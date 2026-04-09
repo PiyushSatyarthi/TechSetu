@@ -111,6 +111,15 @@ class VerifyPhoneBody(BaseModel):
     otp: str
 
 
+class GoogleOAuthStartBody(BaseModel):
+    role: str = Field(default="buyer", pattern="^(buyer|farmer)$")
+
+
+class GoogleOAuthExchangeBody(BaseModel):
+    auth_code: str = Field(min_length=1)
+    redirect_to: Optional[str] = None
+
+
 class RazorpayOrderBody(BaseModel):
     amount_inr: int = Field(gt=0, le=500000)
 
@@ -266,6 +275,72 @@ def login(body: LoginBody) -> dict:
 @app.post("/auth/logout")
 def logout() -> dict:
     return {"ok": True}
+
+
+@app.post("/auth/google/start")
+def google_oauth_start(body: GoogleOAuthStartBody) -> dict:
+    role = body.role or "buyer"
+    redirect_to = f"{APP_ORIGIN.rstrip('/')}/index.html?oauth_role={role}"
+    try:
+        oauth_res = supabase.auth.sign_in_with_oauth(
+            {
+                "provider": "google",
+                "options": {"redirect_to": redirect_to},
+            }
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to start Google OAuth. Check Supabase Google provider settings.",
+        ) from exc
+
+    auth_url = None
+    if isinstance(oauth_res, dict):
+        auth_url = oauth_res.get("url")
+    else:
+        auth_url = getattr(oauth_res, "url", None)
+        if not auth_url and hasattr(oauth_res, "model"):
+            auth_url = getattr(oauth_res.model, "url", None)
+
+    if not auth_url:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase did not return an OAuth URL.",
+        )
+
+    return {"ok": True, "url": auth_url}
+
+
+@app.post("/auth/google/exchange")
+def google_oauth_exchange(body: GoogleOAuthExchangeBody) -> dict:
+    try:
+        auth_res = supabase.auth.exchange_code_for_session(
+            {
+                "auth_code": body.auth_code,
+                "redirect_to": body.redirect_to,
+            }
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to exchange OAuth code. Please retry Google login.",
+        ) from exc
+
+    session = auth_res.session
+    user = auth_res.user
+    if not session or not session.access_token:
+        raise HTTPException(status_code=401, detail="OAuth exchange did not return an access token.")
+
+    role = (user.user_metadata or {}).get("role", "buyer") if user else "buyer"
+    return {
+        "ok": True,
+        "access_token": session.access_token,
+        "user": {
+            "id": user.id if user else None,
+            "email": user.email if user else None,
+            "role": role,
+        },
+    }
 
 
 @app.get("/auth/me")

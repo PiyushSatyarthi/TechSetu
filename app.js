@@ -34,6 +34,7 @@ const API_BASE = 'http://127.0.0.1:8000';
 const SCREEN_STORAGE_KEY = 'techsetu_current_screen';
 const AUTH_STATE_KEY = 'techsetu_auth_state';
 const AUTH_DRAFTS_KEY = 'techsetu_auth_drafts';
+const HOME_ROLE_BADGE_KEY = 'techsetu_home_role_badge';
 
 function readJsonStorage(key, fallback) {
   try {
@@ -125,6 +126,35 @@ function loginSuccess(role) {
   }
 }
 
+function setHomeRoleBadge(role) {
+  const badge = document.getElementById('buyer-type-badge');
+  if(!badge) return;
+  badge.textContent = role === 'farmer' ? 'Farmer' : 'Customer';
+}
+
+function saveHomeRoleBadge(role) {
+  localStorage.setItem(HOME_ROLE_BADGE_KEY, role === 'farmer' ? 'farmer' : 'buyer');
+}
+
+function applySavedHomeRoleBadge() {
+  const savedRole = localStorage.getItem(HOME_ROLE_BADGE_KEY);
+  if(savedRole === 'farmer' || savedRole === 'buyer') {
+    setHomeRoleBadge(savedRole);
+  }
+}
+
+function clearSavedHomeRoleBadge() {
+  localStorage.removeItem(HOME_ROLE_BADGE_KEY);
+}
+
+function googleLoginSuccess(role) {
+  currentRole = role;
+  saveAuthState();
+  saveHomeRoleBadge(role);
+  setHomeRoleBadge(role);
+  showScreen('screen-home');
+}
+
 function switchLoginTab(tab, role) {
   snapshotAuthInputs();
   currentLoginTab = tab;
@@ -183,6 +213,84 @@ async function apiGet(path) {
     throw new Error(payload.detail || 'Request failed');
   }
   return payload;
+}
+
+function cleanOAuthUrl() {
+  if(window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+async function handleGoogleAuth(role) {
+  currentRole = role;
+  saveAuthState();
+  try {
+    const startRes = await apiPost('/auth/google/start', {role});
+    if(!startRes.url) {
+      throw new Error('Unable to start Google login');
+    }
+    window.location.href = startRes.url;
+  } catch (err) {
+    toast(`⚠️ ${err.message}`);
+  }
+}
+
+async function handleOAuthRedirect() {
+  const queryParams = new URLSearchParams(window.location.search);
+  const hashText = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+  const hashParams = new URLSearchParams(hashText);
+  const role = queryParams.get('oauth_role') || currentRole || 'buyer';
+
+  const oauthError = hashParams.get('error_description') || hashParams.get('error') || queryParams.get('error_description') || queryParams.get('error');
+  if(oauthError) {
+    cleanOAuthUrl();
+    toast(`⚠️ Google login failed: ${oauthError}`);
+    showRoleSelect();
+    return true;
+  }
+
+  const oauthCode = queryParams.get('code');
+  if(oauthCode) {
+    try {
+      const redirectTo = `${window.location.origin}${window.location.pathname}?oauth_role=${encodeURIComponent(role)}`;
+      const exchangeRes = await apiPost('/auth/google/exchange', {
+        auth_code: oauthCode,
+        redirect_to: redirectTo,
+      });
+      if(!exchangeRes.access_token) {
+        throw new Error('Google code exchange failed');
+      }
+      setToken(exchangeRes.access_token);
+      cleanOAuthUrl();
+      await apiGet('/auth/me');
+      toast('✅ Logged in with Google');
+      localStorage.removeItem(AUTH_DRAFTS_KEY);
+      googleLoginSuccess(role);
+    } catch (_) {
+      clearToken();
+      cleanOAuthUrl();
+      toast('⚠️ Google login could not be completed. Please try again.');
+      showRoleSelect();
+    }
+    return true;
+  }
+
+  const token = hashParams.get('access_token') || queryParams.get('access_token');
+  if(!token) return false;
+
+  setToken(token);
+  cleanOAuthUrl();
+  try {
+    await apiGet('/auth/me');
+    toast('✅ Logged in with Google');
+    localStorage.removeItem(AUTH_DRAFTS_KEY);
+    googleLoginSuccess(role);
+  } catch (_) {
+    clearToken();
+    toast('⚠️ Google login could not be verified. Please try again.');
+    showRoleSelect();
+  }
+  return true;
 }
 
 async function handleAuthSubmit(role, isSignup) {
@@ -337,7 +445,7 @@ function renderLoginScreen(role) {
       ${isSignup ? `<div class="lf"><label>Confirm Password</label><input id="auth-confirm-password" value="${getDraftValue(role, currentLoginTab, 'auth-confirm-password')}" type="password" placeholder="••••••••" /></div>` : ''}
       <button class="login-btn" onclick="handleAuthSubmit('${role}', ${isSignup ? 'true' : 'false'})">${isSignup ? 'Create Account →' : 'Sign In →'}</button>
       <div class="login-divider">or continue with</div>
-      <button class="login-btn" style="background:${isBuyer?'var(--offwhite)':'rgba(255,255,255,.08)'};color:${isBuyer?'var(--text-dark)':'white'};border:1px solid ${isBuyer?'var(--card-border)':'rgba(255,255,255,.15)'}" onclick="toast('Google login can be added with Supabase OAuth setup')">
+      <button class="login-btn" style="background:${isBuyer?'var(--offwhite)':'rgba(255,255,255,.08)'};color:${isBuyer?'var(--text-dark)':'white'};border:1px solid ${isBuyer?'var(--card-border)':'rgba(255,255,255,.15)'}" onclick="handleGoogleAuth('${role}')">
         <span style="margin-right:6px">G</span> Continue with Google
       </button>
     </div>
@@ -373,6 +481,7 @@ function renderLoginScreen(role) {
 // ─── BUYER TYPE ───
 const buyerTypeNames = {personal:'Personal',retailer:'Retailer',wholesale:'Wholesaler'};
 function selectBuyerType(type) {
+  clearSavedHomeRoleBadge();
   currentBuyerType = type;
   document.getElementById('buyer-type-badge').textContent = buyerTypeNames[type];
   renderProducts();
@@ -772,11 +881,20 @@ updateCartCount();
 const savedAuthState = readJsonStorage(AUTH_STATE_KEY, {});
 if(savedAuthState.currentRole) currentRole = savedAuthState.currentRole;
 if(savedAuthState.currentLoginTab) currentLoginTab = savedAuthState.currentLoginTab;
-const savedScreen = localStorage.getItem(SCREEN_STORAGE_KEY);
-if(savedScreen && savedScreen !== 'page-main' && document.getElementById(savedScreen)) {
-  showScreen(savedScreen);
-  if(savedScreen === 'screen-login' && currentRole) renderLoginScreen(currentRole);
-  if(savedScreen === 'screen-home') renderProducts();
-} else {
-  showPageMain();
-}
+
+(async function initApp() {
+  const handledOAuth = await handleOAuthRedirect();
+  if(handledOAuth) return;
+
+  const savedScreen = localStorage.getItem(SCREEN_STORAGE_KEY);
+  if(savedScreen && savedScreen !== 'page-main' && document.getElementById(savedScreen)) {
+    showScreen(savedScreen);
+    if(savedScreen === 'screen-login' && currentRole) renderLoginScreen(currentRole);
+    if(savedScreen === 'screen-home') {
+      renderProducts();
+      applySavedHomeRoleBadge();
+    }
+  } else {
+    showPageMain();
+  }
+})();
