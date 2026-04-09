@@ -121,6 +121,7 @@ class SignupBody(BaseModel):
 class LoginBody(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=64)
+    expected_role: Optional[str] = Field(default=None, pattern="^(buyer|farmer)$")
 
 
 class VerifyPhoneBody(BaseModel):
@@ -201,7 +202,13 @@ def app_transport() -> FileResponse:
 @app.post("/auth/verify-phone")
 def verify_phone(body: VerifyPhoneBody) -> dict:
     if body.otp != DEV_OTP:
-        raise HTTPException(status_code=400, detail="Invalid OTP. Please try again.")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "INVALID_OTP",
+                "detail": "Invalid OTP. Please try again.",
+            },
+        )
     return {"ok": True, "message": "Phone verified."}
 
 
@@ -230,15 +237,33 @@ def signup(body: SignupBody) -> dict:
         )
     except Exception as exc:
         message = str(exc)
-        if "Database error saving new user" in message:
+        lower = message.lower()
+        if "already registered" in lower or "already been registered" in lower:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error_code": "EMAIL_ALREADY_REGISTERED",
+                    "detail": "This email is already registered. Please sign in instead.",
+                },
+            )
+        if "database error saving new user" in lower:
             raise HTTPException(
                 status_code=500,
-                detail=(
-                    "Supabase could not save the new user. "
-                    "Check Auth settings, user-related DB triggers, and constraints."
-                ),
+                detail={
+                    "error_code": "AUTH_DB_SAVE_FAILED",
+                    "detail": (
+                        "Supabase could not save the new user. "
+                        "Check Auth settings, user-related DB triggers, and constraints."
+                    ),
+                },
             )
-        raise HTTPException(status_code=400, detail=message)
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "SIGNUP_FAILED",
+                "detail": message,
+            },
+        )
     user = auth_res.user
     if not user:
         raise HTTPException(status_code=400, detail="Sign-up failed. Email may already exist.")
@@ -294,11 +319,26 @@ def login(body: LoginBody) -> dict:
         if "email not confirmed" in lower:
             raise HTTPException(
                 status_code=403,
-                detail="Email not confirmed. Please verify your email before logging in.",
+                detail={
+                    "error_code": "EMAIL_NOT_CONFIRMED",
+                    "detail": "Email not confirmed. Please verify your email before logging in.",
+                },
             )
         if "invalid login credentials" in lower:
-            raise HTTPException(status_code=401, detail="Invalid email or password.")
-        raise HTTPException(status_code=400, detail=message)
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error_code": "INVALID_CREDENTIALS",
+                    "detail": "Invalid email or password.",
+                },
+            )
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "LOGIN_FAILED",
+                "detail": message,
+            },
+        )
 
     user = auth_res.user
     session = auth_res.session
@@ -306,6 +346,20 @@ def login(body: LoginBody) -> dict:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
     role = (user.user_metadata or {}).get("role", "buyer")
+    if body.expected_role and role != body.expected_role:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error_code": "ROLE_MISMATCH",
+                "detail": (
+                    f"This account is registered as {role}. "
+                    f"Please use the {role} login option."
+                ),
+                "expected_role": body.expected_role,
+                "actual_role": role,
+            },
+        )
+
     access_token = session.access_token
     return {
         "ok": True,

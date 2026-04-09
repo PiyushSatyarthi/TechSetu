@@ -204,7 +204,12 @@ async function apiPost(path, data) {
   });
   const payload = await res.json().catch(()=>({detail:'Something went wrong'}));
   if(!res.ok) {
-    throw new Error(payload.detail || 'Request failed');
+    const err = new Error('Request failed');
+    const detailObj = payload?.detail && typeof payload.detail === 'object' ? payload.detail : null;
+    err.code = detailObj?.error_code || payload?.error_code || null;
+    err.message = detailObj?.detail || payload?.detail || 'Request failed';
+    err.payload = payload;
+    throw err;
   }
   return payload;
 }
@@ -216,7 +221,12 @@ async function apiGet(path) {
   });
   const payload = await res.json().catch(()=>({detail:'Something went wrong'}));
   if(!res.ok) {
-    throw new Error(payload.detail || 'Request failed');
+    const err = new Error('Request failed');
+    const detailObj = payload?.detail && typeof payload.detail === 'object' ? payload.detail : null;
+    err.code = detailObj?.error_code || payload?.error_code || null;
+    err.message = detailObj?.detail || payload?.detail || 'Request failed';
+    err.payload = payload;
+    throw err;
   }
   return payload;
 }
@@ -376,12 +386,29 @@ async function handleAuthSubmit(role, isSignup) {
     }
 
     // ── 4. Store JWT from login response ──
-    const loginRes = await apiPost('/auth/login', {email, password});
+    const loginRes = await apiPost('/auth/login', {email, password, expected_role: role});
     if(loginRes.access_token) setToken(loginRes.access_token);
     toast('✅ Login successful');
     localStorage.removeItem(AUTH_DRAFTS_KEY);
-    loginSuccess(role);
+    loginSuccess((loginRes.user && loginRes.user.role) ? loginRes.user.role : role);
   } catch (err) {
+    if(err.code === 'EMAIL_ALREADY_REGISTERED') {
+      toast('⚠️ Email already registered. Please log in instead.');
+      return;
+    }
+    if(err.code === 'ROLE_MISMATCH') {
+      const actualRole = err?.payload?.detail?.actual_role;
+      toast(`⚠️ This email is registered as ${actualRole || 'another role'}. Please use the correct login.`);
+      return;
+    }
+    if(err.code === 'INVALID_CREDENTIALS') {
+      toast('⚠️ Invalid email or password.');
+      return;
+    }
+    if(err.code === 'EMAIL_NOT_CONFIRMED') {
+      toast('⚠️ Email not confirmed. Please verify your email first.');
+      return;
+    }
     toast(`⚠️ ${err.message}`);
   }
 }
