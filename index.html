@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TechSetu – Bridging Farmers & Markets</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- ══ LANDING PAGE ══ -->
+<div id="page-main">
+
+<!-- NAV -->
+<nav id="main-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 14.5v-5l-2 1.5V11l3-2.5L15 11v2l-2-1.5v5h-2z"/></svg>
+    </div>
+    <span class="nav-logo-text">TechSetu</span>
+  </div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#impact">Impact</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn-outline" onclick="showRoleSelect()">Join as Farmer</button>
+    <button class="btn-fill" onclick="showRoleSelect()">Get Started</button>
+  </div>
+</nav>
+
+<!-- FIRST PAGE: LANDING / HERO -->
+<section id="page-landing" class="landing">
+  <div class="landing-bg"></div>
+  <div class="landing-blob landing-blob-1"></div>
+  <div class="landing-blob landing-blob-2"></div>
+  <div class="landing-blob landing-blob-3"></div>
+  <div class="landing-content">
+    <div class="landing-badge"><span class="landing-badge-dot"></span>Live on 4 states across India</div>
+    <h1>The bridge<br/>farmers <em>deserve.</em></h1>
+    <p class="landing-sub">TechSetu connects farmers directly to buyers — eliminating middlemen, enabling transparent pricing, and putting fair value back in the hands of those who grow our food.</p>
+    <button class="landing-get-started" onclick="showRoleSelect()">
+      Get Started <span>→</span>
+    </button>
+    <div class="landing-stats">
+      <div class="landing-stat"><div class="num">2,400+</div><div class="lbl">Farmers onboarded</div></div>
+      <div class="landing-stat"><div class="num">₹3.2Cr</div><div class="lbl">Trade volume</div></div>
+      <div class="landing-stat"><div class="num">18%</div><div class="lbl">Avg. income increase</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE PRICE TICKER -->
+<div class="price-ticker">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how" style="background:white">
+  <div class="section-label fade-up">How it works</div>
+  <div class="section-title fade-up">Two journeys, one platform.</div>
+  <div class="section-sub fade-up">Whether you grow food or source it, TechSetu makes the process transparent, fast, and fair.</div>
+  <div class="how-grid fade-up">
+    <div class="flow-block">
+      <div class="flow-header">
+        <div class="flow-icon blue">🛒</div>
+        <span class="flow-title">Buyer journey</span>
+      </div>
+      <div class="flow-step"><div class="step-num blue">1</div><div class="step-text"><strong>Choose Your Role</strong><span>Select whether you're a personal buyer, retailer, or wholesaler.</span></div></div>
+      <div class="flow-step"><div class="step-num blue">2</div><div class="step-text"><strong>Browse & Filter</strong><span>Search produce by category, price range, quality grade, and location.</span></div></div>
+      <div class="flow-step"><div class="step-num blue">3</div><div class="step-text"><strong>Add to Cart & Checkout</strong><span>Place orders directly with farmers, no intermediary involved.</span></div></div>
+      <div class="flow-step"><div class="step-num blue">4</div><div class="step-text"><strong>Track Your Order</strong><span>Real-time status from farm dispatch to your doorstep with live map.</span></div></div>
+    </div>
+    <div class="flow-block">
+      <div class="flow-header">
+        <div class="flow-icon green">🌾</div>
+        <span class="flow-title">Farmer journey</span>
+      </div>
+      <div class="flow-step"><div class="step-num green">1</div><div class="step-text"><strong>Create Your Dashboard</strong><span>Add crop listings with name, quantity, price, and harvest details.</span></div></div>
+      <div class="flow-step"><div class="step-num green">2</div><div class="step-text"><strong>Receive Buyer Offers</strong><span>Get real-time notifications when buyers make price offers on your crops.</span></div></div>
+      <div class="flow-step"><div class="step-num green">3</div><div class="step-text"><strong>Accept or Negotiate</strong><span>Accept offers directly or counter-propose — you stay in control.</span></div></div>
+      <div class="flow-step"><div class="step-num green">4</div><div class="step-text"><strong>Dispatch & Get Paid</strong><span>Confirm dispatch and receive payment directly — no delays, no cuts.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--offwhite)">
+  <div class="section-label fade-up">Platform Features</div>
+  <div class="section-title fade-up">Everything you need to trade smarter.</div>
+  <div class="features-grid fade-up">
+    <div class="feature-card"><div class="feature-emoji">💰</div><div class="feature-title">AI Price Suggestions</div><div class="feature-desc">Get intelligent price recommendations based on mandi trends, demand patterns, and your location.</div><span class="feature-tag smart">Smart Feature</span></div>
+    <div class="feature-card"><div class="feature-emoji">📍</div><div class="feature-title">Location-Aware Insights</div><div class="feature-desc">Pricing and demand data tailored to your region — know what's selling, and for how much, near you.</div><span class="feature-tag smart">Smart Feature</span></div>
+    <div class="feature-card"><div class="feature-emoji">⭐</div><div class="feature-title">Ratings & Trust Score</div><div class="feature-desc">Every farmer and buyer builds a verified reputation. Quality produce gets recognized and rewarded.</div><span class="feature-tag buyer">Buyer</span></div>
+    <div class="feature-card"><div class="feature-emoji">🔔</div><div class="feature-title">Real-Time Notifications</div><div class="feature-desc">Instant alerts for new offers, accepted orders, payment status, and delivery updates.</div><span class="feature-tag farmer">Farmer</span></div>
+    <div class="feature-card"><div class="feature-emoji">🗺️</div><div class="feature-title">Live Order Tracking</div><div class="feature-desc">Watch your delivery in real time on a live map — just like Zepto and Blinkit.</div><span class="feature-tag buyer">Buyer</span></div>
+    <div class="feature-card"><div class="feature-emoji">📦</div><div class="feature-title">Order Status Pipeline</div><div class="feature-desc">Full pipeline visibility: Placed → Packed → Picked Up → Delivered with timestamps.</div><span class="feature-tag buyer">Buyer</span></div>
+    <div class="feature-card"><div class="feature-emoji">🧾</div><div class="feature-title">Payment Monitoring</div><div class="feature-desc">Farmers track every transaction. Know exactly when payment is expected and confirmed.</div><span class="feature-tag farmer">Farmer</span></div>
+    <div class="feature-card"><div class="feature-emoji">🔍</div><div class="feature-title">Smart Filters</div><div class="feature-desc">Filter produce by price range, category, quality grade, availability, and farmer rating.</div><span class="feature-tag buyer">Buyer</span></div>
+    <div class="feature-card"><div class="feature-emoji">📊</div><div class="feature-title">Farmer Dashboard</div><div class="feature-desc">Manage all your listings, track active orders, and monitor monthly revenue in one clean view.</div><span class="feature-tag farmer">Farmer</span></div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section id="impact" style="background:var(--navy);color:white">
+  <div class="section-label fade-up" style="color:var(--sky)">Impact</div>
+  <div class="section-title fade-up" style="color:white">Real change for real people.</div>
+  <div class="impact-grid fade-up">
+    <div class="impact-card"><div class="impact-num">0</div><div class="impact-title">Middlemen</div><div class="impact-desc">Direct trade means every rupee goes to the person who earned it.</div></div>
+    <div class="impact-card"><div class="impact-num">18%</div><div class="impact-title">Income Increase</div><div class="impact-desc">Average farmer income uplift after joining TechSetu.</div></div>
+    <div class="impact-card"><div class="impact-num">100%</div><div class="impact-title">Price Transparency</div><div class="impact-desc">Every listing shows real-time comparable pricing — no hidden margins.</div></div>
+    <div class="impact-card"><div class="impact-num">2.4K+</div><div class="impact-title">Farmers Empowered</div><div class="impact-desc">And growing — across Maharashtra, Punjab, UP, and Tamil Nadu.</div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">TechSetu</div>
+    <div class="footer-tagline">"Bridging farmers and markets — direct, transparent, fair."</div>
+  </div>
+  <div class="footer-right">
+    <div>© 2025 TechSetu</div>
+    <div style="margin-top:4px;color:rgba(255,255,255,.35)">Built with ❤️ for Indian farmers</div>
+  </div>
+</footer>
+</div><!-- /page-main -->
+
+<!-- ══ SCREEN: ROLE SELECT ══ -->
+<div class="screen" id="screen-role-select">
+  <div class="role-select-logo">
+    <div class="role-select-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 14.5v-5l-2 1.5V11l3-2.5L15 11v2l-2-1.5v5h-2z"/></svg>
+    </div>
+    <span class="role-select-logo-text">TechSetu</span>
+  </div>
+  <p class="role-select-tagline">Bridging farmers and markets — direct, transparent, fair</p>
+  <h2 class="role-select-heading">Who are you?</h2>
+  <p class="role-select-sub">Choose your role to get started.</p>
+  <div class="role-cards">
+    <div class="role-card buyer-card" onclick="goToLogin('buyer')">
+      <span class="role-card-badge">BUYER</span>
+      <span class="role-card-icon">🛒</span>
+      <div class="role-card-title">Continue as Customer</div>
+      <p class="role-card-desc">Source fresh produce directly from verified farmers across India — at transparent, fair prices.</p>
+      <ul class="role-card-perks">
+        <li>Browse thousands of live listings</li>
+        <li>Compare prices from multiple farmers</li>
+        <li>Place orders & track deliveries live</li>
+        <li>AI-powered price insights</li>
+      </ul>
+      <button class="role-card-cta">Continue as Customer →</button>
+    </div>
+    <div class="role-card farmer-card" onclick="goToLogin('farmer')">
+      <span class="role-card-badge">FARMER</span>
+      <span class="role-card-icon">🌾</span>
+      <div class="role-card-title">Continue as Farmer</div>
+      <p class="role-card-desc">List your crops, receive offers from verified buyers, and get paid directly — no middlemen.</p>
+      <ul class="role-card-perks">
+        <li>List crops in minutes</li>
+        <li>Receive and negotiate buyer offers</li>
+        <li>Track orders and payments</li>
+        <li>AI price suggestions for your crop</li>
+      </ul>
+      <button class="role-card-cta">Continue as Farmer →</button>
+    </div>
+  </div>
+  <button style="margin-top:24px;font-size:13px;color:var(--text-light);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif" onclick="goBack('screen-role-select','page-main')">← Back to home</button>
+</div>
+
+<!-- ══ SCREEN: LOGIN ══ -->
+<div class="screen" id="screen-login">
+  <div class="login-wrap" id="login-wrap">
+    <div class="login-left" id="login-left"></div>
+    <div class="login-right" id="login-right"></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: BUYER TYPE ══ -->
+<div class="screen" id="screen-buyer-type">
+  <div style="width:100%;max-width:960px;padding:40px 24px;display:flex;flex-direction:column;align-items:center">
+    <h2 class="btype-heading">How will you be shopping?</h2>
+    <p class="btype-sub">Select your buyer profile so we can tailor your experience.</p>
+    <div class="btype-cards">
+      <div class="btype-card" onclick="selectBuyerType('personal')">
+        <span class="btype-icon">🏠</span>
+        <div class="btype-title">Small Scale</div>
+        <div class="btype-subtitle">Personal Use</div>
+        <p class="btype-desc">Fresh produce for your household. Small quantities, great quality, farm-direct.</p>
+      </div>
+      <div class="btype-card" onclick="selectBuyerType('retailer')">
+        <span class="btype-icon">🏪</span>
+        <div class="btype-title">Retailer</div>
+        <div class="btype-subtitle">Store / Shop Owner</div>
+        <p class="btype-desc">Regular supply for your store or restaurant. Consistent quality, competitive pricing.</p>
+      </div>
+      <div class="btype-card" onclick="selectBuyerType('wholesale')">
+        <span class="btype-icon">🏭</span>
+        <div class="btype-title">Wholesaler</div>
+        <div class="btype-subtitle">Bulk Buyer</div>
+        <p class="btype-desc">Large-scale procurement for distribution or processing. Best rates on bulk orders.</p>
+      </div>
+    </div>
+    <button class="btype-back" onclick="showScreen('screen-login')">← Back</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: HOME / MARKETPLACE ══ -->
+<div class="screen" id="screen-home">
+  <div class="home-topbar">
+    <div class="home-topbar-left">
+      <span class="home-topbar-logo">TechSetu</span>
+      <span class="home-topbar-badge" id="buyer-type-badge">Personal</span>
+    </div>
+    <div class="home-topbar-right">
+      <button class="topbar-icon-btn" onclick="toast('🔔 No new notifications')">🔔</button>
+      <button class="topbar-icon-btn" onclick="showScreen('screen-cart')" style="position:relative">
+        🛒<span class="cart-badge" id="cart-badge-count" style="display:none">0</span>
+      </button>
+    </div>
+  </div>
+  <div class="home-body">
+    <div class="home-greeting">
+      <h2>Good morning! 👋</h2>
+      <p>What fresh produce are you looking for today?</p>
+    </div>
+    <div class="home-search">
+      <span class="home-search-icon">🔍</span>
+      <input id="search-input" placeholder="Search produce, farmers, regions..." oninput="filterProducts()"/>
+    </div>
+    <div class="ai-tip">
+      <span style="font-size:16px">💡</span>
+      <span class="ai-tip-text"><strong>AI Insight:</strong> Tomato prices dipped 8% today in your region. Great time to stock up!</span>
+    </div>
+    <div class="cat-row" id="cat-row">
+      <button class="cat-chip active" onclick="setCat('All',this)">All</button>
+      <button class="cat-chip" onclick="setCat('Vegetables',this)">🥦 Vegetables</button>
+      <button class="cat-chip" onclick="setCat('Fruits',this)">🍎 Fruits</button>
+      <button class="cat-chip" onclick="setCat('Grains',this)">🌾 Grains</button>
+      <button class="cat-chip" onclick="setCat('Spices',this)">🌶️ Spices</button>
+      <button class="cat-chip" onclick="setCat('Leafy',this)">🥬 Leafy</button>
+    </div>
+    <div class="section-heading">Fresh from the Farm</div>
+    <div class="prod-grid" id="prod-grid"></div>
+  </div>
+  <!-- Floating Cart -->
+  <div class="floating-cart" id="floating-cart">
+    <button class="floating-cart-btn" onclick="showScreen('screen-cart')">
+      🛒<span class="floating-cart-count" id="floating-cart-count">0</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: PRODUCT DETAIL ══ -->
+<div class="screen" id="screen-product">
+  <div class="prod-detail-topbar">
+    <button class="back-btn" onclick="showScreen('screen-home')">←</button>
+    <div class="prod-detail-topbar-title" id="prod-detail-title">Product</div>
+  </div>
+  <div class="prod-detail-body" id="prod-detail-body"></div>
+  <div class="prod-detail-sticky">
+    <button class="prod-add-cart-btn" id="prod-add-cart-btn" onclick="addCurrentToCart()">
+      🛒 Add to Cart
+    </button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: CART ══ -->
+<div class="screen" id="screen-cart">
+  <div class="cart-topbar">
+    <button class="back-btn" onclick="showScreen('screen-home')">←</button>
+    <div class="cart-title">Your Cart</div>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+</div>
+
+<!-- ══ SCREEN: ADDRESS ══ -->
+<div class="screen" id="screen-address">
+  <div class="addr-topbar">
+    <button class="back-btn" onclick="showScreen('screen-cart')">←</button>
+    <div class="addr-title">Select Delivery Address</div>
+  </div>
+  <div class="addr-body">
+    <div class="addr-cards" id="addr-cards">
+      <div class="addr-card selected" onclick="selectAddr(this)">
+        <div class="addr-card-header">
+          <span class="addr-card-label">🏠 HOME</span>
+          <div class="addr-card-check">✓</div>
+        </div>
+        <div class="addr-card-name">Rajesh Kumar</div>
+        <div class="addr-card-text">42, Sector 18, Near City Mall, Noida, Uttar Pradesh — 201301</div>
+        <div class="addr-card-phone">📞 +91 98765 43210</div>
+      </div>
+      <div class="addr-card" onclick="selectAddr(this)">
+        <div class="addr-card-header">
+          <span class="addr-card-label">🏢 OFFICE</span>
+          <div class="addr-card-check"></div>
+        </div>
+        <div class="addr-card-name">Rajesh Kumar</div>
+        <div class="addr-card-text">Tower B, Plot 7, Technopark, Sector 62, Noida, UP — 201309</div>
+        <div class="addr-card-phone">📞 +91 98765 43210</div>
+      </div>
+    </div>
+    <button class="add-addr-btn" onclick="toast('📍 Add new address feature coming soon!')">+ Add New Address</button>
+    <button class="addr-proceed-btn" onclick="showScreen('screen-payment')">Proceed to Payment →</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: PAYMENT ══ -->
+<div class="screen" id="screen-payment">
+  <div class="pay-topbar">
+    <button class="back-btn" onclick="showScreen('screen-address')">←</button>
+    <div class="pay-title">Payment</div>
+  </div>
+  <div class="pay-body">
+    <div class="razorpay-logo">
+      <span style="font-size:20px">💳</span>
+      <div class="razorpay-logo-text">Secured by <strong>Razorpay</strong> — India's most trusted payment gateway. 100% encrypted.</div>
+    </div>
+    <div class="pay-order-summary" id="pay-order-summary"></div>
+    <button class="pay-btn" onclick="placeOrder()">
+      🔒 Pay with Razorpay
+    </button>
+    <div class="pay-secure-note">🔐 Powered by Razorpay · SSL Encrypted · PCI DSS Compliant</div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: ORDER TRACKING ══ -->
+<div class="screen" id="screen-tracking">
+  <div class="track-topbar">
+    <div>
+      <div class="track-topbar-title">Order #AG-<span id="order-num">3847</span></div>
+      <div class="track-topbar-sub">Placed on <span id="order-date"></span></div>
+    </div>
+    <button style="padding:8px 16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;font-size:13px;color:white;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="toast('📧 Invoice sent to your email!')">Invoice</button>
+  </div>
+  <div class="track-body">
+    <!-- ETA -->
+    <div class="eta-card">
+      <div class="eta-card-bg"></div>
+      <div class="eta-card-content">
+        <div class="eta-label">Estimated Delivery</div>
+        <div class="eta-time" id="eta-time">32 min</div>
+        <div class="eta-sub">Your order is on the way! 🚚</div>
+        <div class="eta-countdown">
+          <div class="eta-count-item"><div class="eta-count-num" id="countdown-min">32</div><div class="eta-count-lbl">min</div></div>
+          <div class="eta-count-item"><div class="eta-count-num" id="countdown-sec">00</div><div class="eta-count-lbl">sec</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Status Steps -->
+    <div class="order-status-card">
+      <div class="order-status-title">Order Status</div>
+      <div class="status-steps">
+        <div class="status-step done">
+          <div class="status-step-icon done">✓</div>
+          <div class="status-step-info">
+            <div class="status-step-name">Order Placed</div>
+            <div class="status-step-time">Today, <span id="step1-time"></span></div>
+          </div>
+        </div>
+        <div class="status-step done">
+          <div class="status-step-icon done">✓</div>
+          <div class="status-step-info">
+            <div class="status-step-name">Order Packed</div>
+            <div class="status-step-time">Today, <span id="step2-time"></span> · Packed by Ramesh Farms</div>
+          </div>
+        </div>
+        <div class="status-step done">
+          <div class="status-step-icon active">🏍</div>
+          <div class="status-step-info">
+            <div class="status-step-name active">Picked Up by Delivery Partner</div>
+            <div class="status-step-time">Today, <span id="step3-time"></span> · On the way to you!</div>
+          </div>
+        </div>
+        <div class="status-step">
+          <div class="status-step-icon pending">○</div>
+          <div class="status-step-info">
+            <div class="status-step-name pending">Delivered</div>
+            <div class="status-step-time pending">Expected in ~32 mins</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Map -->
+    <div class="map-card">
+      <div class="map-card-header">
+        <div class="map-card-title">📍 Live Tracking</div>
+        <div class="map-live-badge"><span class="map-live-dot"></span> LIVE</div>
+      </div>
+      <div class="map-container" id="map-container">
+        <!-- Animated SVG Map -->
+        <svg viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="background:#e8f0e8">
+          <!-- Background roads -->
+          <rect x="0" y="0" width="600" height="280" fill="#e8f0e8"/>
+          <!-- Grid roads -->
+          <line x1="0" y1="70" x2="600" y2="70" stroke="white" stroke-width="10"/>
+          <line x1="0" y1="140" x2="600" y2="140" stroke="white" stroke-width="10"/>
+          <line x1="0" y1="210" x2="600" y2="210" stroke="white" stroke-width="10"/>
+          <line x1="100" y1="0" x2="100" y2="280" stroke="white" stroke-width="10"/>
+          <line x1="200" y1="0" x2="200" y2="280" stroke="white" stroke-width="10"/>
+          <line x1="300" y1="0" x2="300" y2="280" stroke="white" stroke-width="10"/>
+          <line x1="400" y1="0" x2="400" y2="280" stroke="white" stroke-width="10"/>
+          <line x1="500" y1="0" x2="500" y2="280" stroke="white" stroke-width="10"/>
+          <!-- Road center lines -->
+          <line x1="0" y1="70" x2="600" y2="70" stroke="#d0ddd0" stroke-width="1" stroke-dasharray="8,8"/>
+          <line x1="0" y1="140" x2="600" y2="140" stroke="#d0ddd0" stroke-width="1" stroke-dasharray="8,8"/>
+          <line x1="0" y1="210" x2="600" y2="210" stroke="#d0ddd0" stroke-width="1" stroke-dasharray="8,8"/>
+          <!-- Buildings (grey blocks) -->
+          <rect x="115" y="82" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <rect x="215" y="82" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <rect x="315" y="82" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <rect x="415" y="82" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <rect x="115" y="152" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <rect x="215" y="152" width="55" height="44" rx="4" fill="#c8e6c9"/>
+          <rect x="315" y="152" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <rect x="415" y="152" width="72" height="44" rx="4" fill="#cdd8cd"/>
+          <!-- Park -->
+          <rect x="215" y="152" width="55" height="44" rx="4" fill="#a5d6a7"/>
+          <text x="242" y="178" text-anchor="middle" font-size="10" fill="#2e7d32">🌳</text>
+          <!-- Delivery route (blue dashed path) -->
+          <path d="M 60 215 L 300 215 L 300 140 L 450 140 L 450 70 L 540 70" stroke="#3582B8" stroke-width="3" stroke-dasharray="8,4" fill="none" opacity="0.7"/>
+          <!-- Destination pin (customer) -->
+          <circle cx="540" cy="70" r="14" fill="#1F3A60"/>
+          <text x="540" y="75" text-anchor="middle" font-size="14">🏠</text>
+          <!-- Farm origin -->
+          <circle cx="60" cy="215" r="12" fill="#06362D"/>
+          <text x="60" y="220" text-anchor="middle" font-size="12">🌾</text>
+          <!-- Delivery agent (animated) -->
+          <circle id="delivery-dot" cx="60" cy="215" r="10" fill="#F7CF59"/>
+          <text id="delivery-icon" x="60" y="220" text-anchor="middle" font-size="12">🏍</text>
+          <!-- Labels -->
+          <rect x="25" y="228" width="72" height="20" rx="4" fill="rgba(6,54,45,0.85)"/>
+          <text x="61" y="241" text-anchor="middle" font-size="9" fill="white">Ramesh Farms</text>
+          <rect x="505" y="56" width="72" height="20" rx="4" fill="rgba(31,58,96,0.85)"/>
+          <text x="541" y="69" text-anchor="middle" font-size="9" fill="white">Your Location</text>
+        </svg>
+        <!-- CSS animation for delivery agent is in styles.css -->
+        <div class="delivery-agent-marker">🏍️</div>
+      </div>
+      <div style="padding:12px 16px;background:rgba(31,58,96,.03);border-top:1px solid var(--card-border)">
+        <div style="font-size:12px;color:var(--text-mid)">📍 Delivery partner is 2.4 km away — heading to your location</div>
+      </div>
+    </div>
+
+    <!-- Delivery Agent Info -->
+    <div class="delivery-agent">
+      <div class="agent-avatar">🙋</div>
+      <div class="agent-info">
+        <div class="agent-name">Raju Verma</div>
+        <div class="agent-role">Delivery Partner · Rating ⭐ 4.8</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:2px">Vehicle: Hero Splendor · UP-65 AB 1234</div>
+      </div>
+      <button class="agent-call-btn" onclick="toast('📞 Calling Raju Verma...')">📞 Call</button>
+    </div>
+
+    <!-- Back to shopping -->
+    <button style="width:100%;padding:12px;background:white;border:1.5px solid var(--card-border);border-radius:50px;font-size:14px;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:20px;transition:all .2s" onclick="showScreen('screen-home');toast('🛒 Continue shopping!')">Continue Shopping</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: FARMER DASHBOARD ══ -->
+<div class="screen" id="screen-farmer">
+  <div class="farmer-topbar">
+    <span class="farmer-topbar-title">🌾 My Dashboard</span>
+    <button class="topbar-icon-btn" onclick="toast('🔔 3 new offers!')">🔔</button>
+  </div>
+  <div class="farmer-body">
+    <div class="farmer-stats-grid">
+      <div class="farmer-stat-card"><div class="farmer-stat-val">₹24,800</div><div class="farmer-stat-lbl">Monthly revenue</div><div class="farmer-stat-trend">↑ 12% this month</div></div>
+      <div class="farmer-stat-card"><div class="farmer-stat-val">5</div><div class="farmer-stat-lbl">Active listings</div><div class="farmer-stat-trend">3 pending offers</div></div>
+      <div class="farmer-stat-card"><div class="farmer-stat-val">18</div><div class="farmer-stat-lbl">Orders fulfilled</div><div class="farmer-stat-trend">This month</div></div>
+      <div class="farmer-stat-card"><div class="farmer-stat-val">⭐ 4.9</div><div class="farmer-stat-lbl">Your rating</div><div class="farmer-stat-trend">Excellent</div></div>
+    </div>
+    <button class="add-listing-btn" onclick="openFarmerModal()">+ Add New Crop Listing</button>
+    <div class="farmer-section-label">Pending Buyer Offers</div>
+    <div class="farmer-offer-card">
+      <div class="farmer-offer-header"><span class="farmer-offer-crop">🍅 Tomatoes — 200kg</span><span class="farmer-offer-time">2h ago</span></div>
+      <div class="farmer-offer-detail"><span class="farmer-offer-buyer">Ravi Traders, Delhi</span><span class="farmer-offer-price">₹18/kg</span></div>
+      <div class="farmer-offer-actions">
+        <button class="farmer-offer-btn accept" onclick="offerAction(this,'accepted')">✓ Accept</button>
+        <button class="farmer-offer-btn decline" onclick="offerAction(this,'declined')">✗ Decline</button>
+      </div>
+    </div>
+    <div class="farmer-offer-card">
+      <div class="farmer-offer-header"><span class="farmer-offer-crop">🧅 Onions — 500kg</span><span class="farmer-offer-time">5h ago</span></div>
+      <div class="farmer-offer-detail"><span class="farmer-offer-buyer">Meera Enterprises</span><span class="farmer-offer-price">₹16/kg</span></div>
+      <div class="farmer-offer-actions">
+        <button class="farmer-offer-btn accept" onclick="offerAction(this,'accepted')">✓ Accept</button>
+        <button class="farmer-offer-btn decline" onclick="offerAction(this,'declined')">✗ Decline</button>
+      </div>
+    </div>
+    <button style="width:100%;padding:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:50px;font-size:14px;color:rgba(255,255,255,.7);cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px" onclick="goBack('screen-farmer','page-main');showPageMain()">← Back to Home</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-msg" id="toast"></div>
+
+<!-- MODAL (for farmer listing) -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <button class="modal-close-btn" onclick="closeModal()">×</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
