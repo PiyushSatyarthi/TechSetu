@@ -247,6 +247,10 @@ async function handleGoogleAuth(role) {
     }
     window.location.href = startRes.url;
   } catch (err) {
+    if(err.code === 'OAUTH_START_FAILED' || err.code === 'OAUTH_URL_MISSING') {
+      toast('⚠️ Google login setup issue. Please try again in a moment.');
+      return;
+    }
     toast(`⚠️ ${err.message}`);
   }
 }
@@ -281,10 +285,16 @@ async function handleOAuthRedirect() {
       await apiGet('/auth/me');
       toast('✅ Logged in with Google');
       localStorage.removeItem(AUTH_DRAFTS_KEY);
-      googleLoginSuccess(role);
-    } catch (_) {
+      const resolvedRole = (exchangeRes.user && exchangeRes.user.role) ? exchangeRes.user.role : role;
+      googleLoginSuccess(resolvedRole);
+    } catch (err) {
       clearToken();
       cleanOAuthUrl();
+      if(err.code === 'OAUTH_EXCHANGE_FAILED' || err.code === 'OAUTH_TOKEN_MISSING') {
+        toast('⚠️ Google login session expired. Please try again.');
+        showRoleSelect();
+        return true;
+      }
       toast('⚠️ Google login could not be completed. Please try again.');
       showRoleSelect();
     }
@@ -376,7 +386,7 @@ async function handleAuthSubmit(role, isSignup) {
         setToken(signupRes.access_token);
       } else {
         // If signup returns no session (e.g. provider config), sign in immediately.
-        const loginRes = await apiPost('/auth/login', {email, password});
+        const loginRes = await apiPost('/auth/login', {email, password, expected_role: role});
         if(loginRes.access_token) setToken(loginRes.access_token);
       }
       toast('✅ Signup successful');
@@ -392,6 +402,14 @@ async function handleAuthSubmit(role, isSignup) {
     localStorage.removeItem(AUTH_DRAFTS_KEY);
     loginSuccess((loginRes.user && loginRes.user.role) ? loginRes.user.role : role);
   } catch (err) {
+    if(err.code === 'MISSING_FARMER_FIELDS') {
+      toast('⚠️ Please select state and primary crop for farmer signup.');
+      return;
+    }
+    if(err.code === 'MISSING_BUYER_ORGANISATION') {
+      toast('⚠️ Organisation is required for customer signup.');
+      return;
+    }
     if(err.code === 'EMAIL_ALREADY_REGISTERED') {
       toast('⚠️ Email already registered. Please log in instead.');
       return;
@@ -401,12 +419,20 @@ async function handleAuthSubmit(role, isSignup) {
       toast(`⚠️ This email is registered as ${actualRole || 'another role'}. Please use the correct login.`);
       return;
     }
+    if(err.code === 'INVALID_OTP') {
+      toast('⚠️ Invalid OTP. Please try again.');
+      return;
+    }
     if(err.code === 'INVALID_CREDENTIALS') {
       toast('⚠️ Invalid email or password.');
       return;
     }
     if(err.code === 'EMAIL_NOT_CONFIRMED') {
       toast('⚠️ Email not confirmed. Please verify your email first.');
+      return;
+    }
+    if(err.code === 'SIGNUP_PROFILE_WRITE_FAILED') {
+      toast('⚠️ Account created but profile setup failed. Please retry.');
       return;
     }
     toast(`⚠️ ${err.message}`);

@@ -6,6 +6,7 @@ import json
 import base64
 import hashlib
 import uuid
+from urllib.parse import urlencode
 from pathlib import Path
 from typing import Optional
 
@@ -217,9 +218,21 @@ def verify_phone(body: VerifyPhoneBody) -> dict:
 @app.post("/auth/signup")
 def signup(body: SignupBody) -> dict:
     if body.role == "farmer" and (not body.state or not body.primary_crop):
-        raise HTTPException(status_code=400, detail="State and primary crop are required for farmers.")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "MISSING_FARMER_FIELDS",
+                "detail": "State and primary crop are required for farmers.",
+            },
+        )
     if body.role == "buyer" and not body.organisation:
-        raise HTTPException(status_code=400, detail="Organisation is required for buyers.")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "MISSING_BUYER_ORGANISATION",
+                "detail": "Organisation is required for buyers.",
+            },
+        )
 
     metadata = {
         "role": body.role,
@@ -266,7 +279,13 @@ def signup(body: SignupBody) -> dict:
         )
     user = auth_res.user
     if not user:
-        raise HTTPException(status_code=400, detail="Sign-up failed. Email may already exist.")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "SIGNUP_USER_NOT_CREATED",
+                "detail": "Sign-up failed. Email may already exist.",
+            },
+        )
 
     # ── 3. Insert into profiles table ──
     profile_row = {
@@ -290,10 +309,13 @@ def signup(body: SignupBody) -> dict:
                 pass
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Unable to create user profile. "
-                "Configure SUPABASE_SERVICE_ROLE_KEY or update RLS policy for profiles inserts."
-            ),
+            detail={
+                "error_code": "SIGNUP_PROFILE_WRITE_FAILED",
+                "detail": (
+                    "Unable to create user profile. "
+                    "Configure SUPABASE_SERVICE_ROLE_KEY or update RLS policy for profiles inserts."
+                ),
+            },
         ) from exc
 
     # Return access_token from session if available (email confirmation may be off)
@@ -343,7 +365,13 @@ def login(body: LoginBody) -> dict:
     user = auth_res.user
     session = auth_res.session
     if not user or not session or not session.access_token:
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error_code": "INVALID_CREDENTIALS",
+                "detail": "Invalid email or password.",
+            },
+        )
 
     role = (user.user_metadata or {}).get("role", "buyer")
     if body.expected_role and role != body.expected_role:
@@ -378,32 +406,22 @@ def google_oauth_start(body: GoogleOAuthStartBody, request: Request) -> dict:
     role = body.role or "buyer"
     origin = request.headers.get("origin") or APP_ORIGIN
     redirect_to = f"{origin.rstrip('/')}/index.html?oauth_role={role}"
-    try:
-        oauth_res = auth_client().auth.sign_in_with_oauth(
-            {
-                "provider": "google",
-                "options": {"redirect_to": redirect_to},
-            }
-        )
-    except Exception as exc:
+    if not SUPABASE_URL:
         raise HTTPException(
             status_code=500,
-            detail="Unable to start Google OAuth. Check Supabase Google provider settings.",
-        ) from exc
-
-    auth_url = None
-    if isinstance(oauth_res, dict):
-        auth_url = oauth_res.get("url")
-    else:
-        auth_url = getattr(oauth_res, "url", None)
-        if not auth_url and hasattr(oauth_res, "model"):
-            auth_url = getattr(oauth_res.model, "url", None)
-
-    if not auth_url:
-        raise HTTPException(
-            status_code=500,
-            detail="Supabase did not return an OAuth URL.",
+            detail={
+                "error_code": "OAUTH_START_FAILED",
+                "detail": "Supabase URL is not configured.",
+            },
         )
+
+    # Build authorize URL directly so callback can return access_token without
+    # server-side PKCE verifier dependency in serverless runtimes.
+    query = urlencode({
+        "provider": "google",
+        "redirect_to": redirect_to,
+    })
+    auth_url = f"{SUPABASE_URL.rstrip('/')}/auth/v1/authorize?{query}"
 
     return {"ok": True, "url": auth_url}
 
@@ -420,13 +438,22 @@ def google_oauth_exchange(body: GoogleOAuthExchangeBody) -> dict:
     except Exception as exc:
         raise HTTPException(
             status_code=400,
-            detail="Unable to exchange OAuth code. Please retry Google login.",
+            detail={
+                "error_code": "OAUTH_EXCHANGE_FAILED",
+                "detail": "Unable to exchange OAuth code. Please retry Google login.",
+            },
         ) from exc
 
     session = auth_res.session
     user = auth_res.user
     if not session or not session.access_token:
-        raise HTTPException(status_code=401, detail="OAuth exchange did not return an access token.")
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error_code": "OAUTH_TOKEN_MISSING",
+                "detail": "OAuth exchange did not return an access token.",
+            },
+        )
 
     role = (user.user_metadata or {}).get("role", "buyer") if user else "buyer"
     return {
