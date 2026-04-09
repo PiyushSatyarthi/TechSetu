@@ -37,6 +37,12 @@ const SCREEN_STORAGE_KEY = 'techsetu_current_screen';
 const AUTH_STATE_KEY = 'techsetu_auth_state';
 const AUTH_DRAFTS_KEY = 'techsetu_auth_drafts';
 const HOME_ROLE_BADGE_KEY = 'techsetu_home_role_badge';
+const PROFILE_PREV_SCREEN_KEY = 'techsetu_profile_prev_screen';
+const FORGOT_PASSWORD_COOLDOWN_MS = 60000;
+const FORGOT_PASSWORD_COOLDOWN_UNTIL_KEY = 'techsetu_forgot_cooldown_until';
+
+let forgotPasswordCooldownUntil = 0;
+let forgotPasswordTimer = null;
 
 function readJsonStorage(key, fallback) {
   try {
@@ -153,6 +159,19 @@ function clearSavedHomeRoleBadge() {
   localStorage.removeItem(HOME_ROLE_BADGE_KEY);
 }
 
+function getCurrentAppRole() {
+  if(currentRole === 'buyer' || currentRole === 'farmer') return currentRole;
+  const badgeRole = localStorage.getItem(HOME_ROLE_BADGE_KEY);
+  if(badgeRole === 'buyer' || badgeRole === 'farmer') return badgeRole;
+  return 'buyer';
+}
+
+function escapeHtml(value) {
+  return (value || '').replace(/[&<>"']/g, function(char) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char];
+  });
+}
+
 function googleLoginSuccess(role) {
   currentRole = role;
   saveAuthState();
@@ -199,6 +218,24 @@ function authHeaders() {
 async function apiPost(path, data) {
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(data)
+  });
+  const payload = await res.json().catch(()=>({detail:'Something went wrong'}));
+  if(!res.ok) {
+    const err = new Error('Request failed');
+    const detailObj = payload?.detail && typeof payload.detail === 'object' ? payload.detail : null;
+    err.code = detailObj?.error_code || payload?.error_code || null;
+    err.message = detailObj?.detail || payload?.detail || 'Request failed';
+    err.payload = payload;
+    throw err;
+  }
+  return payload;
+}
+
+async function apiPatch(path, data) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify(data)
   });
@@ -457,6 +494,385 @@ async function ensureCheckoutAuth() {
   }
 }
 
+function profileField(label, id, value, placeholder, type = 'text') {
+  return `<div class="profile-field"><label>${label}</label><input id="${id}" type="${type}" value="${escapeHtml(value)}" placeholder="${placeholder}"/><div class="field-error" id="${id}-error"></div></div>`;
+}
+
+function clearFieldError(fieldId) {
+  const errorEl = document.getElementById(`${fieldId}-error`);
+  const inputEl = document.getElementById(fieldId);
+  if(errorEl) errorEl.textContent = '';
+  if(inputEl) inputEl.classList.remove('has-error');
+}
+
+function setFieldError(fieldId, message) {
+  const errorEl = document.getElementById(`${fieldId}-error`);
+  const inputEl = document.getElementById(fieldId);
+  if(errorEl) errorEl.textContent = message;
+  if(inputEl) inputEl.classList.add('has-error');
+}
+
+function clearProfileFieldErrors() {
+  [
+    'profile-first-name','profile-last-name','profile-phone','profile-state',
+    'profile-primary-crop','profile-organisation','profile-current-password',
+    'profile-new-password','profile-confirm-password'
+  ].forEach(clearFieldError);
+}
+
+function setInlineStatus(id, type, message) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.className = `inline-status ${type || ''}`.trim();
+  el.textContent = message || '';
+}
+
+function setLoginStatus(type, message) {
+  const el = document.getElementById('login-inline-status');
+  if(!el) return;
+  el.className = `login-inline-status ${type || ''}`.trim();
+  el.textContent = message || '';
+}
+
+function getForgotCooldownSeconds() {
+  const remainingMs = forgotPasswordCooldownUntil - Date.now();
+  if(remainingMs <= 0) return 0;
+  return Math.ceil(remainingMs / 1000);
+}
+
+function stopForgotCooldownTicker() {
+  if(forgotPasswordTimer) {
+    clearInterval(forgotPasswordTimer);
+    forgotPasswordTimer = null;
+  }
+}
+
+function persistForgotCooldownUntil(timestampMs) {
+  forgotPasswordCooldownUntil = timestampMs || 0;
+  if(forgotPasswordCooldownUntil > Date.now()) {
+    localStorage.setItem(FORGOT_PASSWORD_COOLDOWN_UNTIL_KEY, String(forgotPasswordCooldownUntil));
+    return;
+  }
+  forgotPasswordCooldownUntil = 0;
+  localStorage.removeItem(FORGOT_PASSWORD_COOLDOWN_UNTIL_KEY);
+}
+
+function restoreForgotCooldownUntil() {
+  const raw = localStorage.getItem(FORGOT_PASSWORD_COOLDOWN_UNTIL_KEY);
+  const parsed = raw ? parseInt(raw, 10) : 0;
+  if(Number.isNaN(parsed) || parsed <= Date.now()) {
+    persistForgotCooldownUntil(0);
+    return;
+  }
+  persistForgotCooldownUntil(parsed);
+}
+
+function refreshForgotPasswordUi() {
+  const forgotBtn = document.getElementById('login-forgot-btn');
+  if(!forgotBtn) return;
+  const seconds = getForgotCooldownSeconds();
+  if(seconds > 0) {
+    forgotBtn.disabled = true;
+    forgotBtn.textContent = `Resend in ${seconds}s`;
+    return;
+  }
+  forgotBtn.disabled = false;
+  forgotBtn.textContent = 'Forgot password?';
+}
+
+function startForgotCooldownTicker() {
+  stopForgotCooldownTicker();
+  refreshForgotPasswordUi();
+  forgotPasswordTimer = setInterval(() => {
+    refreshForgotPasswordUi();
+    if(getForgotCooldownSeconds() <= 0) {
+      persistForgotCooldownUntil(0);
+      stopForgotCooldownTicker();
+    }
+  }, 1000);
+}
+
+async function handleForgotPassword(role) {
+  setLoginStatus('', '');
+  const cooldownSeconds = getForgotCooldownSeconds();
+  if(cooldownSeconds > 0) {
+    setLoginStatus('error', `Please wait ${cooldownSeconds}s before requesting another reset email.`);
+    refreshForgotPasswordUi();
+    return;
+  }
+  const email = document.getElementById('auth-email')?.value.trim() || '';
+  if(!isValidEmail(email)) {
+    setLoginStatus('error', 'Enter a valid email first.');
+    return;
+  }
+  try {
+    await apiPost('/auth/forgot-password', {email, role});
+    persistForgotCooldownUntil(Date.now() + FORGOT_PASSWORD_COOLDOWN_MS);
+    startForgotCooldownTicker();
+    setLoginStatus('success', 'Reset link sent. Please check your email inbox.');
+    toast('✅ Password reset email sent');
+  } catch (err) {
+    if(err.code === 'PASSWORD_RESET_UNAVAILABLE') {
+      setLoginStatus('error', 'Password reset is not configured on server yet.');
+      return;
+    }
+    if(err.code === 'PASSWORD_RESET_EMAIL_FAILED') {
+      setLoginStatus('error', 'Could not send reset email. Please retry.');
+      return;
+    }
+    setLoginStatus('error', err.message || 'Unable to send reset email.');
+  }
+}
+
+function renderProfile(profile) {
+  const role = profile?.role || getCurrentAppRole();
+  currentRole = role;
+  saveAuthState();
+  saveHomeRoleBadge(role);
+  setHomeRoleBadge(role);
+
+  const body = document.getElementById('profile-body');
+  if(!body) return;
+
+  const roleLabel = role === 'farmer' ? 'Farmer' : 'Customer';
+  const roleIcon = role === 'farmer' ? '🌾' : '🛒';
+  const roleSpecificFields = role === 'farmer'
+    ? `${profileField('State / Region', 'profile-state', profile?.state || '', 'e.g. Maharashtra')}
+       ${profileField('Primary Crop', 'profile-primary-crop', profile?.primary_crop || '', 'e.g. Tomatoes')}`
+    : `${profileField('Organisation / Business', 'profile-organisation', profile?.organisation || '', 'e.g. Sharma Traders')}`;
+
+  body.innerHTML = `
+    <div class="profile-role-card">
+      <div class="profile-role-left">
+        <span class="profile-role-icon">${roleIcon}</span>
+        <div>
+          <div class="profile-role-title">${roleLabel} Profile</div>
+          <div class="profile-role-sub">Manage your account details and security settings.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-card-title">Basic Information</div>
+      <div class="profile-grid">
+        ${profileField('First Name', 'profile-first-name', profile?.first_name || '', 'First name')}
+        ${profileField('Last Name', 'profile-last-name', profile?.last_name || '', 'Last name')}
+      </div>
+      <div class="profile-grid">
+        ${profileField('Phone Number', 'profile-phone', profile?.phone || '', '+91 98765 43210', 'tel')}
+        ${profileField('Email', 'profile-email', profile?.email || '', '', 'email')}
+      </div>
+      <div class="profile-grid profile-grid-single">
+        ${roleSpecificFields}
+      </div>
+      <button class="profile-btn primary" onclick="saveProfile()">Save Profile</button>
+      <div class="inline-status" id="profile-save-status"></div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-card-title">Password Reset</div>
+      <div class="profile-grid">
+        ${profileField('Current Password', 'profile-current-password', '', 'Current password', 'password')}
+        ${profileField('New Password', 'profile-new-password', '', 'Min 8 chars, upper/lower/number', 'password')}
+      </div>
+      <div class="profile-grid profile-grid-single">
+        ${profileField('Confirm New Password', 'profile-confirm-password', '', 'Confirm new password', 'password')}
+      </div>
+      <button class="profile-btn secondary" onclick="changePassword()">Update Password</button>
+      <div class="inline-status" id="profile-password-status"></div>
+    </div>
+
+    <div class="profile-card profile-danger-card">
+      <div class="profile-card-title">Session</div>
+      <p class="profile-danger-text">Logging out clears your current session on this device.</p>
+      <button class="profile-btn danger" onclick="logoutUser()">Logout</button>
+    </div>
+  `;
+
+  const emailInput = document.getElementById('profile-email');
+  if(emailInput) emailInput.disabled = true;
+}
+
+async function openProfile() {
+  const active = localStorage.getItem(SCREEN_STORAGE_KEY);
+  const fallback = getCurrentAppRole() === 'farmer' ? 'screen-farmer' : 'screen-home';
+  const prevScreen = (active && active !== 'screen-profile') ? active : fallback;
+  localStorage.setItem(PROFILE_PREV_SCREEN_KEY, prevScreen);
+  showScreen('screen-profile');
+  const body = document.getElementById('profile-body');
+  if(body) body.innerHTML = '<div class="profile-loading">Loading profile...</div>';
+  try {
+    const data = await apiGet('/auth/profile');
+    renderProfile(data.profile || {});
+  } catch (err) {
+    if(err.code === 'PROFILE_NOT_FOUND') {
+      toast('⚠️ Profile not found for this account.');
+    } else if(err.code === 'PROFILE_FETCH_FAILED') {
+      toast('⚠️ Unable to load profile right now.');
+    } else {
+      toast(`⚠️ ${err.message}`);
+    }
+    closeProfile();
+  }
+}
+
+function closeProfile() {
+  const prev = localStorage.getItem(PROFILE_PREV_SCREEN_KEY);
+  if(prev && document.getElementById(prev)) {
+    showScreen(prev);
+    return;
+  }
+  if(getCurrentAppRole() === 'farmer') {
+    showScreen('screen-farmer');
+  } else {
+    showScreen('screen-home');
+  }
+}
+
+async function saveProfile() {
+  const role = getCurrentAppRole();
+  clearProfileFieldErrors();
+  setInlineStatus('profile-save-status', '', '');
+  const payload = {
+    first_name: document.getElementById('profile-first-name')?.value.trim() || '',
+    last_name: document.getElementById('profile-last-name')?.value.trim() || '',
+    phone: document.getElementById('profile-phone')?.value.trim() || '',
+    state: document.getElementById('profile-state')?.value.trim() || '',
+    primary_crop: document.getElementById('profile-primary-crop')?.value.trim() || '',
+    organisation: document.getElementById('profile-organisation')?.value.trim() || '',
+  };
+
+  let hasError = false;
+  if(payload.first_name.length < 2) {
+    setFieldError('profile-first-name', 'First name must be at least 2 characters.');
+    hasError = true;
+  }
+  if(!payload.last_name) {
+    setFieldError('profile-last-name', 'Last name is required.');
+    hasError = true;
+  }
+  if(!/^\+?[0-9\s-]{10,20}$/.test(payload.phone)) {
+    setFieldError('profile-phone', 'Enter a valid phone number.');
+    hasError = true;
+  }
+  if(role === 'farmer' && !payload.state) {
+    setFieldError('profile-state', 'State is required for farmers.');
+    hasError = true;
+  }
+  if(role === 'farmer' && !payload.primary_crop) {
+    setFieldError('profile-primary-crop', 'Primary crop is required for farmers.');
+    hasError = true;
+  }
+  if(role === 'buyer' && !payload.organisation) {
+    setFieldError('profile-organisation', 'Organisation is required for customers.');
+    hasError = true;
+  }
+  if(hasError) {
+    setInlineStatus('profile-save-status', 'error', 'Please fix the highlighted fields.');
+    return;
+  }
+
+  try {
+    const data = await apiPatch('/auth/profile', payload);
+    const preservedEmail = document.getElementById('profile-email')?.value || '';
+    renderProfile({
+      ...payload,
+      ...(data.profile || {}),
+      email: preservedEmail,
+      role,
+    });
+    setInlineStatus('profile-save-status', 'success', 'Profile updated successfully.');
+    toast('✅ Profile updated');
+  } catch (err) {
+    if(err.code === 'MISSING_FARMER_FIELDS') {
+      setInlineStatus('profile-save-status', 'error', 'State and primary crop are required for farmers.');
+      return;
+    }
+    if(err.code === 'MISSING_BUYER_ORGANISATION') {
+      setInlineStatus('profile-save-status', 'error', 'Organisation is required for customers.');
+      return;
+    }
+    if(err.code === 'PROFILE_UPDATE_FAILED') {
+      setInlineStatus('profile-save-status', 'error', 'Could not update profile. Try again.');
+      return;
+    }
+    setInlineStatus('profile-save-status', 'error', err.message || 'Could not update profile.');
+    toast(`⚠️ ${err.message}`);
+  }
+}
+
+async function changePassword() {
+  const role = getCurrentAppRole();
+  clearProfileFieldErrors();
+  setInlineStatus('profile-password-status', '', '');
+  const currentPassword = document.getElementById('profile-current-password')?.value || '';
+  const newPassword = document.getElementById('profile-new-password')?.value || '';
+  const confirmPassword = document.getElementById('profile-confirm-password')?.value || '';
+  const email = document.getElementById('profile-email')?.value || '';
+
+  let hasError = false;
+  if(!currentPassword) {
+    setFieldError('profile-current-password', 'Current password is required.');
+    hasError = true;
+  }
+  if(!validatePasswordStrength(newPassword)) {
+    setFieldError('profile-new-password', 'Use 8+ chars with upper, lower, and number.');
+    hasError = true;
+  }
+  if(newPassword !== confirmPassword) {
+    setFieldError('profile-confirm-password', 'Passwords do not match.');
+    hasError = true;
+  }
+  if(hasError) {
+    setInlineStatus('profile-password-status', 'error', 'Please fix the highlighted password fields.');
+    return;
+  }
+
+  try {
+    const loginRes = await apiPost('/auth/login', {email, password: currentPassword, expected_role: role});
+    if(loginRes.access_token) setToken(loginRes.access_token);
+    await apiPost('/auth/change-password', {new_password: newPassword});
+    document.getElementById('profile-current-password').value = '';
+    document.getElementById('profile-new-password').value = '';
+    document.getElementById('profile-confirm-password').value = '';
+    setInlineStatus('profile-password-status', 'success', 'Password updated successfully.');
+    toast('✅ Password updated successfully');
+  } catch (err) {
+    if(err.code === 'INVALID_CREDENTIALS') {
+      setFieldError('profile-current-password', 'Current password is incorrect.');
+      setInlineStatus('profile-password-status', 'error', 'Current password is incorrect.');
+      return;
+    }
+    if(err.code === 'PASSWORD_CHANGE_UNAVAILABLE') {
+      setInlineStatus('profile-password-status', 'error', 'Password reset is not configured on server yet.');
+      return;
+    }
+    if(err.code === 'PASSWORD_CHANGE_FAILED') {
+      setInlineStatus('profile-password-status', 'error', 'Could not update password. Please try again.');
+      return;
+    }
+    setInlineStatus('profile-password-status', 'error', err.message || 'Could not update password.');
+    toast(`⚠️ ${err.message}`);
+  }
+}
+
+async function logoutUser() {
+  try {
+    await apiPost('/auth/logout', {});
+  } catch (_) {
+    // Ignore logout API failures and clear local session anyway.
+  }
+  clearToken();
+  clearSavedHomeRoleBadge();
+  localStorage.removeItem(SCREEN_STORAGE_KEY);
+  localStorage.removeItem(PROFILE_PREV_SCREEN_KEY);
+  localStorage.removeItem(AUTH_STATE_KEY);
+  currentRole = null;
+  currentLoginTab = 'login';
+  toast('Logged out successfully');
+  showRoleSelect();
+}
+
 function renderLoginScreen(role) {
   const isBuyer = role === 'buyer';
   const theme = isBuyer ? 'buyer-theme' : 'farmer-theme';
@@ -500,7 +916,7 @@ function renderLoginScreen(role) {
       ` : ''}
       <div class="lf"><label>Email Address</label><input id="auth-email" value="${getDraftValue(role, currentLoginTab, 'auth-email')}" type="email" placeholder="${isBuyer ? 'you@company.com' : 'ramesh@farm.com'}" /></div>
       <div class="lf"><label>Password</label><input id="auth-password" value="${getDraftValue(role, currentLoginTab, 'auth-password')}" type="password" placeholder="••••••••" /></div>
-      ${!isSignup ? `<div class="login-forgot">Forgot password?</div>` : ''}
+      ${!isSignup ? `<button type="button" class="login-forgot" id="login-forgot-btn" onclick="handleForgotPassword('${role}')">Forgot password?</button><div class="login-inline-status" id="login-inline-status"></div>` : ''}
       ${isSignup ? `<div class="lf"><label>Confirm Password</label><input id="auth-confirm-password" value="${getDraftValue(role, currentLoginTab, 'auth-confirm-password')}" type="password" placeholder="••••••••" /></div>` : ''}
       <button class="login-btn" onclick="handleAuthSubmit('${role}', ${isSignup ? 'true' : 'false'})">${isSignup ? 'Create Account →' : 'Sign In →'}</button>
       <div class="login-divider">or continue with</div>
@@ -512,6 +928,13 @@ function renderLoginScreen(role) {
       <span onclick="switchLoginTab('${isSignup?'login':'signup'}','${role}')">${isSignup ? 'Sign in' : 'Sign up free'}</span>
     </div>
   `;
+
+  if(!isSignup) {
+    refreshForgotPasswordUi();
+    if(getForgotCooldownSeconds() > 0) {
+      startForgotCooldownTicker();
+    }
+  }
 
   // Right side: vegetable image + stats
   const vegImg = isBuyer
@@ -937,6 +1360,7 @@ function closeModalOutside(e) { if(e.target===document.getElementById('modal')) 
 // ─── INIT ───
 renderProducts();
 updateCartCount();
+restoreForgotCooldownUntil();
 const savedAuthState = readJsonStorage(AUTH_STATE_KEY, {});
 if(savedAuthState.currentRole) currentRole = savedAuthState.currentRole;
 if(savedAuthState.currentLoginTab) currentLoginTab = savedAuthState.currentLoginTab;
@@ -947,6 +1371,10 @@ if(savedAuthState.currentLoginTab) currentLoginTab = savedAuthState.currentLogin
 
   const savedScreen = localStorage.getItem(SCREEN_STORAGE_KEY);
   if(savedScreen && savedScreen !== 'page-main' && document.getElementById(savedScreen)) {
+    if(savedScreen === 'screen-profile') {
+      openProfile();
+      return;
+    }
     showScreen(savedScreen);
     if(savedScreen === 'screen-login' && currentRole) renderLoginScreen(currentRole);
     if(savedScreen === 'screen-home') {

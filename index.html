@@ -219,6 +219,7 @@
       <button class="topbar-icon-btn" onclick="showScreen('screen-cart')" style="position:relative">
         🛒<span class="cart-badge" id="cart-badge-count" style="display:none">0</span>
       </button>
+      <button class="topbar-icon-btn" onclick="openProfile()">👤</button>
     </div>
   </div>
   <div class="home-body">
@@ -469,6 +470,7 @@
     <span class="farmer-topbar-title">🌾 My Dashboard</span>
     <button class="topbar-icon-btn" onclick="openTransport()">🚚</button>
     <button class="topbar-icon-btn" onclick="toast('🔔 3 new offers!')">🔔</button>
+    <button class="topbar-icon-btn" onclick="openProfile()">👤</button>
   </div>
   <div class="farmer-body">
     <div class="farmer-stats-grid">
@@ -497,6 +499,17 @@
       </div>
     </div>
     <button style="width:100%;padding:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:50px;font-size:14px;color:rgba(255,255,255,.7);cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px" onclick="goBack('screen-farmer','page-main');showPageMain()">← Back to Home</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: USER PROFILE ══ -->
+<div class="screen" id="screen-profile">
+  <div class="profile-topbar">
+    <button class="back-btn" id="profile-back-btn" onclick="closeProfile()">←</button>
+    <div class="profile-title">My Profile</div>
+  </div>
+  <div class="profile-body" id="profile-body">
+    <div class="profile-loading">Loading profile...</div>
   </div>
 </div>
 

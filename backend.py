@@ -139,6 +139,12 @@ class GoogleOAuthExchangeBody(BaseModel):
     redirect_to: Optional[str] = None
 
 
+class ForgotPasswordBody(BaseModel):
+    email: EmailStr
+    role: Optional[str] = Field(default="buyer", pattern="^(buyer|farmer)$")
+    redirect_to: Optional[str] = None
+
+
 class RazorpayOrderBody(BaseModel):
     amount_inr: int = Field(gt=0, le=500000)
 
@@ -147,6 +153,38 @@ class VerifyPaymentBody(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
+
+
+class UpdateProfileBody(BaseModel):
+    first_name: str = Field(min_length=2, max_length=50)
+    last_name: str = Field(min_length=1, max_length=50)
+    phone: str = Field(min_length=10, max_length=20)
+    state: Optional[str] = None
+    primary_crop: Optional[str] = None
+    organisation: Optional[str] = None
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not re.fullmatch(r"^\+?[0-9\s-]{10,20}$", cleaned):
+            raise ValueError("Invalid phone number format.")
+        return cleaned
+
+
+class ChangePasswordBody(BaseModel):
+    new_password: str = Field(min_length=8, max_length=64)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if (
+            not re.search(r"[A-Z]", value)
+            or not re.search(r"[a-z]", value)
+            or not re.search(r"[0-9]", value)
+        ):
+            raise ValueError("Password must include uppercase, lowercase, and a number.")
+        return value
 
 
 # ─── AUTH HELPERS ───
@@ -401,6 +439,42 @@ def logout() -> dict:
     return {"ok": True}
 
 
+@app.post("/auth/forgot-password")
+def forgot_password(body: ForgotPasswordBody, request: Request) -> dict:
+    origin = request.headers.get("origin") or APP_ORIGIN
+    fallback_role = body.role or "buyer"
+    redirect_to = body.redirect_to or f"{origin.rstrip('/')}/index.html?oauth_role={fallback_role}"
+    auth_api = auth_client().auth
+
+    reset_fn = getattr(auth_api, "reset_password_email", None)
+    if not callable(reset_fn):
+        reset_fn = getattr(auth_api, "reset_password_for_email", None)
+    if not callable(reset_fn):
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "PASSWORD_RESET_UNAVAILABLE",
+                "detail": "Password reset API is unavailable in current Supabase SDK version.",
+            },
+        )
+
+    try:
+        try:
+            reset_fn(body.email, {"redirect_to": redirect_to})
+        except TypeError:
+            reset_fn(body.email)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "PASSWORD_RESET_EMAIL_FAILED",
+                "detail": "Could not send password reset email. Please try again.",
+            },
+        ) from exc
+
+    return {"ok": True, "message": "Password reset email sent."}
+
+
 @app.post("/auth/google/start")
 def google_oauth_start(body: GoogleOAuthStartBody, request: Request) -> dict:
     role = body.role or "buyer"
@@ -471,6 +545,123 @@ def google_oauth_exchange(body: GoogleOAuthExchangeBody) -> dict:
 def me(request: Request) -> dict:
     session = _get_user_from_token(request)
     return {"ok": True, "session": session}
+
+
+@app.get("/auth/profile")
+def get_profile(request: Request) -> dict:
+    session = _get_user_from_token(request)
+    try:
+        profile_res = db_client().table("profiles").select(
+            "id, role, first_name, last_name, phone, state, primary_crop, organisation"
+        ).eq("id", session["uid"]).single().execute()
+        profile = profile_res.data
+        if not profile:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error_code": "PROFILE_NOT_FOUND",
+                    "detail": "Profile not found for this account.",
+                },
+            )
+        profile["email"] = session.get("email")
+        return {"ok": True, "profile": profile}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "PROFILE_FETCH_FAILED",
+                "detail": "Could not fetch profile details.",
+            },
+        ) from exc
+
+
+@app.patch("/auth/profile")
+def update_profile(body: UpdateProfileBody, request: Request) -> dict:
+    session = _get_user_from_token(request)
+    try:
+        existing_res = db_client().table("profiles").select("id, role").eq(
+            "id", session["uid"]
+        ).single().execute()
+        existing = existing_res.data
+        if not existing:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error_code": "PROFILE_NOT_FOUND",
+                    "detail": "Profile not found for this account.",
+                },
+            )
+
+        role = existing.get("role", "buyer")
+        if role == "farmer" and (not body.state or not body.primary_crop):
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "MISSING_FARMER_FIELDS",
+                    "detail": "State and primary crop are required for farmers.",
+                },
+            )
+        if role == "buyer" and not body.organisation:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "MISSING_BUYER_ORGANISATION",
+                    "detail": "Organisation is required for customers.",
+                },
+            )
+
+        patch_data = {
+            "first_name": body.first_name.strip(),
+            "last_name": body.last_name.strip(),
+            "phone": body.phone.strip(),
+            "state": (body.state or "").strip(),
+            "primary_crop": (body.primary_crop or "").strip(),
+            "organisation": (body.organisation or "").strip(),
+        }
+        profile_res = db_client().table("profiles").update(patch_data).eq(
+            "id", session["uid"]
+        ).execute()
+        updated = profile_res.data[0] if profile_res.data else None
+        return {"ok": True, "profile": updated}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "PROFILE_UPDATE_FAILED",
+                "detail": "Could not update profile.",
+            },
+        ) from exc
+
+
+@app.post("/auth/change-password")
+def change_password(body: ChangePasswordBody, request: Request) -> dict:
+    session = _get_user_from_token(request)
+    if not supabase_admin:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "PASSWORD_CHANGE_UNAVAILABLE",
+                "detail": "Password change is unavailable. Configure SUPABASE_SERVICE_ROLE_KEY.",
+            },
+        )
+    try:
+        supabase_admin.auth.admin.update_user_by_id(
+            session["uid"],
+            {"password": body.new_password},
+        )
+        return {"ok": True, "message": "Password updated successfully."}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "PASSWORD_CHANGE_FAILED",
+                "detail": "Unable to change password. Please try again.",
+            },
+        ) from exc
 
 
 # ── 5. Payments — with order storage ──
