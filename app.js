@@ -30,7 +30,9 @@ let currentRole = null;
 let currentLoginTab = 'login';
 let currentBuyerType = 'personal';
 let currentProduct = null;
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+  ? 'http://127.0.0.1:8000'
+  : '';
 const SCREEN_STORAGE_KEY = 'techsetu_current_screen';
 const AUTH_STATE_KEY = 'techsetu_auth_state';
 const AUTH_DRAFTS_KEY = 'techsetu_auth_drafts';
@@ -98,6 +100,10 @@ function showPageMain() {
 
 function showRoleSelect() {
   showScreen('screen-role-select');
+}
+
+function openTransport() {
+  window.location.href = 'request-transport.html';
 }
 
 function goToLogin(role) {

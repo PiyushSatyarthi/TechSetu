@@ -6,11 +6,13 @@ import json
 import base64
 import hashlib
 import uuid
+from pathlib import Path
 from typing import Optional
 
 import razorpay
 from fastapi import FastAPI, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -28,17 +30,19 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 
 DEV_OTP = "666666"
 
-if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-    raise RuntimeError("SUPABASE_URL and SUPABASE_ANON_KEY are required in environment.")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+supabase: Optional[Client] = (
+    create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    if SUPABASE_URL and SUPABASE_ANON_KEY
+    else None
+)
 # Use service role for trusted server-side DB writes that must bypass RLS.
 supabase_admin: Optional[Client] = (
     create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    if SUPABASE_SERVICE_ROLE_KEY
+    if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
     else None
 )
 rzp_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="TechSetu Backend")
 
@@ -65,7 +69,20 @@ app.add_middleware(
 
 def db_client() -> Client:
     """Return privileged client for server writes when available."""
-    return supabase_admin or supabase
+    client = supabase_admin or supabase
+    if not client:
+        raise HTTPException(status_code=500, detail="Supabase is not configured.")
+    return client
+
+
+def auth_client() -> Client:
+    """Return auth-enabled Supabase client or fail with clear config error."""
+    if not supabase:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.",
+        )
+    return supabase
 
 
 # ─── MODELS ───
@@ -139,7 +156,7 @@ def _get_user_from_token(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Not authenticated.")
     token = auth_header[7:]
     try:
-        user_res = supabase.auth.get_user(token)
+        user_res = auth_client().auth.get_user(token)
         if not user_res or not user_res.user:
             raise HTTPException(status_code=401, detail="Invalid or expired token.")
         return {"uid": user_res.user.id, "email": user_res.user.email}
@@ -152,6 +169,31 @@ def _get_user_from_token(request: Request) -> dict:
 @app.get("/health")
 def health() -> dict:
     return {"ok": True}
+
+
+@app.get("/")
+def app_root() -> FileResponse:
+    return FileResponse(BASE_DIR / "index.html")
+
+
+@app.get("/index.html")
+def app_index() -> FileResponse:
+    return FileResponse(BASE_DIR / "index.html")
+
+
+@app.get("/app.js")
+def app_js() -> FileResponse:
+    return FileResponse(BASE_DIR / "app.js", media_type="application/javascript")
+
+
+@app.get("/styles.css")
+def app_css() -> FileResponse:
+    return FileResponse(BASE_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/request-transport.html")
+def app_transport() -> FileResponse:
+    return FileResponse(BASE_DIR / "request-transport.html")
 
 
 # ── 1. Phone OTP verification (dev mode) ──
@@ -179,7 +221,7 @@ def signup(body: SignupBody) -> dict:
         "phone": body.phone.strip(),
     }
     try:
-        auth_res = supabase.auth.sign_up(
+        auth_res = auth_client().auth.sign_up(
             {
                 "email": body.email,
                 "password": body.password,
@@ -245,7 +287,7 @@ def signup(body: SignupBody) -> dict:
 @app.post("/auth/login")
 def login(body: LoginBody) -> dict:
     try:
-        auth_res = supabase.auth.sign_in_with_password({"email": body.email, "password": body.password})
+        auth_res = auth_client().auth.sign_in_with_password({"email": body.email, "password": body.password})
     except Exception as exc:
         message = str(exc)
         lower = message.lower()
@@ -278,11 +320,12 @@ def logout() -> dict:
 
 
 @app.post("/auth/google/start")
-def google_oauth_start(body: GoogleOAuthStartBody) -> dict:
+def google_oauth_start(body: GoogleOAuthStartBody, request: Request) -> dict:
     role = body.role or "buyer"
-    redirect_to = f"{APP_ORIGIN.rstrip('/')}/index.html?oauth_role={role}"
+    origin = request.headers.get("origin") or APP_ORIGIN
+    redirect_to = f"{origin.rstrip('/')}/index.html?oauth_role={role}"
     try:
-        oauth_res = supabase.auth.sign_in_with_oauth(
+        oauth_res = auth_client().auth.sign_in_with_oauth(
             {
                 "provider": "google",
                 "options": {"redirect_to": redirect_to},
@@ -314,7 +357,7 @@ def google_oauth_start(body: GoogleOAuthStartBody) -> dict:
 @app.post("/auth/google/exchange")
 def google_oauth_exchange(body: GoogleOAuthExchangeBody) -> dict:
     try:
-        auth_res = supabase.auth.exchange_code_for_session(
+        auth_res = auth_client().auth.exchange_code_for_session(
             {
                 "auth_code": body.auth_code,
                 "redirect_to": body.redirect_to,

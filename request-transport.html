@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Transport — TechSetu</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;background:#0d1810}
+:root{
+  --g9:#0d1810;--g8:#183325;--g7:#1f4530;--g6:#2e5040;--g5:#3e7252;--g4:#5a8e6e;--g3:#83ab9a;--g2:#c0d9c8;--g1:#e5f0e8;--g0:#f2f7f4;
+  --y3:#b8860b;--y2:#d4a017;--y1:#efc56a;--y0:#fdf5e0;
+  --od:#ddeee4;--ods:#6d9d7e;
+  --rd:#a33020;--rdp:#fdecea;
+  font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5
+}
+@media(prefers-color-scheme:dark){
+  :root{--g0:#0b1710;--g1:#102016;--g2:#1b3224;--g3:#2e5040;--od:#c8e0d2;--ods:#5a8a6a}
+  .ts-card,.ts-transporter-row,.ts-tracker-row{border-color:var(--g2)!important}
+  .ts-form-input,.ts-form-select,.ts-form-textarea{background:var(--g1)!important;color:var(--od)!important;border-color:var(--g2)!important}
+  .ts-summary-strip{background:var(--g1)!important;border-color:var(--g2)!important}
+  .ts-tracker-title,.ts-transporter-name{color:var(--od)!important}
+  .ts-detail-val{color:var(--od)!important}
+  .ts-card-title{color:var(--od)!important}
+}
+
+/* NAV */
+.ts-nav{background:var(--g9);height:52px;display:flex;align-items:center;padding:0 20px;gap:0;position:sticky;top:0;z-index:100}
+.ts-logo{font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:400;color:var(--od);letter-spacing:-.2px;margin-right:28px;display:flex;align-items:center;gap:8px;flex-shrink:0;text-decoration:none}
+.ts-logo-leaf{width:9px;height:9px;background:var(--y2);border-radius:50% 0 50% 0;transform:rotate(45deg);flex-shrink:0}
+.ts-nav-links{display:flex;gap:2px;flex:1;overflow:hidden}
+.ts-nav-link{color:var(--ods);font-size:12.5px;padding:5px 11px;border-radius:5px;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;transition:background .15s,color .15s}
+.ts-nav-link:hover{color:var(--od);background:var(--g8)}
+.ts-nav-link.active{color:var(--od);background:var(--g7)}
+.ts-nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+.ts-bell{width:30px;height:30px;background:var(--g8);border-radius:7px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;flex-shrink:0}
+.ts-bell-dot{position:absolute;top:6px;right:7px;width:5px;height:5px;background:var(--y2);border-radius:50%;border:1.5px solid var(--g9)}
+.ts-lang{font-size:11px;color:var(--ods);letter-spacing:.5px;border:0.5px solid var(--g6);border-radius:4px;padding:2px 7px;cursor:pointer;flex-shrink:0}
+.ts-avatar{width:30px;height:30px;background:var(--g6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--od);border:1.5px solid var(--g4);flex-shrink:0}
+
+/* MAIN */
+.ts-wrap{background:var(--g0);min-height:calc(100vh - 52px)}
+.ts-main{padding:16px 20px 40px}
+
+/* GREETING */
+.ts-greet{background:var(--g7);border-radius:9px;padding:15px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ts-greet-name{font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:400;color:var(--od);margin-bottom:3px}
+.ts-greet-sub{font-size:11.5px;color:var(--ods)}
+.ts-greet-right{display:flex;gap:8px;flex-shrink:0}
+.ts-season-badge{background:var(--g6);border-radius:7px;padding:8px 13px;text-align:center}
+.ts-season-label{font-size:10.5px;color:var(--ods);margin-bottom:2px}
+.ts-season-value{font-size:13px;font-weight:500;color:var(--od)}
+.ts-season-value.yl{color:var(--y2)}
+
+/* CARDS */
+.ts-card{background:var(--g0);border:0.5px solid var(--g2);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.ts-card-head{padding:12px 15px 10px;border-bottom:0.5px solid var(--g1);display:flex;align-items:center;justify-content:space-between}
+.ts-card-title{font-family:Georgia,'Times New Roman',serif;font-size:14.5px;font-weight:400;color:var(--g8)}
+.ts-card-body{padding:13px 15px}
+
+/* FORM */
+.ts-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.ts-form-full{grid-column:1/-1}
+.ts-form-group{display:flex;flex-direction:column;gap:4px}
+.ts-form-label{font-size:11px;font-weight:500;color:var(--g5);letter-spacing:.2px}
+.ts-form-input,.ts-form-select,.ts-form-textarea{
+  background:var(--g1);border:0.5px solid var(--g2);border-radius:6px;
+  padding:10px;font-size:12.5px;color:var(--g8);
+  font-family:system-ui,-apple-system,sans-serif;
+  outline:none;transition:border-color .15s;width:100%
+}
+.ts-form-input:focus,.ts-form-select:focus,.ts-form-textarea:focus{border-color:var(--g4)}
+.ts-form-input.error,.ts-form-select.error{border-color:var(--rd)!important}
+.ts-form-error{font-size:10.5px;color:var(--rd);margin-top:2px;display:none}
+.ts-form-error.show{display:block}
+.ts-form-textarea{resize:vertical;min-height:80px}
+.ts-form-input[readonly]{color:var(--g5);cursor:not-allowed}
+
+/* SUMMARY STRIP */
+.ts-summary-strip{background:var(--g1);border:0.5px solid var(--g2);border-radius:7px;padding:10px 14px;margin-top:14px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.ts-summary-item{display:flex;align-items:center;gap:6px}
+.ts-summary-label{font-size:10.5px;color:var(--g4)}
+.ts-summary-val{font-size:11.5px;font-weight:500;color:var(--g7)}
+.ts-summary-badge{background:var(--g6);color:var(--od);font-size:10px;padding:2px 6px;border-radius:3px;font-weight:500}
+
+/* BUTTONS */
+.ts-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.ts-btn-primary{background:var(--y3);color:#fff;border:none;border-radius:5px;padding:9px 18px;font-size:12.5px;font-weight:500;cursor:pointer;transition:background .15s;min-height:44px}
+.ts-btn-primary:hover{background:var(--y2)}
+.ts-btn-secondary{background:var(--g7);color:var(--od);border:none;border-radius:5px;padding:9px 16px;font-size:12.5px;font-weight:500;cursor:pointer;transition:background .15s;min-height:44px}
+.ts-btn-secondary:hover{background:var(--g6)}
+.ts-btn-neutral{background:transparent;color:var(--g4);border:0.5px solid var(--g2);border-radius:5px;padding:9px 16px;font-size:12.5px;cursor:pointer;transition:border-color .15s;min-height:44px}
+.ts-btn-neutral:hover{border-color:var(--g4);color:var(--g7)}
+
+/* TRANSPORTERS */
+.ts-transporter-row{border:0.5px solid var(--g2);border-radius:7px;margin-bottom:8px;overflow:hidden}
+.ts-transporter-row:last-child{margin-bottom:0}
+.ts-transporter-main{display:flex;align-items:center;gap:12px;padding:11px 13px}
+.ts-transporter-icon{width:36px;height:36px;background:var(--g6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ts-transporter-info{flex:1;min-width:0}
+.ts-transporter-name{font-size:12.5px;font-weight:500;color:var(--g8);margin-bottom:1px}
+.ts-transporter-meta{font-size:10.5px;color:var(--g4)}
+.ts-transporter-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.ts-tag{font-size:10px;padding:2px 6px;border-radius:3px;background:var(--g1);color:var(--g5);border:0.5px solid var(--g2)}
+.ts-tag.verified{background:#d8f0e0;color:#1a5e30;border-color:#5cb878}
+.ts-tag.busy{background:var(--y0);color:#7a5200;border-color:#e8d080}
+.ts-tag.cold{background:#e0edff;color:#1a3fa8;border-color:#a0c4ff}
+.ts-transporter-right{text-align:right;flex-shrink:0}
+.ts-transporter-cap{font-size:11.5px;font-weight:500;color:var(--g7);margin-bottom:4px}
+.ts-btn-request{background:var(--g7);color:var(--od);border:none;border-radius:5px;padding:6px 12px;font-size:11.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s;min-height:34px}
+.ts-btn-request:hover{background:var(--g6)}
+.ts-btn-request.open-state{background:var(--g5)}
+
+/* INLINE PANEL */
+.ts-inline-panel{display:none;background:var(--g1);border-top:0.5px solid var(--g2);padding:13px}
+.ts-inline-panel.open{display:block;animation:fadeDown .2s ease}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.ts-inline-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.ts-inline-note{font-size:10.5px;color:#7a5200;padding:7px 9px;background:var(--y0);border-radius:5px;border:0.5px solid #e8d080;margin-bottom:10px;line-height:1.5}
+.ts-inline-actions{display:flex;gap:7px;justify-content:flex-end}
+.ts-btn-sm-sec{background:var(--g7);color:var(--od);border:none;border-radius:5px;padding:6px 13px;font-size:11.5px;font-weight:500;cursor:pointer;min-height:36px}
+.ts-btn-sm-sec:hover{background:var(--g6)}
+.ts-btn-sm-neu{background:transparent;color:var(--g4);border:0.5px solid var(--g2);border-radius:5px;padding:6px 13px;font-size:11.5px;cursor:pointer;min-height:36px}
+.ts-btn-sm-neu:hover{border-color:var(--g4)}
+
+/* TRACKER */
+.ts-tracker-row{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:0.5px solid var(--g1)}
+.ts-tracker-row:last-child{border-bottom:none}
+.ts-tracker-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ts-tracker-icon.ic-pend{background:var(--y0)}
+.ts-tracker-icon.ic-acc{background:#d8f0e0}
+.ts-tracker-icon.ic-tr{background:#e0edff}
+.ts-tracker-content{flex:1;min-width:0}
+.ts-tracker-title{font-size:12.5px;font-weight:500;color:var(--g8);margin-bottom:1px}
+.ts-tracker-route{font-size:11px;color:var(--g4);margin-bottom:3px}
+.ts-tracker-meta{font-size:10.5px;color:var(--ods);margin-bottom:5px}
+.ts-prog{display:flex;align-items:center;gap:3px;margin-top:5px}
+.ts-prog-dot{width:6px;height:6px;border-radius:50%;background:var(--g2);flex-shrink:0}
+.ts-prog-dot.dn{background:var(--g5)}
+.ts-prog-dot.cu{background:var(--y3);width:7px;height:7px}
+.ts-prog-line{width:14px;height:1.5px;background:var(--g2);flex-shrink:0}
+.ts-prog-line.dn{background:var(--g4)}
+.ts-prog-labels{display:flex;gap:0;margin-top:3px}
+.ts-prog-lbl{font-size:9px;color:var(--g4);width:21px;text-align:center;flex-shrink:0;line-height:1.3}
+.ts-tracker-right{text-align:right;flex-shrink:0;min-width:90px}
+.ts-tracker-cap{font-size:10.5px;color:var(--g5);margin-top:4px}
+
+/* BADGES */
+.ts-badge{display:inline-block;font-size:10.5px;font-weight:500;padding:3px 7px;border-radius:4px}
+.ts-badge.pend{background:var(--y0);color:#7a5200}
+.ts-badge.acc{background:#d8f0e0;color:#1a5e30}
+.ts-badge.tr{background:#e0edff;color:#1a3fa8}
+
+/* SIMULATE */
+.ts-sim-btn{font-size:10.5px;color:var(--g4);background:transparent;border:0.5px dashed var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;margin-top:5px;display:block;transition:border-color .15s,color .15s}
+.ts-sim-btn:hover{border-color:var(--g4);color:var(--g7)}
+
+/* ACCEPTED DETAILS */
+.ts-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:14px}
+.ts-detail-label{font-size:10.5px;color:var(--g4);margin-bottom:2px}
+.ts-detail-val{font-size:12.5px;font-weight:500;color:var(--g8)}
+.ts-detail-val.green{color:#1a5e30}
+.ts-acceptance-banner{background:#d8f0e0;border:0.5px solid #5cb878;border-radius:7px;padding:10px 12px;color:#1a5e30;font-size:11.5px;line-height:1.5;margin-bottom:14px}
+
+/* TOAST */
+.ts-toast{position:fixed;bottom:20px;right:20px;transform:translateY(80px);background:var(--g7);color:var(--od);padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:500;border:0.5px solid var(--g5);box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;transition:transform .3s ease,opacity .3s ease;opacity:0;max-width:280px}
+.ts-toast.show{transform:translateY(0);opacity:1}
+.ts-toast.success{background:#1a4a2a;border-color:#3a7a50;color:#a8ecc0}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .ts-main{padding:12px}
+  .ts-greet{flex-direction:column;align-items:flex-start;gap:10px}
+  .ts-greet-right{flex-wrap:wrap}
+  .ts-nav-links{display:none}
+  .ts-form-grid,.ts-inline-grid,.ts-detail-grid{grid-template-columns:1fr}
+  .ts-form-full{grid-column:1}
+  .ts-transporter-main{flex-wrap:wrap;gap:8px}
+  .ts-transporter-right{display:flex;justify-content:space-between;align-items:center;width:100%}
+  .ts-summary-strip{flex-direction:column;align-items:flex-start;gap:7px}
+}
+</style>
+</head>
+<body>
+
+<div id="ts-toast" class="ts-toast" role="status" aria-live="polite"></div>
+
+<nav class="ts-nav" role="navigation" aria-label="Main navigation">
+  <a class="ts-logo" href="#" aria-label="TechSetu home">
+    <span class="ts-logo-leaf" aria-hidden="true"></span>TechSetu
+  </a>
+  <div class="ts-nav-links">
+    <a class="ts-nav-link" href="#">Dashboard</a>
+    <a class="ts-nav-link" href="#">My crops</a>
+    <a class="ts-nav-link" href="#">Orders</a>
+    <a class="ts-nav-link" href="#">Payments</a>
+    <a class="ts-nav-link" href="#">Mandi rates</a>
+    <a class="ts-nav-link active" href="#" aria-current="page">Transport</a>
+    <a class="ts-nav-link" href="#">Help</a>
+  </div>
+  <div class="ts-nav-right">
+    <button class="ts-bell" aria-label="Notifications">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#6d9d7e" stroke-width="1.1" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#6d9d7e" stroke-width="1.1" fill="none"/>
+      </svg>
+      <div class="ts-bell-dot" aria-hidden="true"></div>
+    </button>
+    <div class="ts-lang" role="button" aria-label="Language toggle">हि | EN</div>
+    <div class="ts-avatar" role="img" aria-label="Rajesh Singh">RS</div>
+  </div>
+</nav>
+
+<div class="ts-wrap">
+<main class="ts-main">
+
+  <!-- PAGE HEADER -->
+  <div class="ts-greet">
+    <div>
+      <div class="ts-greet-name">Request Transport</div>
+      <div class="ts-greet-sub">Book a vehicle to move your crop from farm or mandi to the buyer destination</div>
+    </div>
+    <div class="ts-greet-right">
+      <div class="ts-season-badge">
+        <div class="ts-season-label">Nearby trucks</div>
+        <div class="ts-season-value yl">12 available</div>
+      </div>
+      <div class="ts-season-badge">
+        <div class="ts-season-label">Pending requests</div>
+        <div class="ts-season-value" id="pending-count">3 active</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: BOOK A VEHICLE -->
+  <section aria-labelledby="book-title">
+  <div class="ts-card">
+    <div class="ts-card-head" style="background:var(--g8)">
+      <div>
+        <div class="ts-card-title" id="book-title" style="color:var(--od)">Book a Vehicle</div>
+        <div style="font-size:10.5px;color:var(--ods);margin-top:2px">Fill in pickup and destination details to request a logistics provider</div>
+      </div>
+    </div>
+    <div class="ts-card-body">
+      <div class="ts-form-grid">
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="farmer-name">Farmer Name</label>
+          <input class="ts-form-input" id="farmer-name" type="text" value="Rajesh Singh" readonly aria-readonly="true">
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="farmer-id">Farmer ID</label>
+          <input class="ts-form-input" id="farmer-id" type="text" value="MH-2847" readonly aria-readonly="true">
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="crop-name">Crop Name</label>
+          <select class="ts-form-select" id="crop-name" onchange="updateSummary()">
+            <option value="">Select crop</option>
+            <option value="Wheat">Wheat</option>
+            <option value="Onion">Onion</option>
+            <option value="Grapes">Grapes</option>
+            <option value="Tomato">Tomato</option>
+            <option value="Soybean">Soybean</option>
+            <option value="Pomegranate">Pomegranate</option>
+          </select>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="listing-id">Listing ID</label>
+          <select class="ts-form-select" id="listing-id">
+            <option value="">Select listing</option>
+            <option value="LST-2041">LST-2041 · Wheat · 120 qtl</option>
+            <option value="LST-2042">LST-2042 · Onion · 80 qtl</option>
+            <option value="LST-2043">LST-2043 · Grapes · 30 qtl</option>
+          </select>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="pickup-location">Pickup Location (From) <span style="color:var(--rd)">*</span></label>
+          <input class="ts-form-input" id="pickup-location" type="text" placeholder="e.g. Rajesh Farm, Nashik" oninput="clearErr(this,'err-pickup')">
+          <div class="ts-form-error" id="err-pickup">Pickup location is required</div>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="drop-location">Drop Location (To) <span style="color:var(--rd)">*</span></label>
+          <input class="ts-form-input" id="drop-location" type="text" placeholder="e.g. Lasalgaon Mandi / Delhi Fresh Mart" oninput="clearErr(this,'err-drop')">
+          <div class="ts-form-error" id="err-drop">Drop location is required</div>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="quantity">Quantity to Transport <span style="color:var(--rd)">*</span></label>
+          <input class="ts-form-input" id="quantity" type="number" placeholder="e.g. 80" min="1" oninput="updateSummary();clearErr(this,'err-qty')">
+          <div class="ts-form-error" id="err-qty">Quantity is required</div>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="unit">Unit</label>
+          <select class="ts-form-select" id="unit">
+            <option value="Quintals">Quintals</option>
+            <option value="Kg">Kg</option>
+            <option value="Crates">Crates</option>
+            <option value="Bags">Bags</option>
+          </select>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="vehicle-type">Preferred Vehicle Type</label>
+          <select class="ts-form-select" id="vehicle-type" onchange="updateSummary()">
+            <option value="">Select vehicle</option>
+            <option value="Mini truck">Mini truck</option>
+            <option value="Pickup van">Pickup van</option>
+            <option value="14 ft truck">14 ft truck</option>
+            <option value="Refrigerated vehicle">Refrigerated vehicle</option>
+            <option value="Open-body carrier">Open-body carrier</option>
+          </select>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="pickup-date">Preferred Pickup Date <span style="color:var(--rd)">*</span></label>
+          <input class="ts-form-input" id="pickup-date" type="date" oninput="clearErr(this,'err-date')">
+          <div class="ts-form-error" id="err-date">Pickup date is required</div>
+        </div>
+
+        <div class="ts-form-group">
+          <label class="ts-form-label" for="pickup-time">Preferred Pickup Time</label>
+          <select class="ts-form-select" id="pickup-time" onchange="updateSummary()">
+            <option value="Morning">Morning (6 AM – 10 AM)</option>
+            <option value="Afternoon">Afternoon (10 AM – 3 PM)</option>
+            <option value="Evening">Evening (3 PM – 7 PM)</option>
+            <option value="Urgent">Urgent — ASAP</option>
+          </select>
+        </div>
+
+        <div class="ts-form-group ts-form-full">
+          <label class="ts-form-label" for="special-instructions">Special Instructions</label>
+          <textarea class="ts-form-textarea" id="special-instructions" rows="3" placeholder="Mention loading assistance, fragile produce, perishability, market urgency, packaging notes, etc."></textarea>
+        </div>
+
+      </div>
+
+      <!-- SUMMARY STRIP -->
+      <div class="ts-summary-strip">
+        <div class="ts-summary-item">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h12M8 2l6 6-6 6" stroke="var(--g4)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="ts-summary-label">Est. distance:</span>
+          <span class="ts-summary-val" id="sum-dist">Approx. 38 km</span>
+        </div>
+        <div class="ts-summary-item">
+          <span class="ts-summary-label">Suggested vehicle:</span>
+          <span class="ts-summary-val" id="sum-vehicle">Mini truck</span>
+        </div>
+        <div class="ts-summary-item">
+          <span class="ts-summary-label">Capacity needed:</span>
+          <span class="ts-summary-val" id="sum-capacity">Up to 80 qtl</span>
+        </div>
+        <div class="ts-summary-item">
+          <span class="ts-summary-label">Priority:</span>
+          <span class="ts-summary-badge" id="sum-priority">Same day</span>
+        </div>
+      </div>
+
+      <div class="ts-form-actions">
+        <button class="ts-btn-secondary" onclick="saveDraft()">Save Request Draft</button>
+        <button class="ts-btn-primary" onclick="sendMainRequest()">Send Transport Request</button>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- SECTION 2: NEARBY TRANSPORTERS -->
+  <section aria-labelledby="transporters-title">
+  <div class="ts-card">
+    <div class="ts-card-head">
+      <div class="ts-card-title" id="transporters-title">Nearby Transporters</div>
+      <span style="font-size:10.5px;color:var(--g4)">Nashik &amp; nearby zones · 4 providers</span>
+    </div>
+    <div class="ts-card-body">
+
+      <!-- Transporter 0: GreenRoute -->
+      <div class="ts-transporter-row" id="tp-row-0">
+        <div class="ts-transporter-main">
+          <div class="ts-transporter-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 20 18" fill="none"><rect x="1" y="7" width="10" height="8" rx="1.2" stroke="var(--od)" stroke-width="1.2"/><path d="M11 10h3l2.5 2v3H11v-5z" stroke="var(--od)" stroke-width="1.2" stroke-linejoin="round"/><circle cx="4" cy="15.5" r="1.3" fill="var(--od)"/><circle cx="13.5" cy="15.5" r="1.3" fill="var(--od)"/><path d="M1 7V4.5l5-3H11v5.5" stroke="var(--od)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ts-transporter-info">
+            <div class="ts-transporter-name">GreenRoute Logistics</div>
+            <div class="ts-transporter-meta">Nashik &amp; nearby mandis · Dispatch within 1 hr</div>
+            <div class="ts-transporter-tags">
+              <span class="ts-tag">Mini truck</span>
+              <span class="ts-tag">Pickup van</span>
+              <span class="ts-tag" style="background:#d8f0e0;color:#1a5e30;border-color:#5cb878">Available now</span>
+              <span class="ts-tag verified">✓ Verified partner</span>
+            </div>
+          </div>
+          <div class="ts-transporter-right">
+            <div class="ts-transporter-cap">20–80 qtl</div>
+            <button class="ts-btn-request" id="rbtn-0" onclick="togglePanel(0,'Mini truck')" aria-expanded="false" aria-controls="panel-0">Request Transport</button>
+          </div>
+        </div>
+        <div class="ts-inline-panel" id="panel-0" role="region" aria-label="Request panel for GreenRoute Logistics">
+          <div class="ts-inline-note">Transport request will be sent to <strong>GreenRoute Logistics</strong> for confirmation. They will respond within 30 minutes.</div>
+          <div class="ts-inline-grid">
+            <div class="ts-form-group"><label class="ts-form-label" for="tp0-from">Pickup Location (From)</label><input class="ts-form-input" id="tp0-from" type="text" placeholder="e.g. Rajesh Farm, Nashik"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp0-to">Drop Location (To)</label><input class="ts-form-input" id="tp0-to" type="text" placeholder="e.g. Lasalgaon Mandi"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp0-qty">Quantity</label><input class="ts-form-input" id="tp0-qty" type="number" placeholder="e.g. 80"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp0-veh">Vehicle Type</label><input class="ts-form-input" id="tp0-veh" type="text" value="Mini truck" readonly></div>
+          </div>
+          <div class="ts-inline-actions">
+            <button class="ts-btn-sm-neu" onclick="closePanel(0)">Cancel</button>
+            <button class="ts-btn-sm-sec" onclick="sendInlineRequest(0,'GreenRoute Logistics')">Send Request</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transporter 1: MahaFresh -->
+      <div class="ts-transporter-row" id="tp-row-1">
+        <div class="ts-transporter-main">
+          <div class="ts-transporter-icon" aria-hidden="true" style="background:var(--g5)">
+            <svg width="18" height="18" viewBox="0 0 20 18" fill="none"><rect x="1" y="7" width="10" height="8" rx="1.2" stroke="var(--od)" stroke-width="1.2"/><path d="M11 10h3l2.5 2v3H11v-5z" stroke="var(--od)" stroke-width="1.2" stroke-linejoin="round"/><circle cx="4" cy="15.5" r="1.3" fill="var(--od)"/><circle cx="13.5" cy="15.5" r="1.3" fill="var(--od)"/><path d="M1 7V4.5l5-3H11v5.5" stroke="var(--od)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ts-transporter-info">
+            <div class="ts-transporter-name">MahaFresh Transport Co.</div>
+            <div class="ts-transporter-meta">Nashik to Pune &amp; Delhi corridor · Large capacity fleet</div>
+            <div class="ts-transporter-tags">
+              <span class="ts-tag">14 ft truck</span>
+              <span class="ts-tag">Open-body carrier</span>
+              <span class="ts-tag busy">Available in 2 hrs</span>
+              <span class="ts-tag verified">✓ Verified partner</span>
+            </div>
+          </div>
+          <div class="ts-transporter-right">
+            <div class="ts-transporter-cap">50–140 qtl</div>
+            <button class="ts-btn-request" id="rbtn-1" onclick="togglePanel(1,'14 ft truck')" aria-expanded="false" aria-controls="panel-1">Request Transport</button>
+          </div>
+        </div>
+        <div class="ts-inline-panel" id="panel-1" role="region" aria-label="Request panel for MahaFresh Transport Co.">
+          <div class="ts-inline-note">Transport request will be sent to <strong>MahaFresh Transport Co.</strong> for confirmation. Ideal for long-haul and heavy loads.</div>
+          <div class="ts-inline-grid">
+            <div class="ts-form-group"><label class="ts-form-label" for="tp1-from">Pickup Location (From)</label><input class="ts-form-input" id="tp1-from" type="text" placeholder="e.g. Rajesh Farm, Nashik"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp1-to">Drop Location (To)</label><input class="ts-form-input" id="tp1-to" type="text" placeholder="e.g. Pune Market Yard / Delhi Fresh Mart"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp1-qty">Quantity</label><input class="ts-form-input" id="tp1-qty" type="number" placeholder="e.g. 100"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp1-veh">Vehicle Type</label><input class="ts-form-input" id="tp1-veh" type="text" value="14 ft truck" readonly></div>
+          </div>
+          <div class="ts-inline-actions">
+            <button class="ts-btn-sm-neu" onclick="closePanel(1)">Cancel</button>
+            <button class="ts-btn-sm-sec" onclick="sendInlineRequest(1,'MahaFresh Transport Co.')">Send Request</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transporter 2: Kisan Load -->
+      <div class="ts-transporter-row" id="tp-row-2">
+        <div class="ts-transporter-main">
+          <div class="ts-transporter-icon" aria-hidden="true" style="background:var(--g4)">
+            <svg width="18" height="18" viewBox="0 0 20 18" fill="none"><rect x="1" y="7" width="10" height="8" rx="1.2" stroke="var(--od)" stroke-width="1.2"/><path d="M11 10h3l2.5 2v3H11v-5z" stroke="var(--od)" stroke-width="1.2" stroke-linejoin="round"/><circle cx="4" cy="15.5" r="1.3" fill="var(--od)"/><circle cx="13.5" cy="15.5" r="1.3" fill="var(--od)"/><path d="M1 7V4.5l5-3H11v5.5" stroke="var(--od)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ts-transporter-info">
+            <div class="ts-transporter-name">Kisan Load Services</div>
+            <div class="ts-transporter-meta">Village pickup support · Nashik district &amp; nearby areas</div>
+            <div class="ts-transporter-tags">
+              <span class="ts-tag">Pickup van</span>
+              <span class="ts-tag">Mini truck</span>
+              <span class="ts-tag" style="background:#d8f0e0;color:#1a5e30;border-color:#5cb878">Priority support</span>
+              <span class="ts-tag verified">✓ Verified partner</span>
+            </div>
+          </div>
+          <div class="ts-transporter-right">
+            <div class="ts-transporter-cap">10–60 qtl</div>
+            <button class="ts-btn-request" id="rbtn-2" onclick="togglePanel(2,'Pickup van')" aria-expanded="false" aria-controls="panel-2">Request Transport</button>
+          </div>
+        </div>
+        <div class="ts-inline-panel" id="panel-2" role="region" aria-label="Request panel for Kisan Load Services">
+          <div class="ts-inline-note">Transport request will be sent to <strong>Kisan Load Services</strong> for confirmation. Specialises in farm-door pickup.</div>
+          <div class="ts-inline-grid">
+            <div class="ts-form-group"><label class="ts-form-label" for="tp2-from">Pickup Location (From)</label><input class="ts-form-input" id="tp2-from" type="text" placeholder="e.g. Village pack house, Nashik"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp2-to">Drop Location (To)</label><input class="ts-form-input" id="tp2-to" type="text" placeholder="e.g. Lasalgaon Mandi"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp2-qty">Quantity</label><input class="ts-form-input" id="tp2-qty" type="number" placeholder="e.g. 40"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp2-veh">Vehicle Type</label><input class="ts-form-input" id="tp2-veh" type="text" value="Pickup van" readonly></div>
+          </div>
+          <div class="ts-inline-actions">
+            <button class="ts-btn-sm-neu" onclick="closePanel(2)">Cancel</button>
+            <button class="ts-btn-sm-sec" onclick="sendInlineRequest(2,'Kisan Load Services')">Send Request</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transporter 3: ColdChain -->
+      <div class="ts-transporter-row" id="tp-row-3">
+        <div class="ts-transporter-main">
+          <div class="ts-transporter-icon" aria-hidden="true" style="background:#1a3fa8">
+            <svg width="18" height="18" viewBox="0 0 20 18" fill="none"><rect x="1" y="6" width="11" height="9" rx="1.2" stroke="#a0c4ff" stroke-width="1.2"/><path d="M12 10h3l2.5 2v3H12v-5z" stroke="#a0c4ff" stroke-width="1.2" stroke-linejoin="round"/><circle cx="4.5" cy="15.5" r="1.3" fill="#a0c4ff"/><circle cx="14" cy="15.5" r="1.3" fill="#a0c4ff"/><path d="M5 6V3.5a2 2 0 014 0V6" stroke="#a0c4ff" stroke-width="1.2"/></svg>
+          </div>
+          <div class="ts-transporter-info">
+            <div class="ts-transporter-name">ColdChain Agro Movers</div>
+            <div class="ts-transporter-meta">Perishable produce specialist · Nashik to Mumbai &amp; beyond</div>
+            <div class="ts-transporter-tags">
+              <span class="ts-tag cold">Refrigerated vehicle</span>
+              <span class="ts-tag busy">Available tomorrow</span>
+              <span class="ts-tag verified">✓ Verified partner</span>
+            </div>
+          </div>
+          <div class="ts-transporter-right">
+            <div class="ts-transporter-cap">20–50 qtl</div>
+            <button class="ts-btn-request" id="rbtn-3" onclick="togglePanel(3,'Refrigerated vehicle')" aria-expanded="false" aria-controls="panel-3">Request Transport</button>
+          </div>
+        </div>
+        <div class="ts-inline-panel" id="panel-3" role="region" aria-label="Request panel for ColdChain Agro Movers">
+          <div class="ts-inline-note">Transport request will be sent to <strong>ColdChain Agro Movers</strong> for confirmation. Ideal for temperature-sensitive &amp; perishable produce.</div>
+          <div class="ts-inline-grid">
+            <div class="ts-form-group"><label class="ts-form-label" for="tp3-from">Pickup Location (From)</label><input class="ts-form-input" id="tp3-from" type="text" placeholder="e.g. Village Pack House, Nashik"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp3-to">Drop Location (To)</label><input class="ts-form-input" id="tp3-to" type="text" placeholder="e.g. Mumbai Export Hub"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp3-qty">Quantity</label><input class="ts-form-input" id="tp3-qty" type="number" placeholder="e.g. 30"></div>
+            <div class="ts-form-group"><label class="ts-form-label" for="tp3-veh">Vehicle Type</label><input class="ts-form-input" id="tp3-veh" type="text" value="Refrigerated vehicle" readonly></div>
+          </div>
+          <div class="ts-inline-actions">
+            <button class="ts-btn-sm-neu" onclick="closePanel(3)">Cancel</button>
+            <button class="ts-btn-sm-sec" onclick="sendInlineRequest(3,'ColdChain Agro Movers')">Send Request</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </section>
+
+  <!-- SECTION 3: TRACKER -->
+  <section aria-labelledby="tracker-title">
+  <div class="ts-card">
+    <div class="ts-card-head">
+      <div class="ts-card-title" id="tracker-title">Transport Request Status</div>
+      <span style="font-size:10.5px;color:var(--g4)" id="tracker-count">3 requests</span>
+    </div>
+    <div class="ts-card-body" id="tracker-body">
+
+      <!-- Pending -->
+      <div class="ts-tracker-row" id="track-row-0">
+        <div class="ts-tracker-icon ic-pend" id="track-icon-0" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#b8860b" stroke-width="1.2"/><path d="M8 5v3.5l2 1.5" stroke="#b8860b" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="ts-tracker-content">
+          <div class="ts-tracker-title" id="track-title-0">GreenRoute Logistics</div>
+          <div class="ts-tracker-route" id="track-route-0">Rajesh Farm, Nashik → Lasalgaon Mandi</div>
+          <div class="ts-tracker-meta" id="track-meta-0">Wheat · 80 qtl · Awaiting confirmation from logistics partner</div>
+          <div class="ts-prog" id="track-prog-0" aria-label="Step 1 of 4: Request sent">
+            <div class="ts-prog-dot cu"></div><div class="ts-prog-line"></div>
+            <div class="ts-prog-dot"></div><div class="ts-prog-line"></div>
+            <div class="ts-prog-dot"></div><div class="ts-prog-line"></div>
+            <div class="ts-prog-dot"></div>
+          </div>
+          <div class="ts-prog-labels"><span class="ts-prog-lbl">Sent</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Viewed</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Confirmed</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Pickup</span></div>
+        </div>
+        <div class="ts-tracker-right">
+          <span class="ts-badge pend" id="track-badge-0">Request sent</span>
+          <button class="ts-sim-btn" onclick="simulateAcceptance()" title="Demo: Simulate transporter accepting this request">Simulate Acceptance ↗</button>
+        </div>
+      </div>
+
+      <!-- Accepted -->
+      <div class="ts-tracker-row">
+        <div class="ts-tracker-icon ic-acc" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2e7d44" stroke-width="1.2"/><path d="M5.5 8l2 2 3-3" stroke="#2e7d44" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ts-tracker-content">
+          <div class="ts-tracker-title">MahaFresh Transport Co.</div>
+          <div class="ts-tracker-route">Rajesh Farm, Nashik → Delhi Fresh Mart collection point</div>
+          <div class="ts-tracker-meta">Onion · 50 qtl · 14 ft truck · Pickup: Tomorrow, 7:30 AM · Transporter confirmed the transfer</div>
+          <div class="ts-prog" aria-label="Step 3 of 4: Confirmed">
+            <div class="ts-prog-dot dn"></div><div class="ts-prog-line dn"></div>
+            <div class="ts-prog-dot dn"></div><div class="ts-prog-line dn"></div>
+            <div class="ts-prog-dot cu"></div><div class="ts-prog-line"></div>
+            <div class="ts-prog-dot"></div>
+          </div>
+          <div class="ts-prog-labels"><span class="ts-prog-lbl">Sent</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Viewed</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Confirmed</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Pickup</span></div>
+        </div>
+        <div class="ts-tracker-right">
+          <span class="ts-badge acc">Accepted</span>
+          <div class="ts-tracker-cap">Truck cap: 100 qtl</div>
+        </div>
+      </div>
+
+      <!-- Scheduled -->
+      <div class="ts-tracker-row">
+        <div class="ts-tracker-icon ic-tr" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="8" width="8" height="6" rx="1" stroke="#1a3fa8" stroke-width="1.2"/><path d="M10 10h2.5l1.5 1.5v2.5H10v-4z" stroke="#1a3fa8" stroke-width="1.2" stroke-linejoin="round"/><circle cx="4" cy="14.5" r="1" fill="#1a3fa8"/><circle cx="11" cy="14.5" r="1" fill="#1a3fa8"/><path d="M2 8V5.5l4-3H10v5.5" stroke="#1a3fa8" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ts-tracker-content">
+          <div class="ts-tracker-title">ColdChain Agro Movers</div>
+          <div class="ts-tracker-route">Village Pack House → Mumbai Export Hub</div>
+          <div class="ts-tracker-meta">Grapes · 30 qtl · Refrigerated vehicle · Apr 11 · Morning · Temperature-controlled shipment booked</div>
+          <div class="ts-prog" aria-label="Step 4 of 4: Pickup scheduled">
+            <div class="ts-prog-dot dn"></div><div class="ts-prog-line dn"></div>
+            <div class="ts-prog-dot dn"></div><div class="ts-prog-line dn"></div>
+            <div class="ts-prog-dot dn"></div><div class="ts-prog-line dn"></div>
+            <div class="ts-prog-dot cu"></div>
+          </div>
+          <div class="ts-prog-labels"><span class="ts-prog-lbl">Sent</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Viewed</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Confirmed</span><span style="width:14px;display:inline-block"></span><span class="ts-prog-lbl">Pickup</span></div>
+        </div>
+        <div class="ts-tracker-right">
+          <span class="ts-badge tr">Scheduled</span>
+          <div class="ts-tracker-cap">Truck cap: 40 qtl</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </section>
+
+  <!-- SECTION 4: ACCEPTED DETAILS -->
+  <section aria-labelledby="details-title">
+  <div class="ts-card" id="accepted-card">
+    <div class="ts-card-head" style="background:var(--g8)">
+      <div>
+        <div class="ts-card-title" id="details-title" style="color:var(--od)">Accepted Transfer Details</div>
+        <div style="font-size:10.5px;color:var(--ods);margin-top:2px" id="det-subtitle">MahaFresh Transport Co. — Confirmed booking</div>
+      </div>
+      <span class="ts-badge acc" style="font-size:11px">Driver Confirmed</span>
+    </div>
+    <div class="ts-card-body">
+      <div class="ts-acceptance-banner" role="status">
+        <strong>Transfer accepted.</strong> This transfer has been accepted by the logistics provider. The vehicle will report at the pickup location as scheduled.
+      </div>
+      <div class="ts-detail-grid">
+        <div><div class="ts-detail-label">Transporter Name</div><div class="ts-detail-val" id="det-transporter">MahaFresh Transport Co.</div></div>
+        <div><div class="ts-detail-label">Route</div><div class="ts-detail-val" id="det-route">Rajesh Farm, Nashik → Delhi Fresh Mart</div></div>
+        <div><div class="ts-detail-label">Crop Being Carried</div><div class="ts-detail-val" id="det-crop">Onion</div></div>
+        <div><div class="ts-detail-label">Quantity Assigned</div><div class="ts-detail-val" id="det-qty">50 qtl</div></div>
+        <div><div class="ts-detail-label">Vehicle Type</div><div class="ts-detail-val" id="det-vehicle">14 ft truck</div></div>
+        <div><div class="ts-detail-label">Truck Max Capacity</div><div class="ts-detail-val" id="det-cap">100 qtl</div></div>
+        <div><div class="ts-detail-label">Pickup Date &amp; Time</div><div class="ts-detail-val" id="det-pickup">Tomorrow · 7:30 AM</div></div>
+        <div><div class="ts-detail-label">Driver Status</div><div class="ts-detail-val green" id="det-driver">✓ Confirmed</div></div>
+        <div><div class="ts-detail-label">Transfer Status</div><div class="ts-detail-val green" id="det-status">Ready for pickup</div></div>
+      </div>
+      <div class="ts-form-actions">
+        <button class="ts-btn-secondary" onclick="showToast('Redirecting to Orders…','')">View in Orders</button>
+        <button class="ts-btn-neutral" onclick="showToast('Transport slip downloading…','success')">Download Slip</button>
+      </div>
+    </div>
+  </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+// ---- PANEL ACCORDION ----
+let openPanelIdx = null;
+
+function togglePanel(idx, vehicleType) {
+  const panel = document.getElementById('panel-' + idx);
+  const btn = document.getElementById('rbtn-' + idx);
+  const isOpen = panel.classList.contains('open');
+
+  // Close any open panel
+  if (openPanelIdx !== null && openPanelIdx !== idx) {
+    const prev = document.getElementById('panel-' + openPanelIdx);
+    const prevBtn = document.getElementById('rbtn-' + openPanelIdx);
+    prev && prev.classList.remove('open');
+    if (prevBtn) { prevBtn.classList.remove('open-state'); prevBtn.textContent = 'Request Transport'; prevBtn.setAttribute('aria-expanded','false'); }
+    openPanelIdx = null;
+  }
+
+  if (isOpen) {
+    panel.classList.remove('open');
+    btn.classList.remove('open-state');
+    btn.textContent = 'Request Transport';
+    btn.setAttribute('aria-expanded','false');
+    openPanelIdx = null;
+  } else {
+    panel.classList.add('open');
+    btn.classList.add('open-state');
+    btn.textContent = 'Close ✕';
+    btn.setAttribute('aria-expanded','true');
+    openPanelIdx = idx;
+
+    // Autofill vehicle
+    const veh = document.getElementById('tp' + idx + '-veh');
+    if (veh) veh.value = vehicleType;
+
+    // Copy from main form if filled
+    const from = document.getElementById('pickup-location').value.trim();
+    const to = document.getElementById('drop-location').value.trim();
+    const qty = document.getElementById('quantity').value.trim();
+    const fromF = document.getElementById('tp' + idx + '-from');
+    const toF = document.getElementById('tp' + idx + '-to');
+    const qtyF = document.getElementById('tp' + idx + '-qty');
+    if (from && fromF && !fromF.value) fromF.value = from;
+    if (to && toF && !toF.value) toF.value = to;
+    if (qty && qtyF && !qtyF.value) qtyF.value = qty;
+  }
+}
+
+function closePanel(idx) {
+  const panel = document.getElementById('panel-' + idx);
+  const btn = document.getElementById('rbtn-' + idx);
+  panel && panel.classList.remove('open');
+  if (btn) { btn.classList.remove('open-state'); btn.textContent = 'Request Transport'; btn.setAttribute('aria-expanded','false'); }
+  if (openPanelIdx === idx) openPanelIdx = null;
+}
+
+// ---- INLINE SEND ----
+function sendInlineRequest(idx, name) {
+  closePanel(idx);
+  const from = document.getElementById('tp' + idx + '-from').value || '—';
+  const to = document.getElementById('tp' + idx + '-to').value || '—';
+  const qty = document.getElementById('tp' + idx + '-qty').value || '—';
+  addTrackerRow(name, from + ' → ' + to, '—', qty);
+  showToast('Request sent to ' + name + ' successfully.', 'success');
+}
+
+// ---- MAIN FORM ----
+function sendMainRequest() {
+  const fields = [
+    { id: 'pickup-location', err: 'err-pickup' },
+    { id: 'drop-location',   err: 'err-drop' },
+    { id: 'quantity',        err: 'err-qty' },
+    { id: 'pickup-date',     err: 'err-date' }
+  ];
+  let valid = true;
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    const err = document.getElementById(f.err);
+    if (!el.value.trim()) {
+      el.classList.add('error');
+      err.classList.add('show');
+      valid = false;
+    } else {
+      el.classList.remove('error');
+      err.classList.remove('show');
+    }
+  });
+
+  if (!valid) { showToast('Please fill all required fields.', ''); return; }
+
+  const from = document.getElementById('pickup-location').value;
+  const to = document.getElementById('drop-location').value;
+  const qty = document.getElementById('quantity').value;
+  const crop = document.getElementById('crop-name').value || 'Crop';
+  addTrackerRow('New Request', from + ' → ' + to, crop, qty + ' qtl');
+  showToast('Transport request sent successfully.', 'success');
+
+  const pc = document.getElementById('pending-count');
+  pc.textContent = (parseInt(pc.textContent) + 1) + ' active';
+}
+
+// ---- ADD TRACKER ROW ----
+function addTrackerRow(name, route, crop, qty) {
+  const body = document.getElementById('tracker-body');
+  const div = document.createElement('div');
+  div.className = 'ts-tracker-row';
+  div.style.animation = 'fadeIn .3s ease';
+  div.innerHTML = `
+    <div class="ts-tracker-icon ic-pend" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#b8860b" stroke-width="1.2"/><path d="M8 5v3.5l2 1.5" stroke="#b8860b" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="ts-tracker-content">
+      <div class="ts-tracker-title">${name}</div>
+      <div class="ts-tracker-route">${route}</div>
+      <div class="ts-tracker-meta">${crop} · ${qty} · Awaiting confirmation</div>
+      <div class="ts-prog">
+        <div class="ts-prog-dot cu"></div><div class="ts-prog-line"></div>
+        <div class="ts-prog-dot"></div><div class="ts-prog-line"></div>
+        <div class="ts-prog-dot"></div><div class="ts-prog-line"></div>
+        <div class="ts-prog-dot"></div>
+      </div>
+    </div>
+    <div class="ts-tracker-right"><span class="ts-badge pend">Request sent</span></div>`;
+  body.insertBefore(div, body.firstChild);
+  const tc = document.getElementById('tracker-count');
+  tc.textContent = (parseInt(tc.textContent) + 1) + ' requests';
+}
+
+// ---- SIMULATE ACCEPTANCE ----
+function simulateAcceptance() {
+  // Update tracker row 0
+  document.getElementById('track-icon-0').className = 'ts-tracker-icon ic-acc';
+  document.getElementById('track-icon-0').innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2e7d44" stroke-width="1.2"/><path d="M5.5 8l2 2 3-3" stroke="#2e7d44" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.getElementById('track-badge-0').className = 'ts-badge acc';
+  document.getElementById('track-badge-0').textContent = 'Accepted';
+  document.getElementById('track-meta-0').textContent = 'Wheat · 80 qtl · Mini truck · Transporter confirmed the transfer';
+
+  // Update progress dots
+  const prog = document.getElementById('track-prog-0');
+  const dots = prog.querySelectorAll('.ts-prog-dot');
+  const lines = prog.querySelectorAll('.ts-prog-line');
+  dots[0].className = 'ts-prog-dot dn';
+  dots[1].className = 'ts-prog-dot dn';
+  dots[2].className = 'ts-prog-dot cu';
+  dots[3].className = 'ts-prog-dot';
+  lines[0].className = 'ts-prog-line dn';
+  lines[1].className = 'ts-prog-line dn';
+  lines[2].className = 'ts-prog-line';
+
+  // Update details panel
+  document.getElementById('det-subtitle').textContent = 'GreenRoute Logistics — Confirmed booking';
+  document.getElementById('det-transporter').textContent = 'GreenRoute Logistics';
+  document.getElementById('det-route').textContent = 'Rajesh Farm, Nashik → Lasalgaon Mandi';
+  document.getElementById('det-crop').textContent = 'Wheat';
+  document.getElementById('det-qty').textContent = '80 qtl';
+  document.getElementById('det-vehicle').textContent = 'Mini truck';
+  document.getElementById('det-cap').textContent = '80 qtl';
+  document.getElementById('det-pickup').textContent = 'Today · On request';
+  document.getElementById('det-driver').textContent = '✓ Confirmed';
+  document.getElementById('det-status').textContent = 'Ready for pickup';
+
+  showToast('GreenRoute Logistics accepted the request!', 'success');
+}
+
+// ---- SUMMARY SYNC ----
+function updateSummary() {
+  const qty = parseInt(document.getElementById('quantity').value) || 80;
+  const vehicle = document.getElementById('vehicle-type').value;
+  const time = document.getElementById('pickup-time').value;
+  document.getElementById('sum-capacity').textContent = 'Up to ' + qty + ' qtl';
+  if (vehicle) document.getElementById('sum-vehicle').textContent = vehicle;
+  document.getElementById('sum-priority').textContent = time === 'Urgent' ? 'Urgent' : 'Same day';
+}
+
+// ---- CLEAR VALIDATION ----
+function clearErr(el, errId) {
+  el.classList.remove('error');
+  const err = document.getElementById(errId);
+  if (err) err.classList.remove('show');
+}
+
+// ---- SAVE DRAFT ----
+function saveDraft() {
+  showToast('Transport request draft saved.', '');
+}
+
+// ---- TOAST ----
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('ts-toast');
+  clearTimeout(toastTimer);
+  t.textContent = msg;
+  t.className = 'ts-toast' + (type ? ' ' + type : '') + ' show';
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
