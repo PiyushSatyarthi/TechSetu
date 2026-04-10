@@ -1,14 +1,16 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.py": {
-      "includeFiles": "{*.html,*.css,*.js}"
-    }
-  },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
