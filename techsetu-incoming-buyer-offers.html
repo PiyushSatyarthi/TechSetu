@@ -39,46 +39,62 @@ body{background:var(--bg-app);color:var(--tx);font-family:system-ui,-apple-syste
 
 /* ─── NAV ─── */
 .nav{
-  position:sticky;top:0;z-index:100;
   background:var(--nav);
-  display:flex;align-items:center;gap:0;
-  height:56px;padding:0 20px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.18);
+  height:54px;
+  display:flex;
+  align-items:center;
+  padding:0 24px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  border-bottom:1px solid #145214;
 }
-.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;margin-right:28px;flex-shrink:0}
-.nav-logo-icon{
-  width:32px;height:32px;background:var(--p);border-radius:8px;
-  display:flex;align-items:center;justify-content:center;font-size:17px;
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:32px;flex-shrink:0}
+.nav-logo-leaf{
+  width:10px;height:10px;
+  background:var(--ac3);
+  border-radius:50% 0 50% 0;
+  transform:rotate(45deg);
+  flex-shrink:0;
 }
-.nav-logo-text{font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:700;color:var(--nav-tx);letter-spacing:-0.3px}
-.nav-links{display:flex;align-items:center;gap:2px;flex:1}
+.nav-logo-text{font-family:Georgia,"Times New Roman",serif;font-size:17px;color:var(--nav-tx);letter-spacing:0.2px}
+.nav-links{display:flex;gap:2px;flex:1;overflow:hidden}
 .nav-link{
-  color:var(--nav-sub);font-size:13px;font-weight:500;text-decoration:none;
-  padding:6px 12px;border-radius:var(--r-sm);transition:background .18s,color .18s;white-space:nowrap;
+  color:var(--nav-sub);font-size:12.5px;text-decoration:none;
+  padding:5px 12px;border-radius:var(--r-sm);white-space:nowrap;
+  transition:color .15s,background .15s;
 }
 .nav-link:hover{background:var(--nav-hov);color:var(--nav-tx)}
-.nav-link.active{background:var(--nav-act);color:var(--nav-tx);font-weight:600}
+.nav-link.active{background:var(--nav-act);color:var(--nav-tx)}
 .nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
-.nav-bell{position:relative;cursor:pointer;color:var(--nav-sub);font-size:18px;padding:4px;border-radius:50%;transition:color .18s}
-.nav-bell:hover{color:var(--nav-tx)}
+.nav-bell{
+  width:32px;height:32px;
+  background:var(--nav-hov);
+  border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;cursor:pointer;
+}
 .nav-bell-dot{
-  position:absolute;top:2px;right:2px;
-  width:8px;height:8px;background:#FFC107;border-radius:50%;border:2px solid var(--nav);
+  position:absolute;top:6px;right:7px;
+  width:6px;height:6px;background:#FFD54F;border-radius:50%;border:1.5px solid var(--nav);
 }
 .nav-lang{
-  background:rgba(255,255,255,0.12);color:var(--nav-tx);border:1px solid rgba(255,255,255,0.2);
-  border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer;
-  transition:background .18s;
+  font-size:11px;color:var(--nav-sub);
+  border:1px solid #2E7D32;
+  border-radius:4px;
+  padding:3px 8px;cursor:pointer;
+  background:transparent;
 }
-.nav-lang:hover{background:rgba(255,255,255,0.2)}
 .nav-avatar{
-  width:32px;height:32px;border-radius:50%;
-  background:linear-gradient(135deg,var(--ac2),var(--p-hov));
+  width:32px;height:32px;
+  background:var(--nav-act);
+  border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:12px;font-weight:700;cursor:pointer;
-  border:2px solid rgba(255,255,255,0.25);transition:border-color .18s;
+  font-size:11px;font-weight:600;
+  color:var(--nav-tx);
+  border:1.5px solid var(--ac2);
+  cursor:pointer;
 }
-.nav-avatar:hover{border-color:rgba(255,255,255,0.55)}
 .nav-hamburger{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:6px}
 .nav-hamburger span{width:20px;height:2px;background:var(--nav-sub);border-radius:2px;transition:.2s}
 
@@ -381,24 +397,27 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:6px 0 1
 <!-- ─── NAV ─── -->
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <a class="nav-logo" href="techsetu_farmer_dashboard.html" aria-label="TechSetu home">
-    <div class="nav-logo-icon">🌿</div>
+    <span class="nav-logo-leaf"></span>
     <span class="nav-logo-text">TechSetu</span>
   </a>
   <div class="nav-links" role="menubar">
     <a class="nav-link" href="techsetu_farmer_dashboard.html" role="menuitem">Dashboard</a>
-    <a class="nav-link" href="#" role="menuitem">My Crops</a>
-    <a class="nav-link" href="techsetu-add-listing.html" role="menuitem">Add Listing</a>
+    <a class="nav-link" href="#" role="menuitem">My crops</a>
+    <a class="nav-link" href="techsetu-add-listing.html" role="menuitem">Add listing</a>
     <a class="nav-link active" href="techsetu-incoming-buyer-offers.html" role="menuitem">Orders</a>
     <a class="nav-link" href="techsetu-payment-history.html" role="menuitem">Payments</a>
-    <a class="nav-link" href="#" role="menuitem">Mandi Rates</a>
+    <a class="nav-link" href="#" role="menuitem">Mandi rates</a>
     <a class="nav-link" href="#" role="menuitem">Help</a>
   </div>
   <div class="nav-right">
     <div class="nav-bell" role="button" aria-label="Notifications" tabindex="0">
-      🔔
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#A5D6A7" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#A5D6A7" stroke-width="1.2" fill="none"/>
+      </svg>
       <span class="nav-bell-dot" aria-hidden="true"></span>
     </div>
-    <div class="nav-lang" role="button" tabindex="0" aria-label="Language selector">EN</div>
+    <div class="nav-lang" role="button" tabindex="0" aria-label="Language selector">हि | EN</div>
     <div class="nav-avatar" role="button" tabindex="0" aria-label="User profile">RS</div>
     <div class="nav-hamburger" role="button" aria-label="Toggle menu" tabindex="0" id="hamburger" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -407,11 +426,11 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:6px 0 1
 </nav>
 <div class="nav-mobile-panel" id="mobileNav" aria-label="Mobile navigation">
   <a class="nav-mobile-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
-  <a class="nav-mobile-link" href="#">My Crops</a>
-  <a class="nav-mobile-link" href="techsetu-add-listing.html">Add Listing</a>
+  <a class="nav-mobile-link" href="#">My crops</a>
+  <a class="nav-mobile-link" href="techsetu-add-listing.html">Add listing</a>
   <a class="nav-mobile-link active" href="techsetu-incoming-buyer-offers.html">Orders</a>
   <a class="nav-mobile-link" href="techsetu-payment-history.html">Payments</a>
-  <a class="nav-mobile-link" href="#">Mandi Rates</a>
+  <a class="nav-mobile-link" href="#">Mandi rates</a>
   <a class="nav-mobile-link" href="#">Help</a>
 </div>
 
