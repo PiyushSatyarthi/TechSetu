@@ -113,6 +113,7 @@ nav {
   color: var(--nav-tx);
   border: 1.5px solid var(--ac2);
   cursor: pointer;
+  font-family: inherit;
 }
 
 /*PAGE WRAP*/
@@ -428,6 +429,119 @@ nav {
   border-radius: 3px; padding: 1px 7px;
 }
 
+/* ── PROFILE MODAL ── */
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+.profile-overlay.open { display: flex; }
+.profile-sheet {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+.profile-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F0F4F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.profile-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  color: var(--tx);
+}
+.profile-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--tx-sub);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+.profile-body { padding: 16px; display: grid; gap: 12px; }
+.profile-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+  background: #FCFEFC;
+}
+.profile-card h3 {
+  font-size: 13px;
+  color: var(--tx-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 10px;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.pf-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--tx-sub);
+  margin-bottom: 4px;
+}
+.pf-field input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 10px;
+  font-size: 13px;
+  color: var(--tx);
+  outline: none;
+}
+.pf-field input:focus { border-color: var(--p); }
+.pf-field input:disabled { background: #F3F5F3; color: #7B7B7B; }
+.profile-phone-otp-row {
+  display: none;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-top: 10px;
+}
+.profile-phone-otp-row.show { display: grid; }
+.profile-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.profile-btn {
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 9px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.profile-btn.primary { background: var(--p); color: #fff; }
+.profile-btn.primary:hover { background: var(--p-hov); }
+.profile-btn.secondary { background: var(--white); color: var(--p); border: 1px solid var(--p); }
+.profile-btn.secondary:hover { background: var(--bg-mint); }
+.profile-btn.otp { background: var(--white); color: var(--p); border: 1px solid var(--ac1); }
+.profile-btn.otp:hover { background: var(--bg-mint); }
+.profile-btn.logout { background: #D64545; color: #fff; margin-left: auto; }
+.profile-btn.logout:hover { background: #B53A3A; }
+.profile-status {
+  min-height: 18px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.profile-status.error { color: #B23A3A; }
+.profile-status.success { color: #2E7D32; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .row-main { grid-template-columns: 1fr; }
@@ -441,6 +555,7 @@ nav {
   .greet { flex-direction: column; align-items: flex-start; gap: 10px; }
   .greet-right { flex-wrap: wrap; }
   .nav-links { display: none; }
+  .profile-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -472,7 +587,7 @@ nav {
       <div class="nav-bell-dot"></div>
     </div>
     <div class="nav-lang">हि | EN</div>
-    <div class="nav-avatar">RS</div>
+    <button class="nav-avatar" id="navAvatar" type="button" aria-label="Open profile" onclick="openProfileModal()">RS</button>
   </div>
 </nav>
 
@@ -844,8 +959,281 @@ nav {
 </main>
 </div>
 
+<div class="profile-overlay" id="profileOverlay" aria-hidden="true">
+  <div class="profile-sheet" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <div class="profile-head">
+      <div class="profile-title" id="profileTitle">Farmer Profile</div>
+      <button type="button" class="profile-close" aria-label="Close profile" onclick="closeProfileModal()">×</button>
+    </div>
+    <div class="profile-body">
+      <div class="profile-card">
+        <h3>Basic Information</h3>
+        <div class="profile-grid">
+          <div class="pf-field"><label for="pfFirstName">First Name</label><input id="pfFirstName" type="text" placeholder="First name"></div>
+          <div class="pf-field"><label for="pfLastName">Last Name</label><input id="pfLastName" type="text" placeholder="Last name"></div>
+          <div class="pf-field"><label for="pfPhone">Phone</label><input id="pfPhone" type="tel" placeholder="+91 98765 43210"></div>
+          <div class="pf-field"><label for="pfEmail">Email</label><input id="pfEmail" type="email" disabled></div>
+          <div class="pf-field"><label for="pfState">State / Region</label><input id="pfState" type="text" placeholder="Maharashtra"></div>
+          <div class="pf-field"><label for="pfCrop">Primary Crop</label><input id="pfCrop" type="text" placeholder="Wheat"></div>
+        </div>
+        <div class="profile-phone-otp-row" id="pfPhoneOtpRow">
+          <div class="pf-field"><label for="pfPhoneOtp">OTP for new number</label><input id="pfPhoneOtp" type="text" inputmode="numeric" maxlength="6" placeholder="Enter OTP"></div>
+          <button type="button" class="profile-btn otp" onclick="sendFarmerPhoneOtp()">Send OTP</button>
+        </div>
+        <div class="profile-status" id="profileOtpStatus"></div>
+        <div class="profile-actions" style="margin-top:10px">
+          <button type="button" class="profile-btn primary" onclick="saveFarmerProfile()">Save Profile</button>
+        </div>
+        <div class="profile-status" id="profileSaveStatus"></div>
+      </div>
+
+      <div class="profile-card">
+        <h3>Password Reset</h3>
+        <div class="profile-grid">
+          <div class="pf-field"><label for="pfCurrentPassword">Current Password</label><input id="pfCurrentPassword" type="password" placeholder="Current password"></div>
+          <div class="pf-field"><label for="pfNewPassword">New Password</label><input id="pfNewPassword" type="password" placeholder="New password"></div>
+        </div>
+        <div class="profile-actions" style="margin-top:10px">
+          <button type="button" class="profile-btn secondary" onclick="changeFarmerPassword()">Update Password</button>
+          <button type="button" class="profile-btn logout" onclick="logoutFarmer()">Logout</button>
+        </div>
+        <div class="profile-status" id="profilePasswordStatus"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var totalListings = 6, activeListings = 5, newThisWeek = 2;
+var API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+  ? 'http://127.0.0.1:8000'
+  : '';
+var profileLoaded = false;
+
+function getToken() {
+  return localStorage.getItem('token') || null;
+}
+
+function clearToken() {
+  localStorage.removeItem('token');
+}
+
+function authHeaders() {
+  var token = getToken();
+  var headers = {'Content-Type': 'application/json'};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  return headers;
+}
+
+function parseApiError(payload, fallback) {
+  var detail = payload && payload.detail;
+  if (typeof detail === 'string' && detail) return detail;
+  if (detail && typeof detail === 'object' && detail.detail) return detail.detail;
+  return fallback || 'Request failed';
+}
+
+async function apiGet(path) {
+  var res = await fetch(API_BASE + path, {method: 'GET', headers: authHeaders()});
+  var payload = await res.json().catch(function(){ return {detail: 'Something went wrong'}; });
+  if (!res.ok) {
+    var err = new Error(parseApiError(payload, 'Request failed'));
+    err.status = res.status;
+    throw err;
+  }
+  return payload;
+}
+
+async function apiPatch(path, body) {
+  var res = await fetch(API_BASE + path, {method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body)});
+  var payload = await res.json().catch(function(){ return {detail: 'Something went wrong'}; });
+  if (!res.ok) {
+    var err = new Error(parseApiError(payload, 'Request failed'));
+    err.status = res.status;
+    throw err;
+  }
+  return payload;
+}
+
+async function apiPost(path, body) {
+  var res = await fetch(API_BASE + path, {method: 'POST', headers: authHeaders(), body: JSON.stringify(body)});
+  var payload = await res.json().catch(function(){ return {detail: 'Something went wrong'}; });
+  if (!res.ok) {
+    var err = new Error(parseApiError(payload, 'Request failed'));
+    err.status = res.status;
+    throw err;
+  }
+  return payload;
+}
+
+function setProfileStatus(id, type, msg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'profile-status' + (type ? ' ' + type : '');
+  el.textContent = msg || '';
+}
+
+function isDashboardPhoneChanged() {
+  var phoneEl = document.getElementById('pfPhone');
+  if (!phoneEl) return false;
+  var current = (phoneEl.value || '').trim();
+  var original = (phoneEl.dataset.original || '').trim();
+  return !!current && current !== original;
+}
+
+function updateDashboardPhoneOtpUi() {
+  var row = document.getElementById('pfPhoneOtpRow');
+  var otpEl = document.getElementById('pfPhoneOtp');
+  if (!row || !otpEl) return;
+  if (isDashboardPhoneChanged()) {
+    row.classList.add('show');
+    return;
+  }
+  row.classList.remove('show');
+  otpEl.value = '';
+  setProfileStatus('profileOtpStatus', '', '');
+}
+
+function setAvatarInitials(firstName, lastName) {
+  var el = document.getElementById('navAvatar');
+  if (!el) return;
+  var f = (firstName || '').trim().charAt(0);
+  var l = (lastName || '').trim().charAt(0);
+  var initials = (f + l).toUpperCase();
+  el.textContent = initials || 'RS';
+}
+
+function fillProfileForm(profile) {
+  document.getElementById('pfFirstName').value = profile.first_name || '';
+  document.getElementById('pfLastName').value = profile.last_name || '';
+  document.getElementById('pfPhone').value = profile.phone || '';
+  document.getElementById('pfPhone').dataset.original = profile.phone || '';
+  document.getElementById('pfPhoneOtp').value = '';
+  document.getElementById('pfEmail').value = profile.email || '';
+  document.getElementById('pfState').value = profile.state || '';
+  document.getElementById('pfCrop').value = profile.primary_crop || '';
+  setAvatarInitials(profile.first_name || '', profile.last_name || '');
+  updateDashboardPhoneOtpUi();
+}
+
+async function loadFarmerProfile() {
+  setProfileStatus('profileSaveStatus', '', '');
+  setProfileStatus('profilePasswordStatus', '', '');
+  setProfileStatus('profileOtpStatus', '', '');
+  try {
+    var data = await apiGet('/auth/profile');
+    fillProfileForm((data && data.profile) || {});
+    profileLoaded = true;
+  } catch (err) {
+    profileLoaded = false;
+    if (err.status === 401 || err.status === 403) {
+      setProfileStatus('profileSaveStatus', 'error', 'Session expired. Please log in again.');
+      return;
+    }
+    setProfileStatus('profileSaveStatus', 'error', err.message || 'Could not load profile.');
+  }
+}
+
+async function sendFarmerPhoneOtp() {
+  var phone = (document.getElementById('pfPhone').value || '').trim();
+  if (!phone) {
+    setProfileStatus('profileOtpStatus', 'error', 'Enter new phone number first.');
+    return;
+  }
+  setProfileStatus('profileOtpStatus', '', '');
+  try {
+    var res = await apiPost('/auth/send-phone-otp', { phone: phone });
+    var hint = res && res.dev_mode ? ' (dev mode: use 666666)' : '';
+    setProfileStatus('profileOtpStatus', 'success', 'OTP sent' + hint);
+  } catch (err) {
+    setProfileStatus('profileOtpStatus', 'error', err.message || 'Could not send OTP.');
+  }
+}
+
+function openProfileModal() {
+  var overlay = document.getElementById('profileOverlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  loadFarmerProfile();
+}
+
+function closeProfileModal() {
+  var overlay = document.getElementById('profileOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+async function saveFarmerProfile() {
+  setProfileStatus('profileSaveStatus', '', '');
+  setProfileStatus('profileOtpStatus', '', '');
+  var payload = {
+    first_name: document.getElementById('pfFirstName').value.trim(),
+    last_name: document.getElementById('pfLastName').value.trim(),
+    phone: document.getElementById('pfPhone').value.trim(),
+    phone_otp: document.getElementById('pfPhoneOtp').value.trim(),
+    state: document.getElementById('pfState').value.trim(),
+    primary_crop: document.getElementById('pfCrop').value.trim()
+  };
+  if (!payload.first_name || !payload.last_name) {
+    setProfileStatus('profileSaveStatus', 'error', 'First and last name are required.');
+    return;
+  }
+  if (!payload.phone) {
+    setProfileStatus('profileSaveStatus', 'error', 'Phone number is required.');
+    return;
+  }
+  if (!payload.state || !payload.primary_crop) {
+    setProfileStatus('profileSaveStatus', 'error', 'State and primary crop are required for farmers.');
+    return;
+  }
+  if (isDashboardPhoneChanged() && !payload.phone_otp) {
+    setProfileStatus('profileSaveStatus', 'error', 'OTP verification is required for new phone number.');
+    return;
+  }
+  try {
+    await apiPatch('/auth/profile', payload);
+    document.getElementById('pfPhone').dataset.original = payload.phone;
+    document.getElementById('pfPhoneOtp').value = '';
+    updateDashboardPhoneOtpUi();
+    setAvatarInitials(payload.first_name, payload.last_name);
+    setProfileStatus('profileSaveStatus', 'success', 'Profile updated successfully.');
+    showToast('✅ Profile updated');
+  } catch (err) {
+    setProfileStatus('profileSaveStatus', 'error', err.message || 'Could not update profile.');
+  }
+}
+
+async function changeFarmerPassword() {
+  setProfileStatus('profilePasswordStatus', '', '');
+  var currentPassword = document.getElementById('pfCurrentPassword').value;
+  var newPassword = document.getElementById('pfNewPassword').value;
+  if (!currentPassword || !newPassword) {
+    setProfileStatus('profilePasswordStatus', 'error', 'Enter current and new password.');
+    return;
+  }
+  if (newPassword.length < 8) {
+    setProfileStatus('profilePasswordStatus', 'error', 'New password must be at least 8 characters.');
+    return;
+  }
+  try {
+    await apiPost('/auth/change-password', {current_password: currentPassword, new_password: newPassword});
+    document.getElementById('pfCurrentPassword').value = '';
+    document.getElementById('pfNewPassword').value = '';
+    setProfileStatus('profilePasswordStatus', 'success', 'Password updated successfully.');
+    showToast('✅ Password updated');
+  } catch (err) {
+    setProfileStatus('profilePasswordStatus', 'error', err.message || 'Could not update password.');
+  }
+}
+
+function logoutFarmer() {
+  clearToken();
+  localStorage.removeItem('techsetu_auth_state');
+  localStorage.removeItem('techsetu_home_role_badge');
+  closeProfileModal();
+  window.location.href = 'index.html';
+}
 
 function showToast(msg) {
   var t = document.getElementById('ts-toast');
@@ -898,6 +1286,13 @@ function esc(s) {
 }
 
 window.addEventListener('load', checkForNewListing);
+document.getElementById('pfPhone').addEventListener('input', updateDashboardPhoneOtpUi);
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeProfileModal();
+});
+document.getElementById('profileOverlay').addEventListener('click', function(e) {
+  if (e.target.id === 'profileOverlay') closeProfileModal();
+});
 </script>
 </body>
 </html>

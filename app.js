@@ -1864,6 +1864,28 @@ if(savedAuthState.currentLoginTab) currentLoginTab = savedAuthState.currentLogin
 
   const savedScreen = localStorage.getItem(SCREEN_STORAGE_KEY);
   if(savedScreen && savedScreen !== 'page-main' && document.getElementById(savedScreen)) {
+    if(savedScreen === 'screen-login') {
+      showScreen(savedScreen);
+      renderLoginScreen(currentRole || 'buyer');
+      return;
+    }
+
+    if(savedScreen === 'screen-google-phone-verify') {
+      const token = getToken();
+      if(!token) {
+        localStorage.removeItem(SCREEN_STORAGE_KEY);
+        showRoleSelect();
+        return;
+      }
+      try {
+        await ensureGooglePhoneVerified(currentRole || getCurrentAppRole());
+      } catch(_) {
+        localStorage.removeItem(SCREEN_STORAGE_KEY);
+        showRoleSelect();
+      }
+      return;
+    }
+
     if(savedScreen === 'screen-profile') {
       openProfile();
       return;
@@ -1893,7 +1915,6 @@ if(savedAuthState.currentLoginTab) currentLoginTab = savedAuthState.currentLogin
     }
 
     showScreen(savedScreen);
-    if(savedScreen === 'screen-login' && currentRole) renderLoginScreen(currentRole);
     if(savedScreen === 'screen-home') {
       renderProducts();
       applySavedHomeRoleBadge();

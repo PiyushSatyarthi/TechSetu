@@ -1,5 +1,14 @@
 {
   "version": 2,
+  "functions": {
+    "api/index.py": {
+      "includeFiles": [
+        "*.html",
+        "*.css",
+        "*.js"
+      ]
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

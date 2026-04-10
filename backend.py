@@ -60,6 +60,7 @@ twilio_client: Optional[TwilioClient] = (
 # keyed on phone_e164 for production multi-process safety.
 otp_send_timestamps: dict[str, int] = {}
 BASE_DIR = Path(__file__).resolve().parent
+ALLOWED_STATIC_EXTENSIONS = {".html", ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico"}
 
 app = FastAPI(title="TechSetu Backend")
 
@@ -1112,3 +1113,29 @@ def verify_payment(body: VerifyPaymentBody, request: Request) -> dict:
         return {"ok": True, "message": "Payment already verified."}
 
     return {"ok": True, "message": "Payment verified."}
+
+
+def _resolve_static_file(file_path: str) -> Path:
+    target = (BASE_DIR / file_path).resolve()
+    if target != BASE_DIR and BASE_DIR not in target.parents:
+        raise HTTPException(status_code=404, detail="Not Found")
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="Not Found")
+    if target.suffix.lower() not in ALLOWED_STATIC_EXTENSIONS:
+        raise HTTPException(status_code=404, detail="Not Found")
+    return target
+
+
+@app.get("/")
+def serve_root() -> FileResponse:
+    return FileResponse(_resolve_static_file("index.html"))
+
+
+@app.get("/{file_path:path}")
+def serve_frontend_file(file_path: str) -> FileResponse:
+    # Catch-all for static frontend files when deployment routes everything through this app.
+    # Existing API/auth routes above remain matched first.
+    clean_path = (file_path or "").lstrip("/")
+    if not clean_path:
+        return FileResponse(_resolve_static_file("index.html"))
+    return FileResponse(_resolve_static_file(clean_path))
