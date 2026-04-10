@@ -8,7 +8,7 @@ import hashlib
 import uuid
 from urllib.parse import urlencode
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import razorpay
 from fastapi import FastAPI, HTTPException, Response, Request
@@ -203,6 +203,15 @@ class VerifyPaymentBody(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
+
+
+class OfferActionBody(BaseModel):
+    offer_id: str = Field(min_length=3, max_length=64)
+    action: str = Field(pattern="^(accept|decline|counter)$")
+    counter_rate: Optional[float] = Field(default=None, gt=0)
+    counter_qty: Optional[float] = Field(default=None, gt=0)
+    note: Optional[str] = Field(default=None, max_length=500)
+    offer_snapshot: Optional[dict[str, Any]] = None
 
 
 class UpdateProfileBody(BaseModel):
@@ -1113,6 +1122,102 @@ def verify_payment(body: VerifyPaymentBody, request: Request) -> dict:
         return {"ok": True, "message": "Payment already verified."}
 
     return {"ok": True, "message": "Payment verified."}
+
+
+# ── 6. Farmer Offer Actions (accept/decline/counter) ──
+
+@app.post("/farmer/offers/action")
+def save_farmer_offer_action(body: OfferActionBody, request: Request) -> dict:
+    sess = _get_user_from_token(request)
+    action = body.action.strip().lower()
+
+    if action == "counter" and body.counter_rate is None:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "COUNTER_RATE_REQUIRED",
+                "detail": "counter_rate is required when action is 'counter'.",
+            },
+        )
+
+    action_row = {
+        "farmer_user_id": sess["uid"],
+        "offer_id": body.offer_id.strip(),
+        "action": action,
+        "counter_rate": body.counter_rate,
+        "counter_qty": body.counter_qty,
+        "note": body.note,
+        "offer_snapshot": body.offer_snapshot or {},
+    }
+
+    try:
+        insert_res = db_client().table("farmer_offer_actions").insert(action_row).execute()
+    except Exception as exc:
+        msg = str(exc).lower()
+        if "farmer_offer_actions" in msg and ("does not exist" in msg or "relation" in msg):
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error_code": "MISSING_DB_TABLE",
+                    "detail": "Table farmer_offer_actions is missing in Supabase. Create it in SQL Editor before using offer actions.",
+                },
+            ) from exc
+        raise HTTPException(status_code=500, detail="Failed to save offer action.") from exc
+
+    row = (insert_res.data or [{}])[0]
+    return {
+        "ok": True,
+        "message": "Offer action saved.",
+        "action": {
+            "offer_id": row.get("offer_id", action_row["offer_id"]),
+            "action": row.get("action", action_row["action"]),
+            "counter_rate": row.get("counter_rate", action_row["counter_rate"]),
+            "counter_qty": row.get("counter_qty", action_row["counter_qty"]),
+            "note": row.get("note", action_row["note"]),
+            "created_at": row.get("created_at"),
+        },
+    }
+
+
+@app.get("/farmer/offers/actions")
+def list_farmer_offer_actions(request: Request) -> dict:
+    sess = _get_user_from_token(request)
+    try:
+        res = (
+            db_client()
+            .table("farmer_offer_actions")
+            .select("offer_id, action, counter_rate, counter_qty, note, created_at")
+            .eq("farmer_user_id", sess["uid"])
+            .order("created_at", desc=True)
+            .limit(500)
+            .execute()
+        )
+    except Exception as exc:
+        msg = str(exc).lower()
+        if "farmer_offer_actions" in msg and ("does not exist" in msg or "relation" in msg):
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error_code": "MISSING_DB_TABLE",
+                    "detail": "Table farmer_offer_actions is missing in Supabase. Create it in SQL Editor before using offer actions.",
+                },
+            ) from exc
+        raise HTTPException(status_code=500, detail="Failed to fetch offer actions.") from exc
+
+    latest_by_offer: dict[str, dict[str, Any]] = {}
+    for row in (res.data or []):
+        offer_id = row.get("offer_id")
+        if not offer_id or offer_id in latest_by_offer:
+            continue
+        latest_by_offer[offer_id] = {
+            "action": row.get("action"),
+            "counter_rate": row.get("counter_rate"),
+            "counter_qty": row.get("counter_qty"),
+            "note": row.get("note"),
+            "created_at": row.get("created_at"),
+        }
+
+    return {"ok": True, "actions": latest_by_offer}
 
 
 def _resolve_static_file(file_path: str) -> Path:

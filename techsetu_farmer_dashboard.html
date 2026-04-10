@@ -753,9 +753,9 @@ nav {
           </div>
           <div class="offer-meta">Verified buyer · Pune · 4.8 ★ · Payment within 3 days</div>
           <div class="offer-actions">
-            <button class="btn-accept">Accept</button>
-            <button class="btn-counter">Counter</button>
-            <button class="btn-decline">Decline</button>
+            <button class="btn-accept" data-action="accept" data-offer-id="OFF-2081">Accept</button>
+            <button class="btn-counter" data-action="counter" data-offer-id="OFF-2081">Counter</button>
+            <button class="btn-decline" data-action="decline" data-offer-id="OFF-2081">Decline</button>
           </div>
         </div>
 
@@ -773,9 +773,9 @@ nav {
           </div>
           <div class="offer-meta">Individual buyer · Nashik · 4.2 ★</div>
           <div class="offer-actions">
-            <button class="btn-accept">Accept</button>
-            <button class="btn-counter">Counter</button>
-            <button class="btn-decline">Decline</button>
+            <button class="btn-accept" data-action="accept" data-offer-id="OFF-2084">Accept</button>
+            <button class="btn-counter" data-action="counter" data-offer-id="OFF-2084">Counter</button>
+            <button class="btn-decline" data-action="decline" data-offer-id="OFF-2084">Decline</button>
           </div>
         </div>
 
@@ -793,9 +793,9 @@ nav {
           </div>
           <div class="offer-meta">Export house · Mumbai · 4.9 ★ · Pickup arranged</div>
           <div class="offer-actions">
-            <button class="btn-accept">Accept</button>
-            <button class="btn-counter">Counter</button>
-            <button class="btn-decline">Decline</button>
+            <button class="btn-accept" data-action="accept" data-offer-id="OFF-2083">Accept</button>
+            <button class="btn-counter" data-action="counter" data-offer-id="OFF-2083">Counter</button>
+            <button class="btn-decline" data-action="decline" data-offer-id="OFF-2083">Decline</button>
           </div>
         </div>
 
@@ -1009,6 +1009,12 @@ var API_BASE = (window.location.hostname === '127.0.0.1' || window.location.host
   ? 'http://127.0.0.1:8000'
   : '';
 var profileLoaded = false;
+var dashboardOfferActions = {};
+var dashboardOfferSnapshots = {
+  'OFF-2081': {buyer: 'Bharat Agro Pvt Ltd', crop: 'Wheat', qty: 80, unit: 'qtl', rate: 2520, total: 201600, buyerType: 'Wholesaler', paymentMode: 'Bank transfer', location: 'Pune'},
+  'OFF-2084': {buyer: 'Ramesh Traders', crop: 'Onion', qty: 50, unit: 'qtl', rate: 1780, total: 89000, buyerType: 'Wholesaler', paymentMode: 'Bank transfer', location: 'Nashik'},
+  'OFF-2083': {buyer: 'FreshMart Exports', crop: 'Grapes', qty: 30, unit: 'qtl', rate: 5900, total: 177000, buyerType: 'Export house', paymentMode: 'Platform settlement', location: 'Mumbai'}
+};
 
 function getToken() {
   return localStorage.getItem('token') || null;
@@ -1244,6 +1250,130 @@ function showToast(msg) {
 
 function goAddListing() { window.location.href = 'techsetu-add-listing.html'; }
 
+function offerActionLabel(actionObj) {
+  if (!actionObj || !actionObj.action) return '';
+  if (actionObj.action === 'accept') return 'Accepted';
+  if (actionObj.action === 'decline') return 'Declined';
+  if (actionObj.action === 'counter') {
+    var rate = actionObj.counter_rate ? (' at ₹' + Number(actionObj.counter_rate).toLocaleString('en-IN')) : '';
+    return 'Counter sent' + rate;
+  }
+  return '';
+}
+
+function applyDashboardOfferState(offerId) {
+  var actionObj = dashboardOfferActions[offerId];
+  var label = offerActionLabel(actionObj);
+  var buttons = document.querySelectorAll('.offer-actions button[data-offer-id="' + offerId + '"]');
+  if (!buttons.length) return;
+
+  var finalState = actionObj && (actionObj.action === 'accept' || actionObj.action === 'decline');
+  buttons.forEach(function(btn) {
+    if (finalState) btn.setAttribute('disabled', 'disabled');
+    else btn.removeAttribute('disabled');
+  });
+
+  var actionsWrap = buttons[0].parentElement;
+  if (!actionsWrap) return;
+  var existing = actionsWrap.querySelector('.offer-action-note');
+  if (!label) {
+    if (existing) existing.remove();
+    return;
+  }
+  if (!existing) {
+    existing = document.createElement('div');
+    existing.className = 'offer-action-note';
+    existing.style.cssText = 'margin-top:6px;font-size:11px;font-weight:600;color:#616161';
+    actionsWrap.appendChild(existing);
+  }
+  existing.textContent = label;
+}
+
+async function loadDashboardOfferActions() {
+  try {
+    var res = await apiGet('/farmer/offers/actions');
+    var actions = (res && res.actions) || {};
+    Object.keys(actions).forEach(function(id) {
+      dashboardOfferActions[id] = actions[id];
+      applyDashboardOfferState(id);
+    });
+  } catch (err) {
+    if (err.status === 401 || err.status === 403) return;
+    showToast('⚠ Could not load saved offer actions');
+  }
+}
+
+async function persistDashboardOfferAction(offerId, action, extra) {
+  var snapshot = dashboardOfferSnapshots[offerId] || { offerId: offerId };
+  var payload = {
+    offer_id: offerId,
+    action: action,
+    offer_snapshot: snapshot
+  };
+  if (extra) {
+    Object.keys(extra).forEach(function(k) { payload[k] = extra[k]; });
+  }
+  var res = await apiPost('/farmer/offers/action', payload);
+  dashboardOfferActions[offerId] = (res && res.action) || payload;
+  applyDashboardOfferState(offerId);
+}
+
+async function handleDashboardOfferButton(btn) {
+  var offerId = btn.getAttribute('data-offer-id');
+  var action = btn.getAttribute('data-action');
+  if (!offerId || !action) return;
+
+  try {
+    if (action === 'counter') {
+      var snap = dashboardOfferSnapshots[offerId] || {};
+      var unit = snap.unit || 'qtl';
+      var defaultRate = snap.rate ? String(snap.rate) : '';
+      var rateInput = window.prompt('Enter counter rate (₹/' + unit + ')', defaultRate);
+      if (rateInput === null) return;
+      var rate = Number(rateInput);
+      if (!Number.isFinite(rate) || rate <= 0) {
+        showToast('⚠ Enter a valid counter rate');
+        return;
+      }
+      var defaultQty = snap.qty ? String(snap.qty) : '';
+      var qtyInput = window.prompt('Enter counter quantity in ' + unit + ' (optional)', defaultQty);
+      if (qtyInput === null) return;
+      var counterQty = null;
+      var raw = (qtyInput || '').trim();
+      if (raw !== '') {
+        var parsedQty = Number(raw);
+        if (!Number.isFinite(parsedQty) || parsedQty <= 0) {
+          showToast('⚠ Enter a valid quantity');
+          return;
+        }
+        counterQty = parsedQty;
+      }
+      await persistDashboardOfferAction(offerId, 'counter', {
+        counter_rate: rate,
+        counter_qty: counterQty,
+        note: 'Countered from dashboard at ₹' + rate
+      });
+      showToast('📝 Counter offer saved');
+      return;
+    }
+
+    await persistDashboardOfferAction(offerId, action, {});
+    if (action === 'accept') showToast('✅ Offer accepted and saved');
+    else if (action === 'decline') showToast('❌ Offer declined and saved');
+  } catch (err) {
+    showToast('⚠ ' + (err.message || 'Could not save offer action'));
+  }
+}
+
+function bindDashboardOfferButtons() {
+  document.querySelectorAll('.offer-actions button[data-action][data-offer-id]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.hasAttribute('disabled')) return;
+      handleDashboardOfferButton(btn);
+    });
+  });
+}
+
 function checkForNewListing() {
   var data = sessionStorage.getItem('ts_new_listing');
   if (!data) return;
@@ -1286,6 +1416,10 @@ function esc(s) {
 }
 
 window.addEventListener('load', checkForNewListing);
+window.addEventListener('load', function() {
+  bindDashboardOfferButtons();
+  loadDashboardOfferActions();
+});
 document.getElementById('pfPhone').addEventListener('input', updateDashboardPhoneOtpUi);
 window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeProfileModal();

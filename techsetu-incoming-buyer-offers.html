@@ -245,16 +245,22 @@ body{background:var(--bg-app);color:var(--tx);font-family:system-ui,-apple-syste
 .btn:active{transform:scale(0.97)}
 .btn-accept{background:var(--p);color:#fff;border-color:var(--p)}
 .btn-accept:hover{background:var(--p-hov);border-color:var(--p-hov)}
+.btn-counter{background:#fff;color:#7B5E00;border-color:#E6D58A}
+.btn-counter:hover{background:#FFF8E1;border-color:#D4B84A}
 .btn-decline{background:transparent;color:#C62828;border-color:#FFCDD2}
 .btn-decline:hover{background:#FCE4EC;border-color:#EF9A9A}
 .btn-breakdown{background:#fff;color:var(--p-hov);border-color:var(--ac1)}
 .btn-breakdown:hover{background:var(--bg-mint);border-color:var(--p)}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
 .btn-full{background:var(--p);color:#fff;border-color:var(--p);width:100%;justify-content:center;padding:10px 14px;font-size:14px}
 .btn-full:hover{background:var(--p-hov)}
+.btn-counter-full{background:#fff;color:#7B5E00;border-color:#E6D58A;width:100%;justify-content:center;padding:10px 14px;font-size:14px}
+.btn-counter-full:hover{background:#FFF8E1;border-color:#D4B84A}
 .btn-full-outline{background:#fff;color:var(--p-hov);border-color:var(--p);width:100%;justify-content:center;padding:10px 14px;font-size:14px}
 .btn-full-outline:hover{background:var(--bg-mint)}
 .btn-decline-full{background:#fff;color:#C62828;border-color:#FFCDD2;width:100%;justify-content:center;padding:10px 14px;font-size:14px}
 .btn-decline-full:hover{background:#FCE4EC;border-color:#EF9A9A}
+.offer-action-state{margin-bottom:10px;font-size:12px;color:var(--tx-sub);font-weight:600}
 
 /* ─── RIGHT PANEL ─── */
 .right-panel{display:flex;flex-direction:column;gap:14px;position:sticky;top:72px}
@@ -650,6 +656,133 @@ const offers = [
 
 let selectedId = "OFF-2081";
 let filteredOffers = [...offers];
+const offerActions = {};
+const API_BASE = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+  ? "http://127.0.0.1:8000"
+  : "";
+
+function getToken(){
+  return localStorage.getItem("token") || null;
+}
+
+function authHeaders(){
+  const headers={"Content-Type":"application/json"};
+  const token=getToken();
+  if(token) headers.Authorization=`Bearer ${token}`;
+  return headers;
+}
+
+function parseApiError(payload,fallback){
+  const detail=payload&&payload.detail;
+  if(typeof detail==="string"&&detail) return detail;
+  if(detail&&typeof detail==="object"&&detail.detail) return detail.detail;
+  return fallback||"Request failed";
+}
+
+async function apiRequest(path,method,body){
+  const res=await fetch(API_BASE+path,{method,headers:authHeaders(),body:body?JSON.stringify(body):undefined});
+  const payload=await res.json().catch(()=>({detail:"Something went wrong"}));
+  if(!res.ok){
+    const err=new Error(parseApiError(payload,"Request failed"));
+    err.status=res.status;
+    throw err;
+  }
+  return payload;
+}
+
+function actionLabel(state){
+  if(!state||!state.action) return "";
+  if(state.action==="accept") return "Accepted";
+  if(state.action==="decline") return "Declined";
+  if(state.action==="counter"){
+    const rate=state.counter_rate?` at ₹${Number(state.counter_rate).toLocaleString("en-IN")}`:"";
+    return `Counter sent${rate}`;
+  }
+  return "";
+}
+
+function offerSnapshot(o){
+  return {
+    buyer:o.buyer,
+    crop:o.crop,
+    qty:o.qty,
+    unit:o.unit,
+    rate:o.rate,
+    total:o.total,
+    paymentMode:o.paymentMode,
+    transport:o.transport,
+    location:o.location,
+    buyerType:o.buyerType
+  };
+}
+
+async function loadOfferActions(){
+  try{
+    const data=await apiRequest("/farmer/offers/actions","GET");
+    const actions=(data&&data.actions)||{};
+    Object.keys(actions).forEach(id=>{offerActions[id]=actions[id];});
+  }catch(err){
+    if(err.status===401||err.status===403){
+      showToast("⚠","Login required to save offer actions");
+      return;
+    }
+    showToast("⚠",err.message||"Could not load saved offer actions");
+  }
+}
+
+async function persistOfferAction(id,action,extra){
+  const o=offers.find(x=>x.id===id);
+  if(!o){
+    showToast("⚠","Offer not found");
+    return;
+  }
+  try{
+    const payload={
+      offer_id:id,
+      action,
+      offer_snapshot:offerSnapshot(o),
+      ...extra
+    };
+    const res=await apiRequest("/farmer/offers/action","POST",payload);
+    offerActions[id]=(res&&res.action)||{action,...extra};
+    renderOffers();
+    renderDetail();
+    if(action==="accept") showToast("✅","Offer accepted and saved");
+    else if(action==="decline") showToast("❌","Offer declined and saved");
+    else showToast("📝","Counter offer sent and saved");
+  }catch(err){
+    showToast("⚠",err.message||"Could not save offer action");
+  }
+}
+
+async function promptCounter(id){
+  const o=offers.find(x=>x.id===id);
+  if(!o) return;
+  const rateInput=window.prompt(`Enter counter rate (₹/${o.unit})`,String(o.rate));
+  if(rateInput===null) return;
+  const rate=Number(rateInput);
+  if(!Number.isFinite(rate)||rate<=0){
+    showToast("⚠","Enter a valid counter rate");
+    return;
+  }
+  const qtyInput=window.prompt(`Enter counter quantity in ${o.unit} (optional)`,String(o.qty));
+  if(qtyInput===null) return;
+  let counterQty=null;
+  const raw=(qtyInput||"").trim();
+  if(raw!==""){
+    const parsed=Number(raw);
+    if(!Number.isFinite(parsed)||parsed<=0){
+      showToast("⚠","Enter a valid quantity");
+      return;
+    }
+    counterQty=parsed;
+  }
+  await persistOfferAction(id,"counter",{
+    counter_rate:rate,
+    counter_qty:counterQty,
+    note:`Countered from UI at rate ₹${rate}`
+  });
+}
 
 // ─── REVIEW DOT COLOR ───
 function reviewDotStyle(o){
@@ -697,6 +830,9 @@ function renderOffers(){
 
   filteredOffers.forEach(o=>{
     const isSelected=o.id===selectedId;
+    const state=offerActions[o.id];
+    const stateText=actionLabel(state);
+    const isFinalAction=state&&(state.action==="accept"||state.action==="decline");
     const card=document.createElement("article");
     card.className=`offer-card${isSelected?" selected":""}`;
     card.setAttribute("role","listitem");
@@ -749,10 +885,12 @@ function renderOffers(){
         </div>
       </div>
       <div class="offer-card-actions">
-        <button class="btn btn-accept" data-action="accept" data-id="${o.id}" aria-label="Accept offer ${o.id}">✓ Accept</button>
-        <button class="btn btn-decline" data-action="decline" data-id="${o.id}" aria-label="Decline offer ${o.id}">✕ Decline</button>
+        <button class="btn btn-accept" data-action="accept" data-id="${o.id}" aria-label="Accept offer ${o.id}" ${isFinalAction?"disabled":""}>✓ Accept</button>
+        <button class="btn btn-counter" data-action="counter" data-id="${o.id}" aria-label="Counter offer ${o.id}" ${isFinalAction?"disabled":""}>↺ Counter</button>
+        <button class="btn btn-decline" data-action="decline" data-id="${o.id}" aria-label="Decline offer ${o.id}" ${isFinalAction?"disabled":""}>✕ Decline</button>
         <button class="btn btn-breakdown" data-action="breakdown" data-id="${o.id}" aria-label="View breakdown for ${o.id}">📊 Breakdown</button>
       </div>
+      ${stateText?`<div class="offer-action-state">${stateText}</div>`:""}
     `;
     list.appendChild(card);
     card.addEventListener("click",e=>{
@@ -772,8 +910,9 @@ function renderOffers(){
       e.stopPropagation();
       const action=btn.dataset.action;
       const id=btn.dataset.id;
-      if(action==="accept"){selectOffer(id);showToast("✅","Offer accepted successfully");}
-      else if(action==="decline"){selectOffer(id);showToast("❌","Offer declined");}
+      if(action==="accept"){selectOffer(id);persistOfferAction(id,"accept",{});}
+      else if(action==="decline"){selectOffer(id);persistOfferAction(id,"decline",{});}
+      else if(action==="counter"){selectOffer(id);promptCounter(id);}
       else if(action==="breakdown"){selectOffer(id);setTimeout(()=>{document.getElementById("breakdownCard").scrollIntoView({behavior:"smooth",block:"center"})},100);}
     });
   });
@@ -785,6 +924,9 @@ function renderDetail(){
   if(!o){document.getElementById("detailCard").innerHTML="";document.getElementById("breakdownCard").innerHTML="";return;}
 
   const finalReceivable=o.total-o.packaging-o.loading-o.transportCost-o.platformFee;
+  const state=offerActions[o.id];
+  const stateText=actionLabel(state);
+  const isFinalAction=state&&(state.action==="accept"||state.action==="decline");
 
   document.getElementById("detailCard").innerHTML=`
     <div class="detail-header">
@@ -876,10 +1018,12 @@ function renderDetail(){
 
     ${o.notes?`<div class="detail-notes">📝 ${o.notes}</div>`:""}
 
+    ${stateText?`<div class="offer-action-state">Current status: ${stateText}</div>`:""}
     <div class="detail-actions">
-      <button class="btn btn-full" data-action="accept-detail" aria-label="Accept this offer">✓ Accept Offer</button>
+      <button class="btn btn-full" data-action="accept-detail" aria-label="Accept this offer" ${isFinalAction?"disabled":""}>✓ Accept Offer</button>
+      <button class="btn btn-counter-full" data-action="counter-detail" aria-label="Send counter offer" ${isFinalAction?"disabled":""}>↺ Counter Offer</button>
       <button class="btn btn-full-outline" data-action="breakdown-detail" aria-label="View price breakdown">📊 View Full Breakdown</button>
-      <button class="btn btn-decline-full" data-action="decline-detail" aria-label="Decline this offer">✕ Decline Offer</button>
+      <button class="btn btn-decline-full" data-action="decline-detail" aria-label="Decline this offer" ${isFinalAction?"disabled":""}>✕ Decline Offer</button>
     </div>
   `;
 
@@ -926,8 +1070,9 @@ function renderDetail(){
   document.getElementById("detailCard").querySelectorAll("button[data-action]").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const a=btn.dataset.action;
-      if(a==="accept-detail") showToast("✅","Offer accepted successfully");
-      else if(a==="decline-detail") showToast("❌","Offer declined");
+      if(a==="accept-detail") persistOfferAction(o.id,"accept",{});
+      else if(a==="decline-detail") persistOfferAction(o.id,"decline",{});
+      else if(a==="counter-detail") promptCounter(o.id);
       else if(a==="breakdown-detail") document.getElementById("breakdownCard").scrollIntoView({behavior:"smooth",block:"center"});
     });
   });
@@ -999,8 +1144,13 @@ document.getElementById("hamburger").addEventListener("keydown",function(e){
 });
 
 // ─── INIT ───
-renderOffers();
-renderDetail();
+async function initOffersPage(){
+  await loadOfferActions();
+  renderOffers();
+  renderDetail();
+}
+
+initOffersPage();
 </script>
 <script src="farmer-profile.js"></script>
 </body>

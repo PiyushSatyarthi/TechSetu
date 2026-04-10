@@ -369,14 +369,17 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
               <div class="field">
                 <label>Harvest date <span class="req">*</span></label>
                 <input type="date" id="harvestDate">
+                <div class="field-error">Select a valid harvest date</div>
               </div>
               <div class="field">
                 <label>Available from</label>
                 <input type="date" id="availFrom">
+                <div class="field-error">Available from cannot be before harvest date</div>
               </div>
               <div class="field">
                 <label>Available until</label>
                 <input type="date" id="availTo">
+                <div class="field-error">Available until cannot be before available from</div>
               </div>
             </div>
             <div class="row2">
@@ -546,6 +549,94 @@ var selectedGrade = '';
 var photoCount = 0;
 var listingSeq = 31;
 
+function todayIso() {
+  var now = new Date();
+  var tzShift = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - tzShift).toISOString().slice(0, 10);
+}
+
+function parseDateOnly(value) {
+  if (!value) return null;
+  var d = new Date(value + 'T00:00:00');
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function setDateFieldError(id, msg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var parent = el.closest('.field');
+  if (!parent) return;
+  var err = parent.querySelector('.field-error');
+  if (err && msg) err.textContent = msg;
+  if (msg) parent.classList.add('error');
+  else parent.classList.remove('error');
+}
+
+function updateDateConstraints() {
+  var harvestEl = document.getElementById('harvestDate');
+  var availFromEl = document.getElementById('availFrom');
+  var availToEl = document.getElementById('availTo');
+  if (!harvestEl || !availFromEl || !availToEl) return;
+
+  var today = todayIso();
+  harvestEl.max = today;
+
+  var harvestVal = harvestEl.value;
+  availFromEl.min = harvestVal || '';
+  availToEl.min = availFromEl.value || harvestVal || '';
+}
+
+function validateDateFields() {
+  var ok = true;
+  var harvestVal = document.getElementById('harvestDate').value;
+  var availFromVal = document.getElementById('availFrom').value;
+  var availToVal = document.getElementById('availTo').value;
+
+  var harvestDate = parseDateOnly(harvestVal);
+  var availFromDate = parseDateOnly(availFromVal);
+  var availToDate = parseDateOnly(availToVal);
+  var today = parseDateOnly(todayIso());
+
+  setDateFieldError('harvestDate', '');
+  setDateFieldError('availFrom', '');
+  setDateFieldError('availTo', '');
+
+  if (!harvestDate) {
+    setDateFieldError('harvestDate', 'Harvest date is required');
+    ok = false;
+  } else if (harvestDate > today) {
+    setDateFieldError('harvestDate', 'Harvest date cannot be in the future');
+    ok = false;
+  }
+
+  if (availFromVal && !availFromDate) {
+    setDateFieldError('availFrom', 'Select a valid available-from date');
+    ok = false;
+  }
+
+  if (availToVal && !availToDate) {
+    setDateFieldError('availTo', 'Select a valid available-until date');
+    ok = false;
+  }
+
+  if (harvestDate && availFromDate && availFromDate < harvestDate) {
+    setDateFieldError('availFrom', 'Available from cannot be before harvest date');
+    ok = false;
+  }
+
+  if (harvestDate && availToDate && availToDate < harvestDate) {
+    setDateFieldError('availTo', 'Available until cannot be before harvest date');
+    ok = false;
+  }
+
+  if (availFromDate && availToDate && availToDate < availFromDate) {
+    setDateFieldError('availTo', 'Available until cannot be before available from');
+    ok = false;
+  }
+
+  return ok;
+}
+
 function selectGrade(val, el) {
   selectedGrade = val;
   document.getElementById('gradeVal').value = val;
@@ -624,6 +715,7 @@ function validate() {
       parent.classList.remove('error');
     }
   });
+  if (!validateDateFields()) ok = false;
   return ok;
 }
 
@@ -663,6 +755,21 @@ function formatAmt(n) {
   if (n >= 1000) { var s = Math.round(n).toString(); return s.length <= 5 ? s.slice(0,s.length-3)+','+s.slice(s.length-3) : s.slice(0,s.length-5)+','+s.slice(s.length-5,s.length-3)+','+s.slice(s.length-3); }
   return Math.round(n).toString();
 }
+
+['harvestDate', 'availFrom', 'availTo'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('change', function() {
+    updateDateConstraints();
+    validateDateFields();
+  });
+  el.addEventListener('input', function() {
+    updateDateConstraints();
+    validateDateFields();
+  });
+});
+
+updateDateConstraints();
 </script>
 <script src="farmer-profile.js"></script>
 </body>
