@@ -178,6 +178,37 @@
   </div>
 </div>
 
+<!-- ══ SCREEN: RECOVERY RESET PASSWORD ══ -->
+<div class="screen" id="screen-recovery-reset">
+  <div class="login-wrap recovery-wrap">
+    <div class="login-left buyer-theme recovery-left">
+      <button class="login-back" onclick="showRoleSelect()">← Back</button>
+      <span class="login-role-badge">🔐 PASSWORD RESET</span>
+      <div class="login-title">Set a new password</div>
+      <div class="login-sub">Choose a strong password for your account.</div>
+      <div class="lf"><label>New Password</label><input id="recovery-new-password" type="password" placeholder="••••••••" /></div>
+      <div class="lf"><label>Confirm New Password</label><input id="recovery-confirm-password" type="password" placeholder="••••••••" /></div>
+      <button class="login-btn" onclick="submitRecoveryPasswordReset()">Update Password →</button>
+      <div class="recovery-inline-status" id="recovery-inline-status"></div>
+    </div>
+    <div class="login-right buyer-right">
+      <div class="login-right-title">Secure your account,<br/>then sign in again.</div>
+      <div class="login-right-sub">This link is meant only for resetting your password. Once updated, you can log in normally.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: GOOGLE SIGNUP PHONE VERIFY ══ -->
+<div class="screen" id="screen-google-phone-verify">
+  <div class="login-wrap google-phone-wrap">
+    <div class="login-left buyer-theme google-phone-left" id="google-phone-left"></div>
+    <div class="login-right buyer-right">
+      <div class="login-right-title">One final step,<br/>verify your phone.</div>
+      <div class="login-right-sub">Phone verification is required to activate your TechSetu account and keep buyer-farmer interactions trusted.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ SCREEN: BUYER TYPE ══ -->
 <div class="screen" id="screen-buyer-type">
   <div style="width:100%;max-width:960px;padding:40px 24px;display:flex;flex-direction:column;align-items:center">

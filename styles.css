@@ -234,6 +234,17 @@ footer{background:var(--green);color:rgba(255,255,255,.7);padding:32px 40px;disp
 .farmer-theme .login-inline-status{color:rgba(255,255,255,.7)}
 .login-inline-status.error{color:#d64545}
 .login-inline-status.success{color:var(--green-light)}
+.otp-action-btn{padding:10px 14px;background:rgba(255,255,255,.12);color:inherit;border:1px solid rgba(255,255,255,.2);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.simple-inline-status{min-height:16px;font-size:12px;margin-top:4px;color:var(--text-mid)}
+.simple-inline-status.error{color:#d64545}
+.simple-inline-status.success{color:var(--green-mid)}
+.recovery-inline-status{min-height:16px;font-size:12px;margin-top:10px;color:var(--text-mid)}
+.recovery-inline-status.error{color:#d64545}
+.recovery-inline-status.success{color:var(--green-mid)}
+.recovery-wrap{max-width:760px}
+.recovery-left{min-height:420px}
+.google-phone-wrap{max-width:860px}
+.google-phone-left{min-height:520px}
 .login-right {
   padding: 48px 40px;
   display: flex;
@@ -530,6 +541,8 @@ footer{background:var(--green);color:rgba(255,255,255,.7);padding:32px 40px;disp
 .profile-field input:disabled{background:#f4f7f9;color:#7a8c99;cursor:not-allowed}
 .profile-field input.has-error{border-color:#d64545;background:#fff7f7}
 .field-error{min-height:14px;font-size:11px;color:#d64545;margin-top:4px}
+.profile-phone-otp-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.profile-otp-btn{height:40px}
 .inline-status{min-height:16px;font-size:12px;margin-top:8px}
 .inline-status.error{color:#d64545}
 .inline-status.success{color:var(--green-mid)}
@@ -571,7 +584,10 @@ footer{background:var(--green);color:rgba(255,255,255,.7);padding:32px 40px;disp
   .login-wrap{grid-template-columns:1fr;border-radius:16px}
   .login-right{display:none}
   .login-left{padding:36px 24px 48px}
+  .recovery-left{min-height:auto}
+  .google-phone-left{min-height:auto}
   .btype-cards{grid-template-columns:1fr}
+  .profile-phone-otp-row{grid-template-columns:1fr}
   .profile-grid{grid-template-columns:1fr}
 }
 @media(max-width:768px){

@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from twilio.rest import Client as TwilioClient
 
 
 load_dotenv()
@@ -28,6 +29,10 @@ SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_VERIFY_SERVICE_SID = os.getenv("TWILIO_VERIFY_SERVICE_SID", "")
+OTP_RESEND_COOLDOWN_SECONDS = 60
 
 DEV_OTP = "666666"
 
@@ -43,6 +48,12 @@ supabase_admin: Optional[Client] = (
     else None
 )
 rzp_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+twilio_client: Optional[TwilioClient] = (
+    TwilioClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID
+    else None
+)
+otp_send_timestamps: dict[str, int] = {}
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="TechSetu Backend")
@@ -95,6 +106,7 @@ class SignupBody(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=64)
     phone: str = Field(min_length=10, max_length=20)
+    otp: str = Field(min_length=4, max_length=10)
     state: Optional[str] = None
     primary_crop: Optional[str] = None
     organisation: Optional[str] = None
@@ -130,6 +142,29 @@ class VerifyPhoneBody(BaseModel):
     otp: str
 
 
+class SendPhoneOtpBody(BaseModel):
+    phone: str
+
+
+class GoogleCompleteSignupBody(BaseModel):
+    role: str = Field(pattern="^(buyer|farmer)$")
+    first_name: str = Field(min_length=2, max_length=50)
+    last_name: str = Field(min_length=1, max_length=50)
+    phone: str = Field(min_length=10, max_length=20)
+    otp: str = Field(min_length=4, max_length=10)
+    state: Optional[str] = None
+    primary_crop: Optional[str] = None
+    organisation: Optional[str] = None
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not re.fullmatch(r"^\+?[0-9\s-]{10,20}$", cleaned):
+            raise ValueError("Invalid phone number format.")
+        return cleaned
+
+
 class GoogleOAuthStartBody(BaseModel):
     role: str = Field(default="buyer", pattern="^(buyer|farmer)$")
 
@@ -159,6 +194,7 @@ class UpdateProfileBody(BaseModel):
     first_name: str = Field(min_length=2, max_length=50)
     last_name: str = Field(min_length=1, max_length=50)
     phone: str = Field(min_length=10, max_length=20)
+    phone_otp: Optional[str] = Field(default=None, min_length=4, max_length=10)
     state: Optional[str] = None
     primary_crop: Optional[str] = None
     organisation: Optional[str] = None
@@ -199,9 +235,106 @@ def _get_user_from_token(request: Request) -> dict:
         user_res = auth_client().auth.get_user(token)
         if not user_res or not user_res.user:
             raise HTTPException(status_code=401, detail="Invalid or expired token.")
-        return {"uid": user_res.user.id, "email": user_res.user.email}
+        return {
+            "uid": user_res.user.id,
+            "email": user_res.user.email,
+            "user_metadata": user_res.user.user_metadata or {},
+            "token": token,
+        }
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+
+def normalize_phone(phone: str) -> str:
+    cleaned = re.sub(r"[\s()-]", "", phone.strip())
+    if not cleaned.startswith("+"):
+        if re.fullmatch(r"\d{10}", cleaned):
+            cleaned = f"+91{cleaned}"
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "INVALID_PHONE",
+                    "detail": "Use a valid mobile number with country code.",
+                },
+            )
+    if not re.fullmatch(r"^\+[1-9]\d{9,14}$", cleaned):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "INVALID_PHONE",
+                "detail": "Use a valid mobile number in E.164 format.",
+            },
+        )
+    return cleaned
+
+
+def _assert_phone_otp(phone: str, otp: str) -> str:
+    phone_e164 = normalize_phone(phone)
+    if twilio_client:
+        try:
+            check = twilio_client.verify.v2.services(TWILIO_VERIFY_SERVICE_SID).verification_checks.create(
+                to=phone_e164,
+                code=otp.strip(),
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "INVALID_OTP",
+                    "detail": "Invalid OTP. Please try again.",
+                },
+            ) from exc
+        if str(getattr(check, "status", "")).lower() != "approved":
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "INVALID_OTP",
+                    "detail": "Invalid OTP. Please try again.",
+                },
+            )
+    else:
+        if otp.strip() != DEV_OTP:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "INVALID_OTP",
+                    "detail": "Invalid OTP. Please try again.",
+                },
+            )
+    return phone_e164
+
+
+def _is_email_registered(email: str) -> bool:
+    if not supabase_admin:
+        return False
+    normalized_email = email.strip().lower()
+    page = 1
+    per_page = 200
+    max_pages = 30
+    for _ in range(max_pages):
+        try:
+            users_page = supabase_admin.auth.admin.list_users(page=page, per_page=per_page)
+        except TypeError:
+            # SDK fallback without pagination parameters.
+            users_page = supabase_admin.auth.admin.list_users()
+        users = []
+        if hasattr(users_page, "users") and users_page.users:
+            users = users_page.users
+        elif hasattr(users_page, "data") and users_page.data:
+            users = users_page.data
+
+        found = any(
+            (getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None) or "").strip().lower() == normalized_email
+            for user in users
+        )
+        if found:
+            return True
+
+        if len(users) < per_page:
+            return False
+        page += 1
+    return False
 
 
 # ─── ROUTES ───
@@ -236,19 +369,76 @@ def app_transport() -> FileResponse:
     return FileResponse(BASE_DIR / "request-transport.html")
 
 
-# ── 1. Phone OTP verification (dev mode) ──
+# ── 1. Phone OTP send/verify (Twilio Verify + dev fallback) ──
+
+@app.post("/auth/send-phone-otp")
+def send_phone_otp(body: SendPhoneOtpBody) -> dict:
+    phone_e164 = normalize_phone(body.phone)
+    now_ts = int(time.time())
+    last_sent_ts = otp_send_timestamps.get(phone_e164, 0)
+    elapsed = now_ts - last_sent_ts
+    if elapsed < OTP_RESEND_COOLDOWN_SECONDS:
+        retry_after = OTP_RESEND_COOLDOWN_SECONDS - elapsed
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "error_code": "OTP_SEND_RATE_LIMIT",
+                "detail": f"Please wait {retry_after}s before requesting another OTP.",
+                "retry_after_seconds": retry_after,
+            },
+        )
+    if twilio_client:
+        try:
+            twilio_client.verify.v2.services(TWILIO_VERIFY_SERVICE_SID).verifications.create(
+                to=phone_e164,
+                channel="sms",
+            )
+        except Exception as exc:
+            error_text = str(exc).lower()
+            if (
+                "60203" in error_text
+                or "20429" in error_text
+                or "max send attempts" in error_text
+                or "too many requests" in error_text
+            ):
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error_code": "OTP_SEND_RATE_LIMIT",
+                        "detail": "OTP request limit reached. Please wait before trying again.",
+                    },
+                ) from exc
+            if "60200" in error_text or "not a valid" in error_text:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error_code": "INVALID_PHONE",
+                        "detail": "Use a valid mobile number in E.164 format.",
+                    },
+                ) from exc
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "OTP_SEND_FAILED",
+                    "detail": "Unable to send OTP right now. Please try again.",
+                },
+            ) from exc
+    otp_send_timestamps[phone_e164] = now_ts
+    return {
+        "ok": True,
+        "message": "OTP sent.",
+        "dev_mode": twilio_client is None,
+        "dev_hint": "Use 666666 in dev mode." if twilio_client is None else None,
+    }
+
 
 @app.post("/auth/verify-phone")
 def verify_phone(body: VerifyPhoneBody) -> dict:
-    if body.otp != DEV_OTP:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error_code": "INVALID_OTP",
-                "detail": "Invalid OTP. Please try again.",
-            },
-        )
-    return {"ok": True, "message": "Phone verified."}
+    _assert_phone_otp(body.phone, body.otp)
+    return {
+        "ok": True,
+        "message": "Phone verified.",
+    }
 
 
 # ── Signup ──
@@ -272,11 +462,22 @@ def signup(body: SignupBody) -> dict:
             },
         )
 
+    if _is_email_registered(str(body.email)):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error_code": "EMAIL_ALREADY_REGISTERED",
+                "detail": "This email is already registered. Please sign in instead.",
+            },
+        )
+
+    normalized_phone = _assert_phone_otp(body.phone, body.otp)
+
     metadata = {
         "role": body.role,
         "first_name": body.first_name.strip(),
         "last_name": body.last_name.strip(),
-        "phone": body.phone.strip(),
+        "phone": normalized_phone,
     }
     try:
         auth_res = auth_client().auth.sign_up(
@@ -331,7 +532,7 @@ def signup(body: SignupBody) -> dict:
         "role": body.role,
         "first_name": body.first_name.strip(),
         "last_name": body.last_name.strip(),
-        "phone": body.phone.strip(),
+        "phone": normalized_phone,
         "state": (body.state or "").strip(),
         "primary_crop": (body.primary_crop or "").strip(),
         "organisation": (body.organisation or "").strip(),
@@ -441,6 +642,50 @@ def logout() -> dict:
 
 @app.post("/auth/forgot-password")
 def forgot_password(body: ForgotPasswordBody, request: Request) -> dict:
+    if not supabase_admin:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "PASSWORD_RESET_UNAVAILABLE",
+                "detail": (
+                    "Password reset verification is unavailable. "
+                    "Configure SUPABASE_SERVICE_ROLE_KEY."
+                ),
+            },
+        )
+
+    normalized_email = str(body.email).strip().lower()
+    try:
+        users_page = supabase_admin.auth.admin.list_users()
+        users = []
+        if hasattr(users_page, "users") and users_page.users:
+            users = users_page.users
+        elif hasattr(users_page, "data") and users_page.data:
+            users = users_page.data
+
+        is_registered = any(
+            (getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None) or "").strip().lower() == normalized_email
+            for user in users
+        )
+        if not is_registered:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error_code": "PASSWORD_RESET_EMAIL_NOT_REGISTERED",
+                    "detail": "No account found with this email.",
+                },
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "PASSWORD_RESET_CHECK_FAILED",
+                "detail": "Could not verify whether this email is registered.",
+            },
+        ) from exc
+
     origin = request.headers.get("origin") or APP_ORIGIN
     fallback_role = body.role or "buyer"
     redirect_to = body.redirect_to or f"{origin.rstrip('/')}/index.html?oauth_role={fallback_role}"
@@ -541,6 +786,61 @@ def google_oauth_exchange(body: GoogleOAuthExchangeBody) -> dict:
     }
 
 
+@app.post("/auth/google/complete-signup")
+def google_complete_signup(body: GoogleCompleteSignupBody, request: Request) -> dict:
+    session = _get_user_from_token(request)
+
+    if body.role == "farmer" and (not body.state or not body.primary_crop):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "MISSING_FARMER_FIELDS",
+                "detail": "State and primary crop are required for farmers.",
+            },
+        )
+    if body.role == "buyer" and not body.organisation:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "MISSING_BUYER_ORGANISATION",
+                "detail": "Organisation is required for buyers.",
+            },
+        )
+
+    normalized_phone = _assert_phone_otp(body.phone, body.otp)
+
+    profile_row = {
+        "id": session["uid"],
+        "role": body.role,
+        "first_name": body.first_name.strip(),
+        "last_name": body.last_name.strip(),
+        "phone": normalized_phone,
+        "state": (body.state or "").strip(),
+        "primary_crop": (body.primary_crop or "").strip(),
+        "organisation": (body.organisation or "").strip(),
+    }
+    try:
+        db_client().table("profiles").upsert(profile_row, on_conflict="id").execute()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "GOOGLE_SIGNUP_PROFILE_WRITE_FAILED",
+                "detail": "Unable to complete Google signup profile.",
+            },
+        ) from exc
+
+    return {
+        "ok": True,
+        "profile": {
+            "id": session["uid"],
+            "email": session.get("email"),
+            "role": body.role,
+            "phone": normalized_phone,
+        },
+    }
+
+
 @app.get("/auth/me")
 def me(request: Request) -> dict:
     session = _get_user_from_token(request)
@@ -568,6 +868,15 @@ def get_profile(request: Request) -> dict:
     except HTTPException:
         raise
     except Exception as exc:
+        message = str(exc)
+        if "PGRST116" in message or "0 rows" in message.lower() or "no rows" in message.lower():
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error_code": "PROFILE_NOT_FOUND",
+                    "detail": "Profile not found for this account.",
+                },
+            )
         raise HTTPException(
             status_code=500,
             detail={
@@ -581,7 +890,7 @@ def get_profile(request: Request) -> dict:
 def update_profile(body: UpdateProfileBody, request: Request) -> dict:
     session = _get_user_from_token(request)
     try:
-        existing_res = db_client().table("profiles").select("id, role").eq(
+        existing_res = db_client().table("profiles").select("id, role, phone").eq(
             "id", session["uid"]
         ).single().execute()
         existing = existing_res.data
@@ -612,10 +921,24 @@ def update_profile(body: UpdateProfileBody, request: Request) -> dict:
                 },
             )
 
+        incoming_phone = normalize_phone(body.phone)
+        existing_phone_raw = str(existing.get("phone") or "").strip()
+        existing_phone = normalize_phone(existing_phone_raw) if existing_phone_raw else ""
+        if existing_phone and incoming_phone != existing_phone:
+            if not body.phone_otp:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error_code": "PHONE_OTP_REQUIRED",
+                        "detail": "Please verify OTP for the new phone number.",
+                    },
+                )
+            _assert_phone_otp(body.phone, body.phone_otp)
+
         patch_data = {
             "first_name": body.first_name.strip(),
             "last_name": body.last_name.strip(),
-            "phone": body.phone.strip(),
+            "phone": incoming_phone,
             "state": (body.state or "").strip(),
             "primary_crop": (body.primary_crop or "").strip(),
             "organisation": (body.organisation or "").strip(),

@@ -4,3 +4,4 @@ supabase
 python-dotenv
 email-validator
 razorpay
+twilio

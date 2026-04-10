@@ -40,9 +40,12 @@ const HOME_ROLE_BADGE_KEY = 'techsetu_home_role_badge';
 const PROFILE_PREV_SCREEN_KEY = 'techsetu_profile_prev_screen';
 const FORGOT_PASSWORD_COOLDOWN_MS = 60000;
 const FORGOT_PASSWORD_COOLDOWN_UNTIL_KEY = 'techsetu_forgot_cooldown_until';
+const OTP_BUTTON_DEFAULT_COOLDOWN_SECONDS = 60;
 
 let forgotPasswordCooldownUntil = 0;
 let forgotPasswordTimer = null;
+let pendingGoogleRole = 'buyer';
+const otpButtonCooldowns = {};
 
 function readJsonStorage(key, fallback) {
   try {
@@ -215,6 +218,31 @@ function authHeaders() {
   return headers;
 }
 
+function parseApiError(payload, fallback = 'Request failed') {
+  const detail = payload?.detail;
+  if(Array.isArray(detail) && detail.length) {
+    const first = detail[0] || {};
+    const loc = Array.isArray(first.loc) ? first.loc.join('.') : '';
+    const msg = first.msg || fallback;
+    const field = Array.isArray(first.loc) ? first.loc[first.loc.length - 1] : null;
+    const code = field ? `VALIDATION_${String(field).toUpperCase()}` : 'VALIDATION_ERROR';
+    return {
+      code,
+      message: loc ? `${msg} (${loc})` : msg,
+    };
+  }
+  if(detail && typeof detail === 'object') {
+    return {
+      code: detail.error_code || payload?.error_code || null,
+      message: detail.detail || fallback,
+    };
+  }
+  return {
+    code: payload?.error_code || null,
+    message: typeof detail === 'string' ? detail : fallback,
+  };
+}
+
 async function apiPost(path, data) {
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
@@ -224,9 +252,9 @@ async function apiPost(path, data) {
   const payload = await res.json().catch(()=>({detail:'Something went wrong'}));
   if(!res.ok) {
     const err = new Error('Request failed');
-    const detailObj = payload?.detail && typeof payload.detail === 'object' ? payload.detail : null;
-    err.code = detailObj?.error_code || payload?.error_code || null;
-    err.message = detailObj?.detail || payload?.detail || 'Request failed';
+    const parsed = parseApiError(payload, 'Request failed');
+    err.code = parsed.code;
+    err.message = parsed.message;
     err.payload = payload;
     throw err;
   }
@@ -242,9 +270,9 @@ async function apiPatch(path, data) {
   const payload = await res.json().catch(()=>({detail:'Something went wrong'}));
   if(!res.ok) {
     const err = new Error('Request failed');
-    const detailObj = payload?.detail && typeof payload.detail === 'object' ? payload.detail : null;
-    err.code = detailObj?.error_code || payload?.error_code || null;
-    err.message = detailObj?.detail || payload?.detail || 'Request failed';
+    const parsed = parseApiError(payload, 'Request failed');
+    err.code = parsed.code;
+    err.message = parsed.message;
     err.payload = payload;
     throw err;
   }
@@ -259,9 +287,9 @@ async function apiGet(path) {
   const payload = await res.json().catch(()=>({detail:'Something went wrong'}));
   if(!res.ok) {
     const err = new Error('Request failed');
-    const detailObj = payload?.detail && typeof payload.detail === 'object' ? payload.detail : null;
-    err.code = detailObj?.error_code || payload?.error_code || null;
-    err.message = detailObj?.detail || payload?.detail || 'Request failed';
+    const parsed = parseApiError(payload, 'Request failed');
+    err.code = parsed.code;
+    err.message = parsed.message;
     err.payload = payload;
     throw err;
   }
@@ -271,6 +299,298 @@ async function apiGet(path) {
 function cleanOAuthUrl() {
   if(window.history && window.history.replaceState) {
     window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+function setSimpleStatus(id, type, message) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.className = `simple-inline-status ${type || ''}`.trim();
+  el.textContent = message || '';
+}
+
+function getOtpButtonCooldownSeconds(buttonId) {
+  const state = otpButtonCooldowns[buttonId];
+  if(!state || !state.until) return 0;
+  const remainingMs = state.until - Date.now();
+  if(remainingMs <= 0) return 0;
+  return Math.ceil(remainingMs / 1000);
+}
+
+function renderOtpButtonCooldown(buttonId) {
+  const btn = document.getElementById(buttonId);
+  if(!btn) return;
+  const defaultLabel = btn.dataset.defaultLabel || 'Send OTP';
+  const seconds = getOtpButtonCooldownSeconds(buttonId);
+  if(seconds > 0) {
+    btn.disabled = true;
+    btn.textContent = `Resend in ${seconds}s`;
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = defaultLabel;
+}
+
+function startOtpButtonCooldown(buttonId, seconds) {
+  if(!buttonId || !seconds || seconds <= 0) return;
+  const existing = otpButtonCooldowns[buttonId];
+  if(existing?.timerId) clearInterval(existing.timerId);
+
+  otpButtonCooldowns[buttonId] = {
+    until: Date.now() + (seconds * 1000),
+    timerId: null,
+  };
+
+  renderOtpButtonCooldown(buttonId);
+
+  const timerId = setInterval(() => {
+    renderOtpButtonCooldown(buttonId);
+    if(getOtpButtonCooldownSeconds(buttonId) <= 0) {
+      clearInterval(timerId);
+      delete otpButtonCooldowns[buttonId];
+      renderOtpButtonCooldown(buttonId);
+    }
+  }, 1000);
+
+  otpButtonCooldowns[buttonId].timerId = timerId;
+}
+
+function refreshOtpButtonCooldown(buttonId) {
+  renderOtpButtonCooldown(buttonId);
+  const seconds = getOtpButtonCooldownSeconds(buttonId);
+  if(seconds > 0) {
+    startOtpButtonCooldown(buttonId, seconds);
+  }
+}
+
+async function sendPhoneOtp(phone, statusId, buttonId) {
+  setSimpleStatus(statusId, '', '');
+  try {
+    const res = await apiPost('/auth/send-phone-otp', {phone});
+    const hint = res?.dev_mode ? ' (dev mode: use 666666)' : '';
+    setSimpleStatus(statusId, 'success', `OTP sent${hint}`);
+    startOtpButtonCooldown(buttonId, OTP_BUTTON_DEFAULT_COOLDOWN_SECONDS);
+    return true;
+  } catch (err) {
+    if(err.code === 'INVALID_PHONE') {
+      setSimpleStatus(statusId, 'error', 'Enter a valid phone number with country code.');
+      return false;
+    }
+    if(err.code === 'OTP_SEND_FAILED') {
+      setSimpleStatus(statusId, 'error', 'Could not send OTP. Please try again.');
+      return false;
+    }
+    if(err.code === 'OTP_SEND_RATE_LIMIT') {
+      const retryAfter = err?.payload?.detail?.retry_after_seconds;
+      const waitSeconds = retryAfter || OTP_BUTTON_DEFAULT_COOLDOWN_SECONDS;
+      setSimpleStatus(statusId, 'error', `Please wait ${waitSeconds}s before requesting another OTP.`);
+      startOtpButtonCooldown(buttonId, waitSeconds);
+      return false;
+    }
+    setSimpleStatus(statusId, 'error', err.message || 'Could not send OTP.');
+    return false;
+  }
+}
+
+async function sendSignupOtp() {
+  const phone = document.getElementById('auth-phone')?.value.trim() || '';
+  if(!phone) {
+    setSimpleStatus('signup-otp-status', 'error', 'Enter phone number first.');
+    return;
+  }
+  await sendPhoneOtp(phone, 'signup-otp-status', 'signup-send-otp-btn');
+}
+
+function renderGooglePhoneVerifyScreen(role, profile = {}) {
+  pendingGoogleRole = role || 'buyer';
+  currentRole = pendingGoogleRole;
+  saveAuthState();
+
+  const isBuyer = pendingGoogleRole === 'buyer';
+  const left = document.getElementById('google-phone-left');
+  if(!left) return;
+  left.className = `login-left ${isBuyer ? 'buyer-theme' : 'farmer-theme'} google-phone-left`;
+
+  const first = escapeHtml(profile.first_name || '');
+  const last = escapeHtml(profile.last_name || '');
+  const phone = escapeHtml(profile.phone || '');
+  const state = escapeHtml(profile.state || '');
+  const crop = escapeHtml(profile.primary_crop || '');
+  const org = escapeHtml(profile.organisation || '');
+
+  left.innerHTML = `
+    <button class="login-back" onclick="showRoleSelect()">← Back</button>
+    <span class="login-role-badge">${isBuyer ? '🛒 CUSTOMER' : '🌾 FARMER'}</span>
+    <div class="login-title">Complete signup</div>
+    <div class="login-sub">Phone verification is required, including Google signup.</div>
+    <div class="lf-row">
+      <div class="lf"><label>First Name</label><input id="gpv-first-name" value="${first}" placeholder="Ramesh"/></div>
+      <div class="lf"><label>Last Name</label><input id="gpv-last-name" value="${last}" placeholder="Patil"/></div>
+    </div>
+    ${isBuyer
+      ? `<div class="lf"><label>Organisation / Business Name</label><input id="gpv-organisation" value="${org}" placeholder="e.g. Sharma Traders"/></div>`
+      : `<div class="lf"><label>State / Region</label><input id="gpv-state" value="${state}" placeholder="e.g. Maharashtra"/></div>
+         <div class="lf"><label>Primary Crop</label><input id="gpv-primary-crop" value="${crop}" placeholder="e.g. Tomatoes"/></div>`}
+    <div class="lf"><label>Mobile Number</label><input id="gpv-phone" value="${phone}" type="tel" placeholder="+91 98765 43210"/></div>
+    <div class="lf" style="display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1"><label>OTP</label><input id="gpv-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP"/></div>
+      <button type="button" class="otp-action-btn" id="gpv-send-otp-btn" data-default-label="Send OTP" onclick="sendGooglePhoneOtp()">Send OTP</button>
+    </div>
+    <div class="simple-inline-status" id="gpv-otp-status"></div>
+    <button class="login-btn" onclick="submitGooglePhoneVerification()">Verify & Continue →</button>
+    <div class="simple-inline-status" id="gpv-submit-status"></div>
+  `;
+
+  refreshOtpButtonCooldown('gpv-send-otp-btn');
+}
+
+async function sendGooglePhoneOtp() {
+  const phone = document.getElementById('gpv-phone')?.value.trim() || '';
+  if(!phone) {
+    setSimpleStatus('gpv-otp-status', 'error', 'Enter phone number first.');
+    return;
+  }
+  await sendPhoneOtp(phone, 'gpv-otp-status', 'gpv-send-otp-btn');
+}
+
+async function submitGooglePhoneVerification() {
+  const role = pendingGoogleRole || currentRole || 'buyer';
+  const firstName = document.getElementById('gpv-first-name')?.value.trim() || '';
+  const lastName = document.getElementById('gpv-last-name')?.value.trim() || '';
+  const phone = document.getElementById('gpv-phone')?.value.trim() || '';
+  const otp = document.getElementById('gpv-otp')?.value.trim() || '';
+  const state = document.getElementById('gpv-state')?.value.trim() || '';
+  const primaryCrop = document.getElementById('gpv-primary-crop')?.value.trim() || '';
+  const organisation = document.getElementById('gpv-organisation')?.value.trim() || '';
+
+  setSimpleStatus('gpv-submit-status', '', '');
+  if(firstName.length < 2 || !lastName) {
+    setSimpleStatus('gpv-submit-status', 'error', 'Please enter valid first and last name.');
+    return;
+  }
+  if(!phone || !otp) {
+    setSimpleStatus('gpv-submit-status', 'error', 'Please enter phone and OTP.');
+    return;
+  }
+  if(role === 'farmer' && (!state || !primaryCrop)) {
+    setSimpleStatus('gpv-submit-status', 'error', 'State and primary crop are required for farmers.');
+    return;
+  }
+  if(role === 'buyer' && !organisation) {
+    setSimpleStatus('gpv-submit-status', 'error', 'Organisation is required for customers.');
+    return;
+  }
+
+  try {
+    const payload = {
+      role,
+      first_name: firstName,
+      last_name: lastName,
+      phone,
+      otp,
+      state,
+      primary_crop: primaryCrop,
+      organisation,
+    };
+    await apiPost('/auth/google/complete-signup', payload);
+    setSimpleStatus('gpv-submit-status', 'success', 'Signup completed successfully.');
+    toast('✅ Google signup completed');
+    localStorage.removeItem(AUTH_DRAFTS_KEY);
+    googleLoginSuccess(role);
+  } catch (err) {
+    if(err.code === 'INVALID_OTP') {
+      setSimpleStatus('gpv-submit-status', 'error', 'Invalid OTP. Please try again.');
+      return;
+    }
+    if(err.code === 'PHONE_NOT_VERIFIED') {
+      setSimpleStatus('gpv-submit-status', 'error', err.message || 'Phone verification is required.');
+      return;
+    }
+    if(err.code === 'MISSING_FARMER_FIELDS' || err.code === 'MISSING_BUYER_ORGANISATION') {
+      setSimpleStatus('gpv-submit-status', 'error', err.message || 'Please complete required fields.');
+      return;
+    }
+    if(err.code === 'GOOGLE_SIGNUP_PROFILE_WRITE_FAILED') {
+      setSimpleStatus('gpv-submit-status', 'error', 'Could not complete signup profile. Please retry.');
+      return;
+    }
+    setSimpleStatus('gpv-submit-status', 'error', err.message || 'Could not complete signup.');
+  }
+}
+
+async function ensureGooglePhoneVerified(role) {
+  try {
+    const profileRes = await apiGet('/auth/profile');
+    const profile = profileRes?.profile || {};
+    const resolvedRole = profile.role || role || 'buyer';
+    if(profile.phone && String(profile.phone).trim()) {
+      googleLoginSuccess(resolvedRole);
+      return;
+    }
+    renderGooglePhoneVerifyScreen(resolvedRole, profile);
+    showScreen('screen-google-phone-verify');
+  } catch (err) {
+    if(err.code === 'PROFILE_NOT_FOUND') {
+      renderGooglePhoneVerifyScreen(role || 'buyer', {});
+      showScreen('screen-google-phone-verify');
+      return;
+    }
+    clearToken();
+    toast('⚠️ Could not verify account status. Please try again.');
+    showRoleSelect();
+  }
+}
+
+function setRecoveryStatus(type, message) {
+  const el = document.getElementById('recovery-inline-status');
+  if(!el) return;
+  el.className = `recovery-inline-status ${type || ''}`.trim();
+  el.textContent = message || '';
+}
+
+function showRecoveryResetScreen(role) {
+  currentRole = role || currentRole || 'buyer';
+  saveAuthState();
+  showScreen('screen-recovery-reset');
+  setRecoveryStatus('', '');
+}
+
+async function submitRecoveryPasswordReset() {
+  const newPassword = document.getElementById('recovery-new-password')?.value || '';
+  const confirmPassword = document.getElementById('recovery-confirm-password')?.value || '';
+
+  setRecoveryStatus('', '');
+  if(!validatePasswordStrength(newPassword)) {
+    setRecoveryStatus('error', 'Use 8+ chars with upper, lower, and number.');
+    return;
+  }
+  if(newPassword !== confirmPassword) {
+    setRecoveryStatus('error', 'Passwords do not match.');
+    return;
+  }
+
+  try {
+    await apiPost('/auth/change-password', {new_password: newPassword});
+    setRecoveryStatus('success', 'Password updated. Please log in with your new password.');
+    toast('✅ Password reset successful');
+    clearToken();
+    setTimeout(() => {
+      currentLoginTab = 'login';
+      saveAuthState();
+      showScreen('screen-login');
+      renderLoginScreen(currentRole || 'buyer');
+      setLoginStatus('success', 'Password updated. Please log in with your new password.');
+    }, 900);
+  } catch (err) {
+    if(err.code === 'PASSWORD_CHANGE_UNAVAILABLE') {
+      setRecoveryStatus('error', 'Password reset is not configured on server yet.');
+      return;
+    }
+    if(err.code === 'PASSWORD_CHANGE_FAILED') {
+      setRecoveryStatus('error', 'Reset link may be expired. Please request a new one.');
+      return;
+    }
+    setRecoveryStatus('error', err.message || 'Could not update password.');
   }
 }
 
@@ -297,6 +617,7 @@ async function handleOAuthRedirect() {
   const hashText = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
   const hashParams = new URLSearchParams(hashText);
   const role = queryParams.get('oauth_role') || currentRole || 'buyer';
+  const flowType = hashParams.get('type') || queryParams.get('type') || '';
 
   const oauthError = hashParams.get('error_description') || hashParams.get('error') || queryParams.get('error_description') || queryParams.get('error');
   if(oauthError) {
@@ -323,7 +644,7 @@ async function handleOAuthRedirect() {
       toast('✅ Logged in with Google');
       localStorage.removeItem(AUTH_DRAFTS_KEY);
       const resolvedRole = (exchangeRes.user && exchangeRes.user.role) ? exchangeRes.user.role : role;
-      googleLoginSuccess(resolvedRole);
+      await ensureGooglePhoneVerified(resolvedRole);
     } catch (err) {
       clearToken();
       cleanOAuthUrl();
@@ -343,11 +664,24 @@ async function handleOAuthRedirect() {
 
   setToken(token);
   cleanOAuthUrl();
+
+  if(flowType === 'recovery') {
+    try {
+      await apiGet('/auth/me');
+      showRecoveryResetScreen(role);
+    } catch (_) {
+      clearToken();
+      toast('⚠️ Password reset link is invalid or expired.');
+      showRoleSelect();
+    }
+    return true;
+  }
+
   try {
     await apiGet('/auth/me');
     toast('✅ Logged in with Google');
     localStorage.removeItem(AUTH_DRAFTS_KEY);
-    googleLoginSuccess(role);
+    await ensureGooglePhoneVerified(role);
   } catch (_) {
     clearToken();
     toast('⚠️ Google login could not be verified. Please try again.');
@@ -394,21 +728,14 @@ async function handleAuthSubmit(role, isSignup) {
         return;
       }
 
-      // ── 1. Phone OTP verification before signup ──
-      try {
-        await apiPost('/auth/verify-phone', {phone, otp});
-      } catch(err) {
-        toast(`⚠️ OTP Error: ${err.message}`);
-        return;
-      }
-
       const body = {
         role,
         first_name: firstName,
         last_name: lastName,
         email,
         password,
-        phone
+        phone,
+        otp,
       };
       if(role === 'farmer') {
         body.state = document.getElementById('auth-state')?.value || '';
@@ -458,6 +785,18 @@ async function handleAuthSubmit(role, isSignup) {
     }
     if(err.code === 'INVALID_OTP') {
       toast('⚠️ Invalid OTP. Please try again.');
+      return;
+    }
+    if(err.code === 'VALIDATION_OTP') {
+      toast('⚠️ OTP is required. Please enter the OTP sent to your phone.');
+      return;
+    }
+    if(err.code === 'INVALID_PHONE') {
+      toast('⚠️ Please enter a valid phone number.');
+      return;
+    }
+    if(err.code === 'PHONE_NOT_VERIFIED') {
+      toast('⚠️ Verify your phone number before creating account.');
       return;
     }
     if(err.code === 'INVALID_CREDENTIALS') {
@@ -515,9 +854,37 @@ function setFieldError(fieldId, message) {
 function clearProfileFieldErrors() {
   [
     'profile-first-name','profile-last-name','profile-phone','profile-state',
-    'profile-primary-crop','profile-organisation','profile-current-password',
+    'profile-primary-crop','profile-organisation','profile-phone-otp','profile-current-password',
     'profile-new-password','profile-confirm-password'
   ].forEach(clearFieldError);
+}
+
+function isProfilePhoneChanged() {
+  const phoneInput = document.getElementById('profile-phone');
+  if(!phoneInput) return false;
+  const currentPhone = (phoneInput.value || '').trim();
+  const originalPhone = (phoneInput.dataset.originalPhone || '').trim();
+  return currentPhone !== originalPhone;
+}
+
+function updateProfilePhoneOtpVisibility() {
+  const wrapper = document.getElementById('profile-phone-otp-wrapper');
+  const otpInput = document.getElementById('profile-phone-otp');
+  const otpStatus = document.getElementById('profile-phone-otp-status');
+  if(!wrapper) return;
+
+  if(isProfilePhoneChanged()) {
+    wrapper.style.display = 'grid';
+    return;
+  }
+
+  wrapper.style.display = 'none';
+  if(otpInput) otpInput.value = '';
+  if(otpStatus) {
+    otpStatus.className = 'simple-inline-status';
+    otpStatus.textContent = '';
+  }
+  clearFieldError('profile-phone-otp');
 }
 
 function setInlineStatus(id, type, message) {
@@ -532,6 +899,15 @@ function setLoginStatus(type, message) {
   if(!el) return;
   el.className = `login-inline-status ${type || ''}`.trim();
   el.textContent = message || '';
+}
+
+async function sendProfilePhoneOtp() {
+  const phone = document.getElementById('profile-phone')?.value.trim() || '';
+  if(!phone) {
+    setSimpleStatus('profile-phone-otp-status', 'error', 'Enter new phone number first.');
+    return;
+  }
+  await sendPhoneOtp(phone, 'profile-phone-otp-status', 'profile-send-otp-btn');
 }
 
 function getForgotCooldownSeconds() {
@@ -616,6 +992,14 @@ async function handleForgotPassword(role) {
       setLoginStatus('error', 'Password reset is not configured on server yet.');
       return;
     }
+    if(err.code === 'PASSWORD_RESET_EMAIL_NOT_REGISTERED') {
+      setLoginStatus('error', 'This email is not registered with us.');
+      return;
+    }
+    if(err.code === 'PASSWORD_RESET_CHECK_FAILED') {
+      setLoginStatus('error', 'Could not verify this email right now. Please try again.');
+      return;
+    }
     if(err.code === 'PASSWORD_RESET_EMAIL_FAILED') {
       setLoginStatus('error', 'Could not send reset email. Please retry.');
       return;
@@ -663,6 +1047,13 @@ function renderProfile(profile) {
         ${profileField('Email', 'profile-email', profile?.email || '', '', 'email')}
       </div>
       <div class="profile-grid profile-grid-single">
+        <div class="profile-phone-otp-row" id="profile-phone-otp-wrapper" style="display:none">
+          ${profileField('OTP For New Phone (only if changing number)', 'profile-phone-otp', '', 'Enter OTP received on new number')}
+          <button type="button" class="otp-action-btn profile-otp-btn" id="profile-send-otp-btn" data-default-label="Send OTP" onclick="sendProfilePhoneOtp()">Send OTP</button>
+        </div>
+        <div class="simple-inline-status" id="profile-phone-otp-status"></div>
+      </div>
+      <div class="profile-grid profile-grid-single">
         ${roleSpecificFields}
       </div>
       <button class="profile-btn primary" onclick="saveProfile()">Save Profile</button>
@@ -691,6 +1082,13 @@ function renderProfile(profile) {
 
   const emailInput = document.getElementById('profile-email');
   if(emailInput) emailInput.disabled = true;
+  const phoneInput = document.getElementById('profile-phone');
+  if(phoneInput) {
+    phoneInput.dataset.originalPhone = (profile?.phone || '').trim();
+    phoneInput.addEventListener('input', updateProfilePhoneOtpVisibility);
+  }
+  updateProfilePhoneOtpVisibility();
+  refreshOtpButtonCooldown('profile-send-otp-btn');
 }
 
 async function openProfile() {
@@ -737,6 +1135,7 @@ async function saveProfile() {
     first_name: document.getElementById('profile-first-name')?.value.trim() || '',
     last_name: document.getElementById('profile-last-name')?.value.trim() || '',
     phone: document.getElementById('profile-phone')?.value.trim() || '',
+    phone_otp: document.getElementById('profile-phone-otp')?.value.trim() || '',
     state: document.getElementById('profile-state')?.value.trim() || '',
     primary_crop: document.getElementById('profile-primary-crop')?.value.trim() || '',
     organisation: document.getElementById('profile-organisation')?.value.trim() || '',
@@ -753,6 +1152,10 @@ async function saveProfile() {
   }
   if(!/^\+?[0-9\s-]{10,20}$/.test(payload.phone)) {
     setFieldError('profile-phone', 'Enter a valid phone number.');
+    hasError = true;
+  }
+  if(isProfilePhoneChanged() && !payload.phone_otp) {
+    setFieldError('profile-phone-otp', 'Enter OTP for the new number.');
     hasError = true;
   }
   if(role === 'farmer' && !payload.state) {
@@ -794,6 +1197,16 @@ async function saveProfile() {
     }
     if(err.code === 'PROFILE_UPDATE_FAILED') {
       setInlineStatus('profile-save-status', 'error', 'Could not update profile. Try again.');
+      return;
+    }
+    if(err.code === 'PHONE_OTP_REQUIRED') {
+      setFieldError('profile-phone-otp', 'Enter OTP for the new number.');
+      setInlineStatus('profile-save-status', 'error', 'Please verify OTP for new phone number.');
+      return;
+    }
+    if(err.code === 'INVALID_OTP') {
+      setFieldError('profile-phone-otp', 'Invalid OTP for new number.');
+      setInlineStatus('profile-save-status', 'error', 'Invalid OTP for new phone number.');
       return;
     }
     setInlineStatus('profile-save-status', 'error', err.message || 'Could not update profile.');
@@ -910,9 +1323,10 @@ function renderLoginScreen(role) {
         <div class="lf"><label>Organisation / Business Name</label><input id="auth-organisation" value="${getDraftValue(role, currentLoginTab, 'auth-organisation')}" placeholder="e.g. Sharma Traders" /></div>`}
         <div class="lf"><label>Mobile Number</label><input id="auth-phone" value="${getDraftValue(role, currentLoginTab, 'auth-phone')}" type="tel" placeholder="+91 98765 43210" /></div>
         <div class="lf" style="display:flex;gap:8px;align-items:flex-end">
-          <div style="flex:1"><label>OTP (use 666666 in dev)</label><input id="auth-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP" /></div>
-          <button type="button" style="padding:10px 14px;background:rgba(255,255,255,.12);color:inherit;border:1px solid rgba(255,255,255,.2);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;font-family:inherit" onclick="toast('OTP sent! Use 666666 in dev mode')">Send OTP</button>
+          <div style="flex:1"><label>OTP</label><input id="auth-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP" /></div>
+          <button type="button" class="otp-action-btn" id="signup-send-otp-btn" data-default-label="Send OTP" onclick="sendSignupOtp()">Send OTP</button>
         </div>
+        <div class="simple-inline-status" id="signup-otp-status"></div>
       ` : ''}
       <div class="lf"><label>Email Address</label><input id="auth-email" value="${getDraftValue(role, currentLoginTab, 'auth-email')}" type="email" placeholder="${isBuyer ? 'you@company.com' : 'ramesh@farm.com'}" /></div>
       <div class="lf"><label>Password</label><input id="auth-password" value="${getDraftValue(role, currentLoginTab, 'auth-password')}" type="password" placeholder="••••••••" /></div>
@@ -934,6 +1348,8 @@ function renderLoginScreen(role) {
     if(getForgotCooldownSeconds() > 0) {
       startForgotCooldownTicker();
     }
+  } else {
+    refreshOtpButtonCooldown('signup-send-otp-btn');
   }
 
   // Right side: vegetable image + stats
