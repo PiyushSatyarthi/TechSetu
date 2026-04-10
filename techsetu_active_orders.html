@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechSetu — Active Orders Tracker</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; min-height: 100%; background: #F7F9F7; color: #2E2E2E; }
+
+:root {
+  --p:      #4CAF50;
+  --p-hov:  #3E8E41;
+  --p-soft: #6FBF73;
+  --bg-app:  #F7F9F7;
+  --bg-mint: #E8F5E9;
+  --bg-soft: #DFF0E3;
+  --bg-card: #C8E6C9;
+  --ac1: #81C784;
+  --ac2: #66BB6A;
+  --ac3: #A5D6A7;
+  --white:  #FFFFFF;
+  --border: #E0E0E0;
+  --tx:     #2E2E2E;
+  --tx-sub: #616161;
+  --tx-sec: #9E9E9E;
+  --nav:     #1B5E20;
+  --nav-hov: #2E7D32;
+  --nav-act: #388E3C;
+  --nav-tx:  #E8F5E9;
+  --nav-sub: #81C784;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── NAV ── */
+nav {
+  background: var(--nav);
+  height: 54px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #145214;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 8px;
+  margin-right: 32px; text-decoration: none; flex-shrink: 0;
+}
+.nav-logo-leaf {
+  width: 10px; height: 10px;
+  background: var(--ac3);
+  border-radius: 50% 0 50% 0;
+  transform: rotate(45deg); flex-shrink: 0;
+}
+.nav-logo-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px; color: var(--nav-tx); letter-spacing: 0.2px;
+}
+.nav-links { display: flex; gap: 2px; flex: 1; overflow: hidden; }
+.nav-link {
+  font-size: 12.5px; color: var(--nav-sub); text-decoration: none;
+  padding: 5px 12px; border-radius: var(--r-sm); white-space: nowrap;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--nav-tx); background: var(--nav-hov); }
+.nav-link.active { color: var(--nav-tx); background: var(--nav-act); }
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.nav-bell {
+  width: 32px; height: 32px; background: var(--nav-hov);
+  border-radius: var(--r-sm); display: flex; align-items: center;
+  justify-content: center; position: relative; cursor: pointer;
+}
+.nav-bell-dot {
+  position: absolute; top: 6px; right: 7px;
+  width: 6px; height: 6px; background: #FFD54F;
+  border-radius: 50%; border: 1.5px solid var(--nav);
+}
+.nav-lang {
+  font-size: 11px; color: var(--nav-sub); border: 1px solid #2E7D32;
+  border-radius: 4px; padding: 3px 8px; cursor: pointer; background: transparent;
+}
+.nav-avatar {
+  width: 32px; height: 32px; background: var(--nav-act);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--nav-tx);
+  border: 1.5px solid var(--ac2); cursor: pointer;
+}
+
+/* ── PAGE ── */
+.page-wrap { background: var(--bg-app); min-height: calc(100vh - 54px); }
+.main { padding: 18px 24px 32px; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  background: linear-gradient(135deg, #A5D6A7 0%, #4CAF50 100%);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.ph-left {}
+.ph-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 19px; font-weight: 400; color: #1B5E20; margin-bottom: 3px;
+}
+.ph-sub { font-size: 11.5px; color: #2E7D32; }
+.ph-badges { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.ph-badge {
+  background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+  border-radius: var(--r-md); padding: 8px 14px; text-align: center;
+  backdrop-filter: blur(4px); min-width: 90px;
+}
+.ph-badge-label { font-size: 10px; color: #2E7D32; margin-bottom: 3px; }
+.ph-badge-value { font-size: 15px; font-weight: 700; color: #1B5E20; }
+.ph-badge-sub { font-size: 10px; color: #388E3C; margin-top: 1px; }
+
+/* ── SUMMARY METRICS ── */
+.metrics {
+  display: grid; grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.metric {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 14px 16px;
+  border-top: 3px solid var(--bg-card);
+}
+.metric.accent { border-top-color: var(--p); }
+.metric-label {
+  font-size: 10.5px; color: var(--tx-sec);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.metric-value { font-size: 26px; font-weight: 600; color: var(--tx); line-height: 1; margin-bottom: 5px; }
+.metric-value.green { color: #2E7D32; }
+.metric-delta { font-size: 11px; color: var(--tx-sec); }
+.metric-delta.up { color: var(--p-hov); }
+
+/* ── CARD ── */
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.card-head {
+  padding: 13px 16px 11px; border-bottom: 1px solid #F0F4F0;
+  display: flex; align-items: center; justify-content: space-between; background: #FAFAFA;
+}
+.card-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14.5px; font-weight: 400; color: var(--tx);
+}
+.card-head-sub { font-size: 11px; color: var(--tx-sec); margin-top: 2px; }
+.card-action { font-size: 11.5px; color: var(--p); cursor: pointer; font-weight: 500; }
+
+/* ── BADGES / CHIPS ── */
+.badge { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+.badge-active   { background: #E8F5E9; color: #2E7D32; }
+.chip-dispatched { background: #E3F2FD; color: #1565C0; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-inprocess  { background: #FFF3E0; color: #E65100; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-packaged   { background: #F3E5F5; color: #7B1FA2; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-ordered    { background: var(--bg-mint); color: #2E7D32; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-delivered  { background: #E8F5E9; color: #1B5E20; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.filter-btn {
+  font-size: 11.5px; padding: 5px 13px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--white);
+  color: var(--tx-sub); cursor: pointer; transition: all 0.15s; font-weight: 500;
+}
+.filter-btn:hover { border-color: var(--p); color: var(--p); }
+.filter-btn.active { background: var(--p); color: #fff; border-color: var(--p); }
+.filter-search {
+  margin-left: auto; display: flex; align-items: center; gap: 6px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 5px 10px;
+}
+.filter-search input {
+  border: none; outline: none; font-size: 12px; color: var(--tx);
+  background: transparent; width: 140px;
+}
+.filter-search input::placeholder { color: var(--tx-sec); }
+
+/* ── MAIN LAYOUT ── */
+.aot-layout { display: grid; grid-template-columns: minmax(0,2.2fr) minmax(0,3fr); gap: 12px; align-items: start; }
+
+/* ── ORDER LIST ── */
+.order-list-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+
+.order-row {
+  padding: 12px 14px; border-bottom: 1px solid #F5F5F5;
+  cursor: pointer; transition: background 0.12s; display: flex; flex-direction: column; gap: 7px;
+  position: relative;
+}
+.order-row:last-child { border-bottom: none; }
+.order-row:hover { background: #FAFFFE; }
+.order-row.selected {
+  background: var(--bg-mint);
+  border-left: 3px solid var(--p);
+  padding-left: 11px;
+}
+.or-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.or-id-crop { display: flex; align-items: baseline; gap: 6px; }
+.or-id { font-size: 10.5px; color: var(--tx-sec); font-weight: 500; }
+.or-crop { font-size: 13.5px; font-weight: 700; color: var(--tx); }
+.or-qty { font-size: 11px; color: var(--tx-sub); font-weight: 400; }
+.or-mid { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.or-buyer { font-size: 11.5px; color: var(--tx-sub); }
+.or-date { font-size: 10.5px; color: var(--tx-sec); }
+.or-bot { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+
+/* Mini stepper */
+.ms { display: flex; align-items: center; gap: 2px; }
+.ms-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink:0; }
+.ms-dot.done { background: var(--p); }
+.ms-dot.cur  { background: #FF9800; width: 7px; height: 7px; }
+.ms-line { width: 10px; height: 2px; background: var(--border); flex-shrink:0; }
+.ms-line.done { background: var(--ac2); }
+.ms-stage { font-size: 10px; color: var(--tx-sec); margin-left: 5px; }
+.ms-stage.active { color: #E65100; font-weight: 600; }
+
+.or-btns { display: flex; gap: 5px; }
+.btn-track {
+  background: var(--p); color: #fff; border: none; border-radius: var(--r-sm);
+  padding: 4px 11px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.btn-track:hover { background: var(--p-hov); }
+.btn-docs {
+  background: var(--white); color: var(--p); border: 1px solid var(--p);
+  border-radius: var(--r-sm); padding: 4px 11px; font-size: 11px;
+  font-weight: 500; cursor: pointer; transition: background 0.15s;
+}
+.btn-docs:hover { background: var(--bg-mint); }
+
+/* ── DETAIL PANEL ── */
+.detail-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.detail-head {
+  padding: 13px 16px 11px; border-bottom: 1px solid #F0F4F0;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; background: #FAFAFA;
+}
+.detail-head-left {}
+.detail-order-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px; font-weight: 400; color: var(--tx);
+}
+.detail-order-sub { font-size: 11px; color: var(--tx-sec); margin-top: 3px; }
+.detail-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 13px; }
+
+/* Info groups */
+.info-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.info-block {
+  background: var(--bg-app); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 10px 12px;
+}
+.info-block-head {
+  font-size: 10px; font-weight: 700; color: var(--tx-sec);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+.info-row:last-child { margin-bottom: 0; }
+.info-key { font-size: 11px; color: var(--tx-sub); flex-shrink: 0; }
+.info-val { font-size: 11.5px; font-weight: 600; color: var(--tx); text-align: right; line-height: 1.3; }
+.info-val.green { color: #2E7D32; }
+
+/* Transport block */
+.transport-block {
+  background: var(--bg-mint); border: 1px solid var(--bg-card);
+  border-radius: var(--r-md); padding: 11px 14px;
+}
+.transport-head {
+  font-size: 10px; font-weight: 700; color: var(--tx-sec);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+}
+.transport-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 14px; }
+.trans-item {}
+.trans-key { font-size: 10.5px; color: var(--tx-sub); margin-bottom: 2px; }
+.trans-val { font-size: 12px; font-weight: 600; color: var(--tx); }
+.trans-val.status { color: #1565C0; }
+
+/* ── TRACKING STEPPER ── */
+.tracker-block {
+  background: var(--bg-app); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 16px;
+}
+.tracker-head {
+  font-size: 10px; font-weight: 700; color: var(--tx-sec);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+}
+.stepper { display: flex; align-items: flex-start; }
+.step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+.step-dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--border); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #fff; font-weight: 700; z-index: 1; flex-shrink: 0;
+}
+.step-dot.done { background: var(--p); border-color: var(--p); }
+.step-dot.cur  { background: #FF9800; border-color: #FF9800; box-shadow: 0 0 0 4px rgba(255,152,0,0.15); }
+.step-connector {
+  position: absolute; top: 13px; left: calc(50% + 13px);
+  width: calc(100% - 26px); height: 2px; background: var(--border); z-index: 0;
+}
+.step-connector.done { background: var(--ac2); }
+.step:last-child .step-connector { display: none; }
+.step-label { font-size: 10px; color: var(--tx-sec); margin-top: 6px; text-align: center; line-height: 1.3; font-weight: 400; }
+.step-label.done { color: #2E7D32; font-weight: 500; }
+.step-label.cur  { color: #E65100; font-weight: 700; }
+.step-sublabel { font-size: 9.5px; color: var(--tx-sec); text-align: center; margin-top: 2px; }
+
+.tracker-meta { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.tm-item {}
+.tm-key { font-size: 10px; color: var(--tx-sec); margin-bottom: 2px; }
+.tm-val { font-size: 12px; font-weight: 600; color: var(--tx); }
+
+/* ── DOCUMENTS ── */
+.docs-head {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px; font-weight: 400; color: var(--tx); margin-bottom: 10px;
+}
+.docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.doc-card {
+  background: var(--bg-app); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 13px 14px;
+}
+.doc-type {
+  font-size: 10px; font-weight: 700; color: var(--tx-sec);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;
+}
+.doc-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13.5px; color: var(--tx); margin-bottom: 10px;
+}
+.doc-rows { margin-bottom: 11px; }
+.doc-row { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 4px; font-size: 11px; }
+.doc-row:last-child { margin-bottom: 0; }
+.doc-key { color: var(--tx-sub); }
+.doc-val { font-weight: 600; color: var(--tx); text-align: right; font-size: 11.5px; }
+.doc-btns { display: flex; gap: 6px; }
+.btn-view-doc {
+  flex: 1; background: var(--white); color: var(--p); border: 1px solid var(--p);
+  border-radius: var(--r-sm); padding: 5px 8px; font-size: 11px;
+  font-weight: 500; cursor: pointer; transition: background 0.15s; text-align: center;
+}
+.btn-view-doc:hover { background: var(--bg-mint); }
+.btn-dl-doc {
+  flex: 1; background: var(--p); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: 5px 8px; font-size: 11px;
+  font-weight: 600; cursor: pointer; transition: background 0.15s; text-align: center;
+}
+.btn-dl-doc:hover { background: var(--p-hov); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.38); z-index: 500;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: var(--r-lg);
+  width: min(660px, 95vw); max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 48px rgba(0,0,0,0.2); position: relative;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 14px;
+  font-size: 20px; color: var(--tx-sec); cursor: pointer;
+  background: none; border: none; padding: 2px 6px; line-height:1;
+}
+.modal-close:hover { color: var(--tx); }
+
+/* Doc preview inside modal */
+.doc-preview { padding: 30px 34px; }
+.dp-header { border-bottom: 2px solid var(--bg-card); padding-bottom: 16px; margin-bottom: 20px; }
+.dp-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.dp-leaf { width: 10px; height: 10px; background: var(--p); border-radius: 50% 0 50% 0; transform: rotate(45deg); }
+.dp-brand-name { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: var(--nav); }
+.dp-doc-type { font-size: 10px; color: var(--tx-sec); text-transform: uppercase; letter-spacing: 0.9px; margin-top: 6px; }
+.dp-doc-id { font-size: 22px; font-weight: 700; color: var(--tx); margin-top: 2px; letter-spacing: -0.3px; }
+.dp-doc-date { font-size: 11.5px; color: var(--tx-sub); margin-top: 4px; }
+
+.dp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; margin-bottom: 20px; }
+.dp-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--tx-sec); margin-bottom: 7px; }
+.dp-field { margin-bottom: 6px; }
+.dp-field:last-child { margin-bottom: 0; }
+.dp-field-key { font-size: 10.5px; color: var(--tx-sub); }
+.dp-field-val { font-size: 13.5px; font-weight: 600; color: var(--tx); margin-top: 1px; }
+
+.dp-amount {
+  background: var(--bg-mint); border: 1px solid var(--bg-card);
+  border-radius: var(--r-md); padding: 13px 18px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.dp-amount-label { font-size: 12px; color: #2E7D32; }
+.dp-amount-val { font-size: 24px; font-weight: 700; color: #1B5E20; letter-spacing: -0.5px; }
+
+.dp-footer {
+  border-top: 1px solid var(--border); padding-top: 13px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dp-footer-note { font-size: 10.5px; color: var(--tx-sec); line-height: 1.55; }
+.dp-stamp {
+  background: var(--bg-card); border-radius: var(--r-sm);
+  padding: 6px 13px; font-size: 10px; font-weight: 700;
+  color: #1B5E20; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.modal-actions {
+  padding: 12px 34px 20px; display: flex; gap: 10px; border-top: 1px solid var(--border);
+}
+.btn-modal-dl {
+  background: var(--p); color: #fff; border: none; border-radius: var(--r-sm);
+  padding: 8px 22px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.btn-modal-dl:hover { background: var(--p-hov); }
+.btn-modal-cls {
+  background: var(--white); color: var(--tx-sub); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 8px 22px; font-size: 12.5px; cursor: pointer;
+}
+.btn-modal-cls:hover { background: #F5F5F5; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #2E7D32; color: #fff; padding: 10px 20px;
+  border-radius: var(--r-md); font-size: 13px; font-weight: 500;
+  z-index: 999; transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0; white-space: nowrap; border: 1px solid #388E3C;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  .aot-layout { grid-template-columns: 1fr; }
+  .info-3col { grid-template-columns: 1fr 1fr; }
+  .transport-grid { grid-template-columns: 1fr 1fr; }
+  .tracker-meta { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 640px) {
+  .main { padding: 12px; }
+  .metrics { grid-template-columns: repeat(2,1fr); }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .ph-badges { flex-wrap: wrap; }
+  .info-3col { grid-template-columns: 1fr; }
+  .docs-grid { grid-template-columns: 1fr; }
+  .dp-grid { grid-template-columns: 1fr; }
+  .transport-grid { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="ts-toast" class="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="techsetu_farmer_dashboard.html">
+    <span class="nav-logo-leaf"></span>
+    <span class="nav-logo-text">TechSetu</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+    <a class="nav-link" href="techsetu_add_listing.html">Add listing</a>
+    <a class="nav-link" href="techsetu_incoming_buyer_offers.html">Orders</a>
+    <a class="nav-link active" href="#">Active orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html">Payments</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-bell">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#A5D6A7" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#A5D6A7" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div class="nav-bell-dot"></div>
+    </div>
+    <div class="nav-lang">हि | EN</div>
+    <div class="nav-avatar">RS</div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+<main class="main">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="ph-left">
+      <div class="ph-title">Active Orders Tracker</div>
+      <div class="ph-sub">Rajesh Singh &nbsp;·&nbsp; FRM-2847 &nbsp;·&nbsp; Track crop deliveries, transport progress &amp; order documents</div>
+    </div>
+    <div class="ph-badges">
+      <div class="ph-badge">
+        <div class="ph-badge-label">Total active</div>
+        <div class="ph-badge-value">3</div>
+        <div class="ph-badge-sub">orders</div>
+      </div>
+      <div class="ph-badge">
+        <div class="ph-badge-label">Awaiting dispatch</div>
+        <div class="ph-badge-value">1</div>
+        <div class="ph-badge-sub">order</div>
+      </div>
+      <div class="ph-badge">
+        <div class="ph-badge-label">In transit</div>
+        <div class="ph-badge-value">1</div>
+        <div class="ph-badge-sub">order</div>
+      </div>
+      <div class="ph-badge">
+        <div class="ph-badge-label">Delivered this week</div>
+        <div class="ph-badge-value">2</div>
+        <div class="ph-badge-sub">orders</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY METRICS -->
+  <div class="metrics">
+    <div class="metric accent">
+      <div class="metric-label">Active orders value</div>
+      <div class="metric-value green">₹4.91L</div>
+      <div class="metric-delta up">3 orders in progress</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Dispatched</div>
+      <div class="metric-value">1</div>
+      <div class="metric-delta">ORD-9931 · Wheat</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Packaged</div>
+      <div class="metric-value">1</div>
+      <div class="metric-delta">ORD-9933 · Onion</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">In process</div>
+      <div class="metric-value">1</div>
+      <div class="metric-delta">ORD-9932 · Tomato</div>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterOrders('all',this)">All orders</button>
+    <button class="filter-btn" onclick="filterOrders('Dispatched',this)">Dispatched</button>
+    <button class="filter-btn" onclick="filterOrders('Packaged',this)">Packaged</button>
+    <button class="filter-btn" onclick="filterOrders('In Process',this)">In Process</button>
+    <button class="filter-btn" onclick="filterOrders('Ordered',this)">Ordered</button>
+    <div class="filter-search">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#9E9E9E" stroke-width="1.3"/><path d="M10 10l2.5 2.5" stroke="#9E9E9E" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search order, crop, buyer…" oninput="searchOrders(this.value)">
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="aot-layout">
+
+    <!-- ORDER LIST -->
+    <div class="order-list-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Active orders</div>
+          <div class="card-head-sub">Select an order to view full details</div>
+        </div>
+        <span class="card-action" id="order-count-label">3 orders</span>
+      </div>
+      <div id="order-list-body">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div class="detail-card" id="detail-panel">
+      <div class="detail-head">
+        <div class="detail-head-left">
+          <div class="detail-order-title" id="d-title">Order ORD-9931 — Wheat</div>
+          <div class="detail-order-sub" id="d-sub">Farmer: Rajesh Singh · FRM-2847 &nbsp;|&nbsp; Buyer: Bharat Agro Pvt Ltd · BUY-9008</div>
+        </div>
+        <span id="d-chip"></span>
+      </div>
+      <div class="detail-body">
+
+        <!-- Farmer / Crop / Buyer -->
+        <div class="info-3col">
+          <div class="info-block">
+            <div class="info-block-head">Farmer Details</div>
+            <div class="info-row"><span class="info-key">Name</span><span class="info-val" id="d-farmer-name">—</span></div>
+            <div class="info-row"><span class="info-key">Farmer ID</span><span class="info-val" id="d-farmer-id">—</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-block-head">Crop Details</div>
+            <div class="info-row"><span class="info-key">Crop</span><span class="info-val" id="d-crop-type">—</span></div>
+            <div class="info-row"><span class="info-key">Quantity</span><span class="info-val green" id="d-crop-qty">—</span></div>
+            <div class="info-row"><span class="info-key">Crop ID</span><span class="info-val" id="d-crop-id">—</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-block-head">Buyer Details</div>
+            <div class="info-row"><span class="info-key">Buyer</span><span class="info-val" id="d-buyer-name">—</span></div>
+            <div class="info-row"><span class="info-key">Buyer ID</span><span class="info-val" id="d-buyer-id">—</span></div>
+            <div class="info-row"><span class="info-key">Delivery</span><span class="info-val" id="d-delivery" style="font-size:10.5px">—</span></div>
+          </div>
+        </div>
+
+        <!-- Transport -->
+        <div class="transport-block">
+          <div class="transport-head">Transportation Details</div>
+          <div class="transport-grid">
+            <div class="trans-item"><div class="trans-key">Vehicle Type</div><div class="trans-val" id="d-veh-type">—</div></div>
+            <div class="trans-item"><div class="trans-key">Vehicle Number</div><div class="trans-val" id="d-veh-num">—</div></div>
+            <div class="trans-item"><div class="trans-key">Driver Name</div><div class="trans-val" id="d-driver">—</div></div>
+            <div class="trans-item"><div class="trans-key">Load Capacity</div><div class="trans-val" id="d-capacity">—</div></div>
+            <div class="trans-item"><div class="trans-key">Transport Status</div><div class="trans-val status" id="d-trans-status">—</div></div>
+            <div class="trans-item"><div class="trans-key">Dispatch Origin</div><div class="trans-val" id="d-dispatch-from">—</div></div>
+          </div>
+        </div>
+
+        <!-- Tracking -->
+        <div class="tracker-block" id="tracker-block">
+          <div class="tracker-head">Order Tracking Progress</div>
+          <div class="stepper" id="main-stepper"></div>
+          <div class="tracker-meta">
+            <div class="tm-item"><div class="tm-key">Current Stage</div><div class="tm-val" id="d-cur-stage">—</div></div>
+            <div class="tm-item"><div class="tm-key">Last Updated</div><div class="tm-val" id="d-last-upd">—</div></div>
+            <div class="tm-item"><div class="tm-key">Delivery Destination</div><div class="tm-val" id="d-dest">—</div></div>
+            <div class="tm-item"><div class="tm-key">Estimated Arrival</div><div class="tm-val" id="d-eta">—</div></div>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <div>
+          <div class="docs-head">Order Documents</div>
+          <div class="docs-grid">
+            <!-- Purchase Order -->
+            <div class="doc-card">
+              <div class="doc-type">Purchase Order</div>
+              <div class="doc-title" id="d-po-id">—</div>
+              <div class="doc-rows">
+                <div class="doc-row"><span class="doc-key">Order Date</span><span class="doc-val" id="d-po-date">—</span></div>
+                <div class="doc-row"><span class="doc-key">Buyer</span><span class="doc-val" id="d-po-buyer">—</span></div>
+                <div class="doc-row"><span class="doc-key">Crop &amp; Qty</span><span class="doc-val" id="d-po-crop">—</span></div>
+                <div class="doc-row"><span class="doc-key">Agreed Price</span><span class="doc-val" id="d-po-price">—</span></div>
+                <div class="doc-row"><span class="doc-key">Total Value</span><span class="doc-val" id="d-po-total">—</span></div>
+              </div>
+              <div class="doc-btns">
+                <button class="btn-view-doc" onclick="openModal('po')">View PO</button>
+                <button class="btn-dl-doc" onclick="downloadDoc('po')">⬇ Download</button>
+              </div>
+            </div>
+            <!-- Sale Order -->
+            <div class="doc-card">
+              <div class="doc-type">Sale Order</div>
+              <div class="doc-title" id="d-so-id">—</div>
+              <div class="doc-rows">
+                <div class="doc-row"><span class="doc-key">Sale Date</span><span class="doc-val" id="d-so-date">—</span></div>
+                <div class="doc-row"><span class="doc-key">Farmer</span><span class="doc-val" id="d-so-farmer">—</span></div>
+                <div class="doc-row"><span class="doc-key">Crop &amp; Qty</span><span class="doc-val" id="d-so-crop">—</span></div>
+                <div class="doc-row"><span class="doc-key">Sale Value</span><span class="doc-val" id="d-so-val">—</span></div>
+                <div class="doc-row"><span class="doc-key">Dispatch Route</span><span class="doc-val" id="d-so-dispatch">—</span></div>
+              </div>
+              <div class="doc-btns">
+                <button class="btn-view-doc" onclick="openModal('so')">View SO</button>
+                <button class="btn-dl-doc" onclick="downloadDoc('so')">⬇ Download</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /aot-layout -->
+
+</main>
+</div>
+
+<!-- DOCUMENT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="doc-preview" id="modal-preview-content"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-dl" onclick="printModal()">⬇ Download / Print</button>
+      <button class="btn-modal-cls" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── DATA ── */
+var STAGES = ['Ordered','In Process','Packaged','Dispatched','Delivered'];
+
+var ORDERS = {
+  '9931': {
+    orderId:'ORD-9931', farmerName:'Rajesh Singh', farmerId:'FRM-2847',
+    cropType:'Wheat', cropId:'CRP-WHT-120', qty:'120 qtl',
+    buyerName:'Bharat Agro Pvt Ltd', buyerId:'BUY-9008',
+    delivery:'Pune Agri Market Yard, Maharashtra',
+    vehType:'Tata 407', vehNum:'MH12AB4582', driver:'Suresh Patil', capacity:'2.5 tons',
+    transStatus:'In transit to buyer', dispatchFrom:'Nashik, MH',
+    stage:3, lastUpd:'Apr 10, 2026 · 08:42 AM', dest:'Pune Agri Market Yard, MH', eta:'Apr 12, 2026',
+    chipClass:'chip-dispatched', chipText:'Dispatched',
+    poId:'PO-9931-BHR', poDate:'Apr 5, 2026', poPrice:'₹2,480/qtl', poTotal:'₹2,97,600',
+    soId:'SO-9931-RSG', soDate:'Apr 5, 2026', soVal:'₹2,97,600', soDispatch:'Nashik → Pune',
+    dueDate:'Apr 12, 2026'
+  },
+  '9932': {
+    orderId:'ORD-9932', farmerName:'Rajesh Singh', farmerId:'FRM-2847',
+    cropType:'Tomato', cropId:'CRP-TMT-050', qty:'50 qtl',
+    buyerName:'Delhi Fresh Mart', buyerId:'BUY-9013',
+    delivery:'Azadpur Mandi, Delhi',
+    vehType:'Ashok Leyland Dost', vehNum:'MH14CT2291', driver:'Mahesh Kale', capacity:'1.8 tons',
+    transStatus:'Vehicle assigned — not yet departed', dispatchFrom:'Nashik, MH',
+    stage:1, lastUpd:'Apr 9, 2026 · 05:10 PM', dest:'Azadpur Mandi, Delhi', eta:'Apr 15, 2026',
+    chipClass:'chip-inprocess', chipText:'In Process',
+    poId:'PO-9932-DFM', poDate:'Apr 7, 2026', poPrice:'₹920/qtl', poTotal:'₹46,000',
+    soId:'SO-9932-RSG', soDate:'Apr 7, 2026', soVal:'₹46,000', soDispatch:'Nashik → Delhi',
+    dueDate:'Apr 15, 2026'
+  },
+  '9933': {
+    orderId:'ORD-9933', farmerName:'Rajesh Singh', farmerId:'FRM-2847',
+    cropType:'Onion', cropId:'CRP-ONN-080', qty:'80 qtl',
+    buyerName:'Ramesh Traders', buyerId:'BUY-8874',
+    delivery:'Nashik Market Link Road, Maharashtra',
+    vehType:'Eicher Pro', vehNum:'MH15DK8710', driver:'Prakash Jadhav', capacity:'4 tons',
+    transStatus:'Ready for dispatch', dispatchFrom:'Nashik, MH',
+    stage:2, lastUpd:'Apr 10, 2026 · 10:15 AM', dest:'Nashik Market Link Road, MH', eta:'Apr 17, 2026',
+    chipClass:'chip-packaged', chipText:'Packaged',
+    poId:'PO-9933-RMT', poDate:'Apr 8, 2026', poPrice:'₹1,850/qtl', poTotal:'₹1,48,000',
+    soId:'SO-9933-RSG', soDate:'Apr 8, 2026', soVal:'₹1,48,000', soDispatch:'Nashik (local)',
+    dueDate:'Apr 17, 2026'
+  }
+};
+
+var selectedId = '9931';
+var activeFilter = 'all';
+var searchVal = '';
+var currentDocType = '';
+
+/* ── RENDER ORDER LIST ── */
+function renderList() {
+  var ids = Object.keys(ORDERS);
+  var visible = ids.filter(function(id){
+    var o = ORDERS[id];
+    if (activeFilter !== 'all' && STAGES[o.stage] !== activeFilter) return false;
+    if (searchVal) {
+      var q = searchVal.toLowerCase();
+      if (o.orderId.toLowerCase().indexOf(q) < 0 &&
+          o.cropType.toLowerCase().indexOf(q) < 0 &&
+          o.buyerName.toLowerCase().indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('order-count-label').textContent = visible.length + ' order' + (visible.length !== 1 ? 's' : '');
+
+  var html = '';
+  if (visible.length === 0) {
+    html = '<div style="padding:24px 16px;text-align:center;color:var(--tx-sec);font-size:12.5px;">No orders match this filter.</div>';
+  } else {
+    visible.forEach(function(id){
+      var o = ORDERS[id];
+      var sel = id === selectedId;
+      var stageIdx = o.stage;
+      // mini stepper html
+      var ms = '';
+      for (var i = 0; i < 5; i++) {
+        var dc = i < stageIdx ? 'done' : (i === stageIdx ? 'cur' : '');
+        ms += '<div class="ms-dot ' + dc + '"></div>';
+        if (i < 4) ms += '<div class="ms-line ' + (i < stageIdx ? 'done' : '') + '"></div>';
+      }
+      ms += '<span class="ms-stage' + (stageIdx < 4 ? ' active' : '') + '">' + STAGES[stageIdx] + '</span>';
+
+      html += '<div class="order-row' + (sel ? ' selected' : '') + '" id="or-' + id + '" onclick="selectOrder(\'' + id + '\')">'
+        + '<div class="or-top">'
+        +   '<div class="or-id-crop"><span class="or-id">' + o.orderId + '</span><span class="or-crop">' + o.cropType + '</span><span class="or-qty">· ' + o.qty + '</span></div>'
+        +   '<span class="' + o.chipClass + '">' + o.chipText + '</span>'
+        + '</div>'
+        + '<div class="or-mid"><span class="or-buyer">' + o.buyerName + '</span><span class="or-date">Due: ' + o.dueDate + '</span></div>'
+        + '<div class="or-bot">'
+        +   '<div class="ms">' + ms + '</div>'
+        +   '<div class="or-btns">'
+        +     '<button class="btn-track" onclick="event.stopPropagation();scrollToTracker(\'' + id + '\')">Track</button>'
+        +     '<button class="btn-docs" onclick="event.stopPropagation();selectAndDocs(\'' + id + '\')">Docs</button>'
+        +   '</div>'
+        + '</div>'
+        + '</div>';
+    });
+  }
+  document.getElementById('order-list-body').innerHTML = html;
+}
+
+/* ── SELECT ORDER ── */
+function selectOrder(id) {
+  selectedId = id;
+  renderList();
+  renderDetail(id);
+}
+
+function scrollToTracker(id) {
+  selectOrder(id);
+  setTimeout(function(){
+    var el = document.getElementById('tracker-block');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 80);
+}
+
+function selectAndDocs(id) {
+  selectOrder(id);
+  setTimeout(function(){
+    var el = document.getElementById('detail-panel');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+}
+
+/* ── RENDER DETAIL ── */
+function renderDetail(id) {
+  var o = ORDERS[id];
+  if (!o) return;
+
+  document.getElementById('d-title').textContent = 'Order ' + o.orderId + ' — ' + o.cropType;
+  document.getElementById('d-sub').textContent = 'Farmer: ' + o.farmerName + ' · ' + o.farmerId + '   |   Buyer: ' + o.buyerName + ' · ' + o.buyerId;
+  document.getElementById('d-chip').innerHTML = '<span class="' + o.chipClass + '">' + o.chipText + '</span>';
+
+  set('d-farmer-name', o.farmerName);
+  set('d-farmer-id', o.farmerId);
+  set('d-crop-type', o.cropType);
+  set('d-crop-qty', o.qty);
+  set('d-crop-id', o.cropId);
+  set('d-buyer-name', o.buyerName);
+  set('d-buyer-id', o.buyerId);
+  set('d-delivery', o.delivery);
+
+  set('d-veh-type', o.vehType);
+  set('d-veh-num', o.vehNum);
+  set('d-driver', o.driver);
+  set('d-capacity', o.capacity);
+  set('d-trans-status', o.transStatus);
+  set('d-dispatch-from', o.dispatchFrom);
+
+  set('d-cur-stage', STAGES[o.stage]);
+  set('d-last-upd', o.lastUpd);
+  set('d-dest', o.dest);
+  set('d-eta', o.eta);
+
+  renderStepper(o.stage);
+
+  set('d-po-id', o.poId);
+  set('d-po-date', o.poDate);
+  set('d-po-buyer', o.buyerName);
+  set('d-po-crop', o.cropType + ' · ' + o.qty);
+  set('d-po-price', o.poPrice);
+  set('d-po-total', o.poTotal);
+
+  set('d-so-id', o.soId);
+  set('d-so-date', o.soDate);
+  set('d-so-farmer', o.farmerName);
+  set('d-so-crop', o.cropType + ' · ' + o.qty);
+  set('d-so-val', o.soVal);
+  set('d-so-dispatch', o.soDispatch);
+}
+
+function set(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ── STEPPER ── */
+function renderStepper(curStage) {
+  var html = '';
+  for (var i = 0; i < STAGES.length; i++) {
+    var dc = i < curStage ? 'done' : (i === curStage ? 'cur' : '');
+    var lc = i < curStage ? 'done' : '';
+    var labelCls = i < curStage ? 'done' : (i === curStage ? 'cur' : '');
+    var icon = i < curStage ? '✓' : (i === curStage && curStage < 4 ? '●' : (i === curStage ? '✓' : ''));
+    html += '<div class="step">'
+      + '<div class="step-dot ' + dc + '">' + (i < curStage ? '✓' : '') + '</div>'
+      + '<div class="step-connector ' + lc + '"></div>'
+      + '<div class="step-label ' + labelCls + '">' + STAGES[i] + '</div>'
+      + '</div>';
+  }
+  document.getElementById('main-stepper').innerHTML = html;
+}
+
+/* ── FILTERS ── */
+function filterOrders(val, btn) {
+  activeFilter = val;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderList();
+}
+
+function searchOrders(val) {
+  searchVal = val;
+  renderList();
+}
+
+/* ── MODAL ── */
+function openModal(type) {
+  currentDocType = type;
+  var o = ORDERS[selectedId];
+  if (!o) return;
+  var content = '';
+  if (type === 'po') {
+    content = buildPreview({
+      docType:'PURCHASE ORDER', docId: o.poId, date: o.poDate,
+      partyALabel:'Buyer', partyAName: o.buyerName, partyAId: o.buyerId,
+      partyBLabel:'Farmer / Seller', partyBName: o.farmerName, partyBId: o.farmerId,
+      cropLabel:'Crop Details', cropType: o.cropType, cropId: o.cropId, qty: o.qty,
+      logLabel:'Logistics', addr: o.delivery, dispatch: o.dispatchFrom, priceLabel:'Agreed Price', price: o.poPrice,
+      totalLabel:'Total Purchase Order Value', total: o.poTotal, stamp:'PURCHASE ORDER'
+    });
+  } else {
+    content = buildPreview({
+      docType:'SALE ORDER', docId: o.soId, date: o.soDate,
+      partyALabel:'Farmer / Seller', partyAName: o.farmerName, partyAId: o.farmerId,
+      partyBLabel:'Buyer', partyBName: o.buyerName, partyBId: o.buyerId,
+      cropLabel:'Crop Details', cropType: o.cropType, cropId: o.cropId, qty: o.qty,
+      logLabel:'Logistics', addr: o.delivery, dispatch: o.soDispatch, priceLabel:'Rate per qtl', price: o.poPrice,
+      totalLabel:'Total Sale Order Value', total: o.soVal, stamp:'SALE ORDER'
+    });
+  }
+  document.getElementById('modal-preview-content').innerHTML = content;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function buildPreview(d) {
+  return '<div class="dp-header">'
+    + '<div class="dp-brand"><div class="dp-leaf"></div><span class="dp-brand-name">TechSetu</span></div>'
+    + '<div class="dp-doc-type">' + d.docType + '</div>'
+    + '<div class="dp-doc-id">' + d.docId + '</div>'
+    + '<div class="dp-doc-date">Date: ' + d.date + ' &nbsp;·&nbsp; Generated via TechSetu platform</div>'
+    + '</div>'
+    + '<div class="dp-grid">'
+    + '<div><div class="dp-group-label">' + d.partyALabel + '</div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Name</div><div class="dp-field-val">' + d.partyAName + '</div></div>'
+    +   '<div class="dp-field"><div class="dp-field-key">ID</div><div class="dp-field-val">' + d.partyAId + '</div></div>'
+    + '</div>'
+    + '<div><div class="dp-group-label">' + d.partyBLabel + '</div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Name</div><div class="dp-field-val">' + d.partyBName + '</div></div>'
+    +   '<div class="dp-field"><div class="dp-field-key">ID</div><div class="dp-field-val">' + d.partyBId + '</div></div>'
+    + '</div>'
+    + '<div><div class="dp-group-label">' + d.cropLabel + '</div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Crop Type</div><div class="dp-field-val">' + d.cropType + '</div></div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Crop ID</div><div class="dp-field-val">' + d.cropId + '</div></div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Quantity</div><div class="dp-field-val">' + d.qty + '</div></div>'
+    + '</div>'
+    + '<div><div class="dp-group-label">' + d.logLabel + '</div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Delivery Address</div><div class="dp-field-val">' + d.addr + '</div></div>'
+    +   '<div class="dp-field"><div class="dp-field-key">Dispatch</div><div class="dp-field-val">' + d.dispatch + '</div></div>'
+    +   '<div class="dp-field"><div class="dp-field-key">' + d.priceLabel + '</div><div class="dp-field-val">' + d.price + '</div></div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="dp-amount"><div class="dp-amount-label">' + d.totalLabel + '</div><div class="dp-amount-val">' + d.total + '</div></div>'
+    + '<div class="dp-footer">'
+    +   '<div class="dp-footer-note">This document is system-generated via TechSetu AgriTech platform.<br>Valid only for the transaction referenced above. For disputes, contact support.</div>'
+    +   '<div class="dp-stamp">' + d.stamp + '</div>'
+    + '</div>';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function downloadDoc(type) {
+  openModal(type);
+  setTimeout(function(){ printModal(); }, 350);
+}
+
+function printModal() {
+  var content = document.getElementById('modal-preview-content').innerHTML;
+  var win = window.open('', '_blank');
+  win.document.write('<!DOCTYPE html><html><head><title>TechSetu Document</title><style>'
+    + 'body{font-family:system-ui,-apple-system,sans-serif;color:#2E2E2E;padding:36px;max-width:660px;margin:auto;}'
+    + '.dp-header{border-bottom:2px solid #C8E6C9;padding-bottom:16px;margin-bottom:20px;}'
+    + '.dp-brand{display:flex;align-items:center;gap:8px;margin-bottom:10px;}'
+    + '.dp-leaf{width:10px;height:10px;background:#4CAF50;border-radius:50% 0 50% 0;transform:rotate(45deg);}'
+    + '.dp-brand-name{font-family:Georgia,serif;font-size:16px;color:#1B5E20;}'
+    + '.dp-doc-type{font-size:10px;color:#9E9E9E;text-transform:uppercase;letter-spacing:0.9px;margin-top:6px;}'
+    + '.dp-doc-id{font-size:22px;font-weight:700;color:#2E2E2E;margin-top:2px;}'
+    + '.dp-doc-date{font-size:11.5px;color:#616161;margin-top:4px;}'
+    + '.dp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 26px;margin-bottom:20px;}'
+    + '.dp-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9E9E9E;margin-bottom:7px;}'
+    + '.dp-field{margin-bottom:6px;}'
+    + '.dp-field-key{font-size:10.5px;color:#616161;}'
+    + '.dp-field-val{font-size:13.5px;font-weight:600;color:#2E2E2E;margin-top:1px;}'
+    + '.dp-amount{background:#E8F5E9;border:1px solid #C8E6C9;border-radius:8px;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}'
+    + '.dp-amount-label{font-size:12px;color:#2E7D32;}'
+    + '.dp-amount-val{font-size:24px;font-weight:700;color:#1B5E20;}'
+    + '.dp-footer{border-top:1px solid #E0E0E0;padding-top:12px;display:flex;align-items:center;justify-content:space-between;}'
+    + '.dp-footer-note{font-size:10.5px;color:#9E9E9E;line-height:1.55;}'
+    + '.dp-stamp{background:#C8E6C9;border-radius:6px;padding:6px 13px;font-size:10px;font-weight:700;color:#1B5E20;text-transform:uppercase;letter-spacing:0.5px;}'
+    + '@media print{body{padding:16px;}}'
+    + '</style></head><body>' + content + '</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 400);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('ts-toast');
+  t.textContent = msg;
+  setTimeout(function(){ t.classList.add('show'); }, 10);
+  setTimeout(function(){ t.classList.remove('show'); }, 3200);
+}
+
+/* ── INIT ── */
+window.addEventListener('load', function(){
+  renderList();
+  renderDetail(selectedId);
+});
+</script>
+</body>
+</html>

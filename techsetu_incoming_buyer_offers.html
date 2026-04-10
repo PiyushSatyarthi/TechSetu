@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechSetu - Incoming Buyer Offers</title>
+<style>
+:root{--p:#4CAF50;--p-h:#3E8E41;--bg:#F7F9F7;--card:#fff;--line:#E0E0E0;--mint:#E8F5E9;--text:#2E2E2E;--sub:#616161;--nav:#1B5E20;--navh:#2E7D32;--nava:#388E3C;--font-body:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--font-heading:Georgia,"Times New Roman",serif;--font-mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-body);background:var(--bg);color:var(--text)}h1,h2,.card-title{font-family:var(--font-heading);font-weight:400}input,select,button{font:inherit}
+nav{background:var(--nav);height:54px;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100;border-bottom:1px solid #145214}
+.nav-logo{display:flex;align-items:center;gap:8px;margin-right:32px;text-decoration:none;flex-shrink:0}
+.nav-logo-leaf{width:10px;height:10px;background:#A5D6A7;border-radius:50% 0 50% 0;transform:rotate(45deg)}
+.nav-logo-text{font-family:Georgia,"Times New Roman",serif;font-size:17px;color:#E8F5E9}
+.nav-links{display:flex;gap:2px;flex:1;overflow:hidden}.nav-link{font-size:12.5px;color:#81C784;text-decoration:none;padding:5px 12px;border-radius:6px;white-space:nowrap}.nav-link:hover{background:var(--navh);color:#E8F5E9}.nav-link.active{background:var(--nava);color:#E8F5E9}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}.nav-bell{width:32px;height:32px;background:var(--navh);border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}.nav-bell-dot{position:absolute;top:6px;right:7px;width:6px;height:6px;background:#FFD54F;border-radius:50%;border:1.5px solid var(--nav)}.nav-lang{font-size:11px;color:#81C784;border:1px solid #2E7D32;border-radius:4px;padding:3px 8px;background:transparent}.nav-avatar{width:32px;height:32px;background:var(--nava);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#E8F5E9;border:1.5px solid #66BB6A}
+.mobile-toggle{display:none;width:32px;height:32px;border-radius:6px;background:var(--navh);border:none;color:#E8F5E9;font-size:15px;cursor:pointer}
+.mobile-nav{display:none;background:var(--nav);padding:8px 12px;gap:4px;flex-direction:column}.mobile-nav.open{display:flex}.mobile-nav .nav-link{display:block}
+main{max-width:1240px;margin:0 auto;padding:18px}
+.hero{background:linear-gradient(130deg,#1B5E20,#388E3C);color:#fff;padding:18px;border-radius:12px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
+.hero h1{font-size:22px}.hero p{font-size:12px;color:rgba(255,255,255,.82)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);padding:8px 11px;border-radius:8px;text-align:center}.stat b{display:block}
+.filters{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12.5px}
+.layout{display:grid;grid-template-columns:1.3fr .9fr;gap:12px}
+.list{display:flex;flex-direction:column;gap:10px}
+.offer{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+.offer.sel{border-color:var(--p);box-shadow:0 0 0 2px rgba(76,175,80,.15)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.offer-id{font-size:11px;color:#9E9E9E;font-family:var(--font-mono)}.buyer{font-size:14px;font-weight:700}.sub{font-size:11px;color:var(--sub)}
+.tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.tag.open{background:#E8F5E9;color:#2E7D32}.tag.declined{background:#FFEBEE;color:#C62828}.tag.accepted{background:#E3F2FD;color:#1565C0}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}
+.meta div{background:#FAFFFE;border:1px solid #EEF4EE;border-radius:8px;padding:8px}
+.meta label{display:block;font-size:10px;color:#9E9E9E;text-transform:uppercase}.meta b{font-size:12.5px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.btn{border:none;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12.5px;font-weight:600}
+.btn.primary{background:var(--p);color:#fff}.btn.primary:hover{background:var(--p-h)}.btn.outline{border:1px solid var(--p);background:#fff;color:var(--p)}.btn.danger{border:1px solid #FFCDD2;background:#fff;color:#C62828}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-head{padding:12px 14px;border-bottom:1px solid #F0F4F0}.card-title{font-size:14px}.card-body{padding:12px 14px}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F5F5F5;font-size:12.5px}.kv:last-child{border-bottom:none}
+.empty{padding:28px;text-align:center;color:#9E9E9E}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(70px);opacity:0;transition:.25s;background:#2E7D32;color:#fff;padding:9px 14px;border-radius:8px;font-size:12.5px;z-index:50}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media (max-width:930px){.layout{grid-template-columns:1fr}}@media (max-width:760px){.nav-links{display:none}.mobile-toggle{display:grid}}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+<nav>
+  <a class="nav-logo" href="techsetu_farmer_dashboard.html"><span class="nav-logo-leaf"></span><span class="nav-logo-text">TechSetu</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+    <a class="nav-link" href="techsetu_add_listing.html">Add listing</a>
+    <a class="nav-link active" href="#">Orders</a>
+    <a class="nav-link" href="techsetu_active_orders.html">Active orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html">Payments</a>
+  </div>
+  <div class="nav-right"><div class="nav-bell">🔔<div class="nav-bell-dot"></div></div><div class="nav-lang">हि | EN</div><div class="nav-avatar">RS</div><button class="mobile-toggle" onclick="toggleMobile()">☰</button></div>
+</nav>
+<div id="mobileNav" class="mobile-nav">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+    <a class="nav-link" href="#">My crops</a>
+    <a class="nav-link" href="techsetu_add_listing.html">Add listing</a>
+    <a class="nav-link active" href="#">Orders</a>
+    <a class="nav-link" href="techsetu_active_orders.html">Active orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html">Payments</a>
+    <a class="nav-link" href="#">Mandi rates</a>
+    <a class="nav-link" href="#">Help</a>
+</div>
+<main>
+  <section class="hero">
+    <div><h1>Incoming Buyer Offers</h1><p>Accepting an offer creates an order, updates active tracking, and adds payment records automatically.</p></div>
+    <div class="stats"><div class="stat"><b id="sOpen">0</b><small>Open</small></div><div class="stat"><b id="sAccepted">0</b><small>Accepted</small></div><div class="stat"><b id="sValue">Rs 0</b><small>Open Value</small></div></div>
+  </section>
+  <div class="filters">
+    <input id="search" placeholder="Search buyer, crop, offer id" oninput="render()">
+    <select id="statusFilter" onchange="render()"><option value="All">All Status</option><option>Open</option><option>Accepted</option><option>Declined</option></select>
+    <select id="transportFilter" onchange="render()"><option value="All">All Transport</option><option>Buyer arranged</option><option>Farmer/TechSetu</option></select>
+  </div>
+  <div class="layout">
+    <div class="list" id="offerList"></div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Selected Offer Breakdown</div></div>
+      <div class="card-body" id="detailBody"></div>
+    </div>
+  </div>
+</main>
+<script>
+const KEYS={listings:'techsetu_listings',offers:'techsetu_offers',orders:'techsetu_orders',payments:'techsetu_payments',transport:'techsetu_transport_bookings',ui:'techsetu_ui_state'};
+function getData(key,fallback){try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback;}catch{return fallback;}}
+function setData(key,val){localStorage.setItem(key,JSON.stringify(val));}
+function upsertById(arr,item,idKey='id'){const i=arr.findIndex(x=>x[idKey]===item[idKey]);if(i>=0)arr[i]=item;else arr.unshift(item);return arr;}
+function generateId(prefix){return prefix+'-'+Date.now().toString(36).toUpperCase().slice(-6)+'-'+Math.random().toString(36).slice(2,6).toUpperCase();}
+function seedDataIfMissing(){if(!localStorage.getItem(KEYS.listings)){setData(KEYS.listings,[{id:'LST-2026-019',cropName:'Wheat',variety:'Lok-1',grade:'Grade A',quantity:120,price:2480,status:'Active',pickupLocation:'Nashik',destination:'Pune',createdAt:new Date().toISOString()},{id:'LST-2026-011',cropName:'Onion',variety:'Nashik Red',grade:'Grade A',quantity:80,price:1850,status:'Active',pickupLocation:'Nashik',destination:'Mumbai',createdAt:new Date().toISOString()}]);}
+if(!localStorage.getItem(KEYS.offers)){setData(KEYS.offers,[{id:'OFF-2081',listingId:'LST-2026-019',cropName:'Wheat',quantity:80,pricePerQtl:2520,total:201600,buyerName:'Bharat Agro Pvt Ltd',buyerType:'Wholesaler',transportType:'Buyer arranged',paymentMode:'Bank Transfer',status:'Open',location:'Pune',createdAt:new Date().toISOString()},{id:'OFF-2082',listingId:'LST-2026-011',cropName:'Onion',quantity:50,pricePerQtl:1780,total:89000,buyerName:'Ramesh Traders',buyerType:'Retailer',transportType:'Farmer/TechSetu',paymentMode:'UPI',status:'Open',location:'Nashik',createdAt:new Date().toISOString()}]);}
+if(!localStorage.getItem(KEYS.orders))setData(KEYS.orders,[]);if(!localStorage.getItem(KEYS.payments))setData(KEYS.payments,[]);if(!localStorage.getItem(KEYS.transport))setData(KEYS.transport,[]);if(!localStorage.getItem(KEYS.ui))setData(KEYS.ui,{});syncDerivedData();}
+function syncDerivedData(){const orders=getData(KEYS.orders,[]);const payments=getData(KEYS.payments,[]);orders.forEach(o=>{if(!payments.some(p=>p.orderId===o.id)){payments.unshift({id:generateId('PAY'),orderId:o.id,listingId:o.listingId,buyerName:o.buyerName,cropName:o.cropName,amount:o.total,status:o.stage==='Delivered'?'Processing':'Pending',paymentMode:o.paymentMode||'Bank Transfer',date:new Date().toISOString(),type:'incoming'});}});setData(KEYS.payments,payments);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+function toggleMobile(){document.getElementById('mobileNav').classList.toggle('open');}
+seedDataIfMissing();
+let selectedId=(getData(KEYS.ui,{}).selectedOfferId)||'';
+function fmt(n){return 'Rs '+Math.round(n).toLocaleString('en-IN')}
+function render(){
+  const offers=getData(KEYS.offers,[]); const q=document.getElementById('search').value.trim().toLowerCase(); const sf=document.getElementById('statusFilter').value; const tf=document.getElementById('transportFilter').value;
+  const filtered=offers.filter(o=>{const mQ=!q||o.id.toLowerCase().includes(q)||o.buyerName.toLowerCase().includes(q)||o.cropName.toLowerCase().includes(q);const mS=sf==='All'||o.status===sf;const mT=tf==='All'||o.transportType===tf;return mQ&&mS&&mT;});
+  if(!selectedId&&filtered[0])selectedId=filtered[0].id;
+  document.getElementById('sOpen').textContent=offers.filter(o=>o.status==='Open').length;document.getElementById('sAccepted').textContent=offers.filter(o=>o.status==='Accepted').length;document.getElementById('sValue').textContent=fmt(offers.filter(o=>o.status==='Open').reduce((a,b)=>a+b.total,0));
+  const wrap=document.getElementById('offerList');
+  if(!filtered.length){wrap.innerHTML='<div class="empty card">No offers match selected filters.</div>'; document.getElementById('detailBody').innerHTML='Select an available offer.'; return;}
+  wrap.innerHTML=filtered.map(o=>'<article class="offer '+(o.id===selectedId?'sel':'')+'" onclick="selectOffer(\''+o.id+'\')"><div class="row"><div><div class="offer-id">'+o.id+' | Listing '+(o.listingId||'-')+'</div><div class="buyer">'+esc(o.buyerName)+'</div><div class="sub">'+esc(o.cropName)+' | '+o.quantity+' qtl | '+esc(o.location||'-')+'</div></div><span class="tag '+o.status.toLowerCase()+'">'+o.status+'</span></div><div class="meta"><div><label>Rate</label><b>'+fmt(o.pricePerQtl)+'/qtl</b></div><div><label>Total</label><b>'+fmt(o.total)+'</b></div><div><label>Transport</label><b>'+esc(o.transportType)+'</b></div></div><div class="actions"><button class="btn primary" onclick="event.stopPropagation();acceptOffer(\''+o.id+'\')">Accept</button><button class="btn danger" onclick="event.stopPropagation();declineOffer(\''+o.id+'\')">Decline</button><button class="btn outline" onclick="event.stopPropagation();selectOffer(\''+o.id+'\')">Breakdown</button></div></article>').join('');
+  showDetail(offers.find(o=>o.id===selectedId)||filtered[0]);
+}
+function selectOffer(id){selectedId=id;const ui=getData(KEYS.ui,{});ui.selectedOfferId=id;setData(KEYS.ui,ui);render();}
+function showDetail(o){if(!o){document.getElementById('detailBody').innerHTML='No offer selected.';return;}document.getElementById('detailBody').innerHTML='<div class="kv"><span>Offer ID</span><strong>'+o.id+'</strong></div><div class="kv"><span>Listing ID</span><strong>'+(o.listingId||'-')+'</strong></div><div class="kv"><span>Buyer</span><strong>'+esc(o.buyerName)+'</strong></div><div class="kv"><span>Buyer Type</span><strong>'+esc(o.buyerType||'-')+'</strong></div><div class="kv"><span>Crop</span><strong>'+esc(o.cropName)+'</strong></div><div class="kv"><span>Qty</span><strong>'+o.quantity+' qtl</strong></div><div class="kv"><span>Rate</span><strong>'+fmt(o.pricePerQtl)+'/qtl</strong></div><div class="kv"><span>Total</span><strong>'+fmt(o.total)+'</strong></div><div class="kv"><span>Payment Mode</span><strong>'+esc(o.paymentMode||'-')+'</strong></div><div class="kv"><span>Transport</span><strong>'+esc(o.transportType)+'</strong></div><div class="kv"><span>Status</span><strong>'+o.status+'</strong></div>';}
+function acceptOffer(id){let offers=getData(KEYS.offers,[]);const offer=offers.find(o=>o.id===id);if(!offer||offer.status==='Accepted'){toast('Offer already accepted');return;}offer.status='Accepted';offer.acceptedAt=new Date().toISOString();setData(KEYS.offers,offers);
+  let orders=getData(KEYS.orders,[]);const existing=orders.find(o=>o.offerId===offer.id);const orderId=existing?existing.id:generateId('ORD');
+  const listing=getData(KEYS.listings,[]).find(l=>l.id===offer.listingId);
+  const order={id:orderId,offerId:offer.id,listingId:offer.listingId,cropName:offer.cropName,buyerName:offer.buyerName,quantity:offer.quantity,pricePerQtl:offer.pricePerQtl,total:offer.total,paymentMode:offer.paymentMode,stage:'Ordered',stageIndex:0,transportType:offer.transportType,transportStatus:offer.transportType==='Buyer arranged'?'Buyer Arranged':'Pending Booking',pickupLocation:(listing&&listing.pickupLocation)||'Farmer Location',destination:(listing&&listing.destination)||offer.location,status:'Active',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  orders=upsertById(orders,order);setData(KEYS.orders,orders);
+  let payments=getData(KEYS.payments,[]); if(!payments.some(p=>p.orderId===order.id)){payments.unshift({id:generateId('PAY'),orderId:order.id,listingId:order.listingId,buyerName:order.buyerName,cropName:order.cropName,amount:order.total,status:'Pending',paymentMode:order.paymentMode||'Bank Transfer',date:new Date().toISOString(),type:'incoming'});} setData(KEYS.payments,payments);
+  const ui=getData(KEYS.ui,{});ui.selectedOrderId=order.id;ui.selectedOfferId=id;ui.lastAction='offer_accepted';if(order.transportType!=='Buyer arranged'){ui.pendingTransportContext={orderId:order.id,listingId:order.listingId,cropName:order.cropName,quantity:order.quantity,pickupLocation:order.pickupLocation,destination:order.destination};setData(KEYS.ui,ui);toast('Offer accepted. Continue with transport booking');setTimeout(()=>location.href='techsetu-request-transport.html',600);return;}setData(KEYS.ui,ui);toast('Offer accepted. Order created');setTimeout(()=>location.href='techsetu_active_orders.html',600);
+}
+function declineOffer(id){let offers=getData(KEYS.offers,[]);const offer=offers.find(o=>o.id===id);if(!offer||offer.status==='Declined'){toast('Offer already declined');return;}offer.status='Declined';offer.declinedAt=new Date().toISOString();setData(KEYS.offers,offers);toast('Offer declined');render();}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+render();
+</script>
+</body>
+</html>
