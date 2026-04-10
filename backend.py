@@ -35,6 +35,7 @@ TWILIO_VERIFY_SERVICE_SID = os.getenv("TWILIO_VERIFY_SERVICE_SID", "")
 OTP_RESEND_COOLDOWN_SECONDS = 60
 
 DEV_OTP = "666666"
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 
 supabase: Optional[Client] = (
     create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -53,6 +54,10 @@ twilio_client: Optional[TwilioClient] = (
     if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID
     else None
 )
+# NOTE (Issue #1): This dict is in-process only. On multi-worker or serverless deploys
+# (e.g. Vercel, Gunicorn with workers) each process has its own copy, making the
+# cooldown bypassable. Replace with a Redis key or a Supabase "otp_rate_limits" table
+# keyed on phone_e164 for production multi-process safety.
 otp_send_timestamps: dict[str, int] = {}
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -61,14 +66,17 @@ app = FastAPI(title="TechSetu Backend")
 _allowed_origins = [o.strip() for o in APP_ORIGINS.split(",") if o.strip()]
 if APP_ORIGIN and APP_ORIGIN not in _allowed_origins:
     _allowed_origins.append(APP_ORIGIN)
-for _origin in (
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-):
-    if _origin not in _allowed_origins:
-        _allowed_origins.append(_origin)
+# Only expose local dev origins outside of production to avoid credentialed
+# cross-origin requests from arbitrary localhost ports in production.
+if not IS_PRODUCTION:
+    for _origin in (
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+    ):
+        if _origin not in _allowed_origins:
+            _allowed_origins.append(_origin)
 
 app.add_middleware(
     CORSMiddleware,
@@ -114,12 +122,14 @@ class SignupBody(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: str) -> str:
-        cleaned = value.strip()
-        if not re.fullmatch(r"^\+?[0-9\s-]{10,20}$", cleaned):
+        cleaned = re.sub(r"[\s()\-]", "", value.strip()).lstrip("0") if not value.strip().startswith("+") else re.sub(r"[\s()\-]", "", value.strip())
+        if not cleaned.startswith("+"):
+            if not re.fullmatch(r"\d{10}", cleaned):
+                raise ValueError("Invalid phone number format. Use +91XXXXXXXXXX or a 10-digit Indian number.")
+            cleaned = f"+91{cleaned}"
+        if not re.fullmatch(r"^\+[1-9]\d{9,14}$", cleaned):
             raise ValueError("Invalid phone number format.")
-        return cleaned
-
-    @field_validator("password")
+        return value.strip()  # Return raw; normalize_phone will canonicalize on use.
     @classmethod
     def validate_password(cls, value: str) -> str:
         if (
@@ -159,10 +169,14 @@ class GoogleCompleteSignupBody(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: str) -> str:
-        cleaned = value.strip()
-        if not re.fullmatch(r"^\+?[0-9\s-]{10,20}$", cleaned):
+        cleaned = re.sub(r"[\s()\-]", "", value.strip())
+        if not cleaned.startswith("+"):
+            cleaned = cleaned.lstrip("0")
+            if not re.fullmatch(r"\d{10}", cleaned):
+                raise ValueError("Invalid phone number format. Use +91XXXXXXXXXX or a 10-digit Indian number.")
+        if not re.fullmatch(r"^\+?[1-9]\d{9,14}$", cleaned):
             raise ValueError("Invalid phone number format.")
-        return cleaned
+        return value.strip()
 
 
 class GoogleOAuthStartBody(BaseModel):
@@ -202,13 +216,18 @@ class UpdateProfileBody(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: str) -> str:
-        cleaned = value.strip()
-        if not re.fullmatch(r"^\+?[0-9\s-]{10,20}$", cleaned):
+        cleaned = re.sub(r"[\s()\-]", "", value.strip())
+        if not cleaned.startswith("+"):
+            cleaned = cleaned.lstrip("0")
+            if not re.fullmatch(r"\d{10}", cleaned):
+                raise ValueError("Invalid phone number format. Use +91XXXXXXXXXX or a 10-digit Indian number.")
+        if not re.fullmatch(r"^\+?[1-9]\d{9,14}$", cleaned):
             raise ValueError("Invalid phone number format.")
-        return cleaned
+        return value.strip()
 
 
 class ChangePasswordBody(BaseModel):
+    current_password: str = Field(min_length=1, max_length=64)
     new_password: str = Field(min_length=8, max_length=64)
 
     @field_validator("new_password")
@@ -241,13 +260,22 @@ def _get_user_from_token(request: Request) -> dict:
             "user_metadata": user_res.user.user_metadata or {},
             "token": token,
         }
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        message = str(exc).lower()
+        # Distinguish genuine auth failures from upstream/network errors.
+        if any(k in message for k in ("invalid", "expired", "jwt", "unauthorized", "forbidden", "not authenticated")):
+            raise HTTPException(status_code=401, detail="Invalid or expired token.")
+        # Supabase or network outage — surface as 503 so callers know it's not their fault.
+        raise HTTPException(status_code=503, detail="Authentication service temporarily unavailable. Please retry.") from exc
 
 
 def normalize_phone(phone: str) -> str:
-    cleaned = re.sub(r"[\s()-]", "", phone.strip())
+    cleaned = re.sub(r"[\s()\-]", "", phone.strip())
     if not cleaned.startswith("+"):
+        # Strip leading zeros (e.g. 09876543210 → 9876543210) then auto-prefix +91
+        cleaned = cleaned.lstrip("0")
         if re.fullmatch(r"\d{10}", cleaned):
             cleaned = f"+91{cleaned}"
         else:
@@ -255,7 +283,7 @@ def normalize_phone(phone: str) -> str:
                 status_code=400,
                 detail={
                     "error_code": "INVALID_PHONE",
-                    "detail": "Use a valid mobile number with country code.",
+                    "detail": "Use a valid mobile number with country code (e.g. +91XXXXXXXXXX or 10-digit Indian number).",
                 },
             )
     if not re.fullmatch(r"^\+[1-9]\d{9,14}$", cleaned):
@@ -294,6 +322,15 @@ def _assert_phone_otp(phone: str, otp: str) -> str:
                 },
             )
     else:
+        # Never allow dev fallback in production — fail loudly instead.
+        if IS_PRODUCTION:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error_code": "OTP_SERVICE_NOT_CONFIGURED",
+                    "detail": "Phone verification is not configured. Set TWILIO_* environment variables.",
+                },
+            )
         if otp.strip() != DEV_OTP:
             raise HTTPException(
                 status_code=400,
@@ -306,6 +343,10 @@ def _assert_phone_otp(phone: str, otp: str) -> str:
 
 
 def _is_email_registered(email: str) -> bool:
+    """Check if an email is registered. Uses paginated scan as Supabase Admin API
+    does not expose a direct email-lookup endpoint without service role.
+    NOTE: For large user bases, replace with a direct DB query on auth.users via
+    supabase_admin.rpc() or a dedicated index to avoid O(N) scans."""
     if not supabase_admin:
         return False
     normalized_email = email.strip().lower()
@@ -316,7 +357,6 @@ def _is_email_registered(email: str) -> bool:
         try:
             users_page = supabase_admin.auth.admin.list_users(page=page, per_page=per_page)
         except TypeError:
-            # SDK fallback without pagination parameters.
             users_page = supabase_admin.auth.admin.list_users()
         users = []
         if hasattr(users_page, "users") and users_page.users:
@@ -423,6 +463,15 @@ def send_phone_otp(body: SendPhoneOtpBody) -> dict:
                     "detail": "Unable to send OTP right now. Please try again.",
                 },
             ) from exc
+    elif IS_PRODUCTION:
+        # Twilio not configured in production — refuse rather than silently use dev mode.
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "OTP_SERVICE_NOT_CONFIGURED",
+                "detail": "Phone verification service is not configured.",
+            },
+        )
     otp_send_timestamps[phone_e164] = now_ts
     return {
         "ok": True,
@@ -655,28 +704,10 @@ def forgot_password(body: ForgotPasswordBody, request: Request) -> dict:
         )
 
     normalized_email = str(body.email).strip().lower()
+    # Use the paginated helper (which handles SDK variations) instead of a raw
+    # single-page list_users() call that silently misses users beyond page 1.
     try:
-        users_page = supabase_admin.auth.admin.list_users()
-        users = []
-        if hasattr(users_page, "users") and users_page.users:
-            users = users_page.users
-        elif hasattr(users_page, "data") and users_page.data:
-            users = users_page.data
-
-        is_registered = any(
-            (getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None) or "").strip().lower() == normalized_email
-            for user in users
-        )
-        if not is_registered:
-            raise HTTPException(
-                status_code=404,
-                detail={
-                    "error_code": "PASSWORD_RESET_EMAIL_NOT_REGISTERED",
-                    "detail": "No account found with this email.",
-                },
-            )
-    except HTTPException:
-        raise
+        is_registered = _is_email_registered(normalized_email)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -685,6 +716,11 @@ def forgot_password(body: ForgotPasswordBody, request: Request) -> dict:
                 "detail": "Could not verify whether this email is registered.",
             },
         ) from exc
+
+    if not is_registered:
+        # Return a generic success-like response to prevent user enumeration:
+        # an attacker probing this endpoint should not learn which emails exist.
+        return {"ok": True, "message": "If this email is registered, a reset link has been sent."}
 
     origin = request.headers.get("origin") or APP_ORIGIN
     fallback_role = body.role or "buyer"
@@ -971,6 +1007,22 @@ def change_password(body: ChangePasswordBody, request: Request) -> dict:
                 "detail": "Password change is unavailable. Configure SUPABASE_SERVICE_ROLE_KEY.",
             },
         )
+
+    # Verify current password by attempting a sign-in before allowing the change.
+    email = session.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail={"error_code": "PASSWORD_CHANGE_FAILED", "detail": "Could not resolve account email."})
+    try:
+        auth_client().auth.sign_in_with_password({"email": email, "password": body.current_password})
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error_code": "INVALID_CREDENTIALS",
+                "detail": "Current password is incorrect.",
+            },
+        )
+
     try:
         supabase_admin.auth.admin.update_user_by_id(
             session["uid"],
@@ -1026,7 +1078,7 @@ def create_order(body: RazorpayOrderBody, request: Request) -> dict:
 
 @app.post("/payments/verify")
 def verify_payment(body: VerifyPaymentBody, request: Request) -> dict:
-    _ = _get_user_from_token(request)
+    sess = _get_user_from_token(request)
     if not RAZORPAY_KEY_SECRET:
         raise HTTPException(status_code=500, detail="Razorpay keys not configured.")
 
@@ -1035,9 +1087,28 @@ def verify_payment(body: VerifyPaymentBody, request: Request) -> dict:
     if not hmac.compare_digest(expected, body.razorpay_signature):
         raise HTTPException(status_code=400, detail="Payment signature verification failed.")
 
-    # Update order status to paid
-    db_client().table("orders").update({"status": "paid"}).eq(
+    # Confirm the order belongs to the authenticated user before marking paid.
+    # This prevents a user from submitting another user's order_id with a valid signature.
+    try:
+        order_res = db_client().table("orders").select("id, user_id, status").eq(
+            "razorpay_order_id", body.razorpay_order_id
+        ).single().execute()
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Order not found.") from exc
+
+    order_row = order_res.data
+    if not order_row:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    if str(order_row.get("user_id")) != str(sess["uid"]):
+        raise HTTPException(status_code=403, detail="Order does not belong to your account.")
+
+    # Fix #5: Idempotency — only update if still pending to prevent double-payment processing.
+    update_res = db_client().table("orders").update({"status": "paid"}).eq(
         "razorpay_order_id", body.razorpay_order_id
-    ).execute()
+    ).eq("status", "pending").execute()
+
+    if not update_res.data:
+        # Either already paid (idempotent success) or row vanished — both are safe to ack.
+        return {"ok": True, "message": "Payment already verified."}
 
     return {"ok": True, "message": "Payment verified."}

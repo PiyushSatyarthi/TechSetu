@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add New Listing — TechSetu</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; background: #F7F9F7; color: #2E2E2E; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5; }
+
+:root {
+  --p: #4CAF50; --p-hov: #3E8E41; --p-soft: #6FBF73;
+  --bg-app: #F7F9F7; --bg-mint: #E8F5E9; --bg-soft: #DFF0E3;
+  --ac1: #81C784; --ac2: #66BB6A; --ac3: #A5D6A7;
+  --white: #FFFFFF; --border: #E0E0E0; --border-focus: #4CAF50;
+  --tx: #2E2E2E; --tx-sub: #616161; --tx-sec: #9E9E9E; --tx-ph: #A0A0A0;
+  --nav: #1B5E20; --nav-hov: #2E7D32; --nav-act: #388E3C; --nav-tx: #E8F5E9; --nav-sub: #81C784;
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px;
+}
+
+/* ── NAV ── */
+nav { background: var(--nav); height: 54px; display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #145214; }
+.nav-logo { display: flex; align-items: center; gap: 8px; margin-right: 32px; text-decoration: none; flex-shrink: 0; }
+.nav-logo-leaf { width: 10px; height: 10px; background: var(--ac3); border-radius: 50% 0 50% 0; transform: rotate(45deg); }
+.nav-logo-text { font-family: Georgia,'Times New Roman',serif; font-size: 17px; color: var(--nav-tx); }
+.nav-links { display: flex; gap: 2px; flex: 1; overflow: hidden; }
+.nav-link { font-size: 12.5px; color: var(--nav-sub); text-decoration: none; padding: 5px 12px; border-radius: var(--r-sm); white-space: nowrap; transition: color 0.15s, background 0.15s; }
+.nav-link:hover { color: var(--nav-tx); background: var(--nav-hov); }
+.nav-link.active { color: var(--nav-tx); background: var(--nav-act); }
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.nav-bell { width: 32px; height: 32px; background: var(--nav-hov); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+.nav-bell-dot { position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; background: #FFD54F; border-radius: 50%; border: 1.5px solid var(--nav); }
+.nav-lang { font-size: 11px; color: var(--nav-sub); border: 1px solid #2E7D32; border-radius: 4px; padding: 3px 8px; cursor: pointer; background: transparent; }
+.nav-avatar { width: 32px; height: 32px; background: var(--nav-act); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--nav-tx); border: 1.5px solid var(--ac2); cursor: pointer; }
+
+/* ── MAIN ── */
+main { padding: 20px 24px 40px; max-width: 960px; margin: 0 auto; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  background: linear-gradient(135deg, #A5D6A7 0%, #4CAF50 100%);
+  border-radius: var(--r-lg);
+  padding: 15px 20px;
+  margin-bottom: 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.page-header h1 { font-family: Georgia,'Times New Roman',serif; font-size: 18px; font-weight: 400; color: #1B5E20; }
+.page-header p { font-size: 11.5px; color: #2E7D32; margin-top: 2px; }
+.listing-id-badge { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.7); border-radius: var(--r-sm); padding: 6px 13px; text-align: center; white-space: nowrap; }
+.listing-id-label { font-size: 10px; color: #2E7D32; }
+.listing-id-val { font-size: 12.5px; font-weight: 700; color: #1B5E20; font-family: monospace; margin-top: 1px; }
+
+/* ── FORM LAYOUT ── */
+.form-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .form-layout { grid-template-columns: 1fr; } }
+
+/* ── SECTION CARD ── */
+.section-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 14px; }
+.section-card:last-child { margin-bottom: 0; }
+.section-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F0F4F0;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-num {
+  width: 24px; height: 24px;
+  background: var(--bg-mint);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 700; color: #2E7D32;
+  flex-shrink: 0;
+}
+.section-title { font-family: Georgia,'Times New Roman',serif; font-size: 14px; font-weight: 400; color: var(--tx); }
+.section-body { padding: 16px; }
+.section-body .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.section-body .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .section-body .row2, .section-body .row3 { grid-template-columns: 1fr; } }
+
+/* ── FORM ELEMENTS ── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--tx-sub); margin-bottom: 5px; }
+label .req { color: #D32F2F; margin-left: 2px; }
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  font-size: 13.5px;
+  color: var(--tx);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--p);
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.12);
+}
+input::placeholder, textarea::placeholder { color: var(--tx-ph); }
+select { background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239E9E9E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.field-hint { font-size: 11px; color: var(--tx-sec); margin-top: 4px; }
+.field-error { font-size: 11px; color: #D32F2F; margin-top: 4px; display: none; }
+.field.error input, .field.error select, .field.error textarea { border-color: #D32F2F; box-shadow: 0 0 0 3px rgba(211,47,47,0.1); }
+.field.error .field-error { display: block; }
+
+/* ── GRADE BUTTONS ── */
+.grade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.grade-btn {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  border-radius: var(--r-sm);
+  padding: 8px 6px;
+  font-size: 12px; font-weight: 600;
+  color: var(--tx-sub);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.grade-btn:hover { border-color: var(--p); color: var(--p); }
+.grade-btn.selected { background: var(--bg-mint); border-color: var(--p); color: #2E7D32; }
+.grade-export { grid-column: span 2; }
+
+/* ── UPLOAD BOX ── */
+.upload-box {
+  border: 2px dashed var(--border);
+  border-radius: var(--r-md);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--bg-app);
+}
+.upload-box:hover { border-color: var(--p); background: var(--bg-mint); }
+.upload-box.has-file { border-color: var(--p); background: var(--bg-mint); }
+.upload-icon { margin: 0 auto 8px; width: 32px; height: 32px; background: var(--bg-soft); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.upload-label { font-size: 12.5px; font-weight: 600; color: var(--tx-sub); }
+.upload-hint { font-size: 11px; color: var(--tx-sec); margin-top: 3px; }
+.upload-previews { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; justify-content: center; }
+.upload-thumb { width: 52px; height: 52px; background: var(--bg-card); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #2E7D32; font-weight: 600; border: 1px solid var(--ac3); }
+
+/* ── PRICE PREVIEW CARD ── */
+.price-preview {
+  background: var(--bg-mint);
+  border: 1px solid var(--bg-card);
+  border-radius: var(--r-md);
+  padding: 13px 14px;
+  margin-bottom: 14px;
+}
+.price-preview-head { font-size: 11px; font-weight: 600; color: #2E7D32; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 9px; }
+.price-preview-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12.5px; border-bottom: 1px solid #C8E6C9; }
+.price-preview-row:last-child { border-bottom: none; font-weight: 700; color: #1B5E20; font-size: 13px; padding-top: 7px; }
+.price-preview-label { color: var(--tx-sub); }
+.price-preview-val { font-weight: 500; color: var(--tx); }
+
+/* ── MSP ALERT ── */
+.msp-alert { padding: 10px 12px; background: #FFF8E1; border-left: 3px solid #FFA000; border-radius: var(--r-sm); margin-bottom: 14px; }
+.msp-alert-head { font-size: 11.5px; font-weight: 600; color: #E65100; margin-bottom: 2px; }
+.msp-alert-body { font-size: 11.5px; color: #6D4C41; }
+
+/* ── CONFIRM SUMMARY ── */
+.confirm-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #F5F5F5; font-size: 12.5px; }
+.confirm-row:last-child { border-bottom: none; }
+.confirm-key { color: var(--tx-sub); }
+.confirm-val { font-weight: 500; color: var(--tx); text-align: right; }
+
+/* ── SUBMIT ACTIONS ── */
+.submit-actions { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid #F0F4F0; background: #FAFFFE; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; font-family: inherit; }
+.btn-primary { background: var(--p); color: #fff; }
+.btn-primary:hover { background: var(--p-hov); }
+.btn-secondary { background: var(--white); color: var(--p); border: 1.5px solid var(--p); }
+.btn-secondary:hover { background: var(--bg-mint); }
+.btn-ghost { background: var(--white); color: var(--tx-sub); border: 1.5px solid var(--border); }
+.btn-ghost:hover { color: var(--tx); border-color: #9E9E9E; }
+
+/* ── SUCCESS STATE ── */
+.success-screen { display: none; text-align: center; padding: 40px 20px; }
+.success-screen.show { display: block; }
+.success-icon {
+  width: 64px; height: 64px;
+  background: var(--bg-mint);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  border: 2px solid var(--p);
+}
+.success-head { font-family: Georgia,'Times New Roman',serif; font-size: 20px; color: #1B5E20; margin-bottom: 6px; }
+.success-sub { font-size: 13px; color: var(--tx-sub); margin-bottom: 20px; }
+.success-id { font-family: monospace; font-size: 13px; font-weight: 700; color: var(--p-hov); background: var(--bg-mint); display: inline-block; padding: 5px 12px; border-radius: var(--r-sm); margin-bottom: 20px; border: 1px solid var(--ac3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  main { padding: 12px; }
+  .nav-links { display: none; }
+  .form-layout { grid-template-columns: 1fr; }
+  .grade-grid { grid-template-columns: repeat(2, 1fr); }
+  .grade-export { grid-column: span 2; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="techsetu_farmer_dashboard.html">
+    <span class="nav-logo-leaf"></span>
+    <span class="nav-logo-text">TechSetu</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+    <a class="nav-link" href="#">My crops</a>
+    <a class="nav-link active" href="#">Add listing</a>
+    <a class="nav-link" href="techsetu-incoming-buyer-offers.html">Orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html">Payments</a>
+    <a class="nav-link" href="#">Mandi rates</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-bell">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#A5D6A7" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#A5D6A7" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div class="nav-bell-dot"></div>
+    </div>
+    <div class="nav-lang">हि | EN</div>
+    <div class="nav-avatar">RS</div>
+  </div>
+</nav>
+
+<main>
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="section-card" style="max-width:480px;margin:0 auto">
+      <div class="section-body" style="padding:32px 24px">
+        <div class="success-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14l6 6 10-12" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="success-head">Listing published!</div>
+        <div class="success-sub">Your crop is now visible to buyers across the TechSetu network.</div>
+        <div class="success-id" id="successId">LST-2026-031</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="window.location.href='techsetu_farmer_dashboard.html'">Back to dashboard</button>
+          <button class="btn btn-secondary" onclick="resetForm()">Add another listing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="formWrap">
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <h1>Add new crop listing</h1>
+        <p>Fill in your crop details to connect with verified buyers</p>
+      </div>
+      <div class="listing-id-badge">
+        <div class="listing-id-label">Draft ID</div>
+        <div class="listing-id-val" id="draftId">LST-2026-031</div>
+      </div>
+    </div>
+
+    <div class="form-layout">
+
+      <!-- LEFT COLUMN: main form sections -->
+      <div>
+
+        <!-- SECTION 1: CROP DETAILS -->
+        <div class="section-card">
+          <div class="section-head">
+            <div class="section-num">1</div>
+            <div class="section-title">Crop details</div>
+          </div>
+          <div class="section-body">
+            <div class="row2">
+              <div class="field">
+                <label>Crop name <span class="req">*</span></label>
+                <select id="cropName" onchange="updatePreview()">
+                  <option value="">Select crop…</option>
+                  <option>Wheat</option>
+                  <option>Onion</option>
+                  <option>Tomato</option>
+                  <option>Grapes</option>
+                  <option>Pomegranate</option>
+                  <option>Potato</option>
+                  <option>Soybean</option>
+                  <option>Maize</option>
+                  <option>Rice</option>
+                  <option>Cotton</option>
+                  <option>Other</option>
+                </select>
+                <div class="field-error">Please select a crop</div>
+              </div>
+              <div class="field">
+                <label>Variety / cultivar</label>
+                <input type="text" id="variety" placeholder="e.g. Nashik Red, Lok-1…" oninput="updatePreview()">
+              </div>
+            </div>
+            <div class="field">
+              <label>Quality grade <span class="req">*</span></label>
+              <div class="grade-grid" id="gradeGrid">
+                <button type="button" class="grade-btn" onclick="selectGrade('Grade A', this)">Grade A</button>
+                <button type="button" class="grade-btn" onclick="selectGrade('Grade B+', this)">Grade B+</button>
+                <button type="button" class="grade-btn" onclick="selectGrade('Grade B', this)">Grade B</button>
+                <button type="button" class="grade-btn grade-export" onclick="selectGrade('Export grade', this)">Export grade</button>
+              </div>
+              <input type="hidden" id="gradeVal">
+              <div class="field-hint">Grade A and Export grade attract premium buyers</div>
+            </div>
+            <div class="field">
+              <label>Description / notes</label>
+              <textarea id="cropDesc" placeholder="Any additional quality details, processing info, packaging…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: QUANTITY & PRICING -->
+        <div class="section-card">
+          <div class="section-head">
+            <div class="section-num">2</div>
+            <div class="section-title">Quantity &amp; pricing</div>
+          </div>
+          <div class="section-body">
+            <div id="mspAlert" class="msp-alert" style="display:none">
+              <div class="msp-alert-head">Below MSP notice</div>
+              <div class="msp-alert-body">Your asking price appears to be below the Minimum Support Price for this crop. Consider revising before publishing.</div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>Available quantity (qtl) <span class="req">*</span></label>
+                <input type="number" id="quantity" placeholder="e.g. 80" min="1" oninput="updatePreview()">
+                <div class="field-error">Enter valid quantity</div>
+              </div>
+              <div class="field">
+                <label>Minimum order quantity (qtl)</label>
+                <input type="number" id="minQty" placeholder="e.g. 10" min="1">
+                <div class="field-hint">Leave blank for no minimum</div>
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>Asking price (₹/qtl) <span class="req">*</span></label>
+                <input type="number" id="price" placeholder="e.g. 2480" min="1" oninput="updatePreview(); checkMSP()">
+                <div class="field-error">Enter valid price</div>
+              </div>
+              <div class="field">
+                <label>Negotiable?</label>
+                <select id="negotiable">
+                  <option value="yes">Yes — open to counter-offers</option>
+                  <option value="no">No — fixed price</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: HARVEST & AVAILABILITY -->
+        <div class="section-card">
+          <div class="section-head">
+            <div class="section-num">3</div>
+            <div class="section-title">Harvest &amp; availability</div>
+          </div>
+          <div class="section-body">
+            <div class="row3">
+              <div class="field">
+                <label>Harvest date <span class="req">*</span></label>
+                <input type="date" id="harvestDate">
+              </div>
+              <div class="field">
+                <label>Available from</label>
+                <input type="date" id="availFrom">
+              </div>
+              <div class="field">
+                <label>Available until</label>
+                <input type="date" id="availTo">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>Storage type</label>
+                <select id="storage">
+                  <option value="">Select…</option>
+                  <option>Field storage</option>
+                  <option>Warehouse</option>
+                  <option>Cold storage</option>
+                  <option>Own storage</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Season</label>
+                <select id="season">
+                  <option>Rabi 2025–26</option>
+                  <option>Kharif 2025</option>
+                  <option>Zaid 2025</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: LOCATION & PICKUP -->
+        <div class="section-card">
+          <div class="section-head">
+            <div class="section-num">4</div>
+            <div class="section-title">Location &amp; pickup</div>
+          </div>
+          <div class="section-body">
+            <div class="row2">
+              <div class="field">
+                <label>Village / town <span class="req">*</span></label>
+                <input type="text" id="village" placeholder="e.g. Dindori">
+              </div>
+              <div class="field">
+                <label>District <span class="req">*</span></label>
+                <input type="text" id="district" placeholder="e.g. Nashik">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>State <span class="req">*</span></label>
+                <select id="state">
+                  <option>Maharashtra</option>
+                  <option>Punjab</option>
+                  <option>Haryana</option>
+                  <option>Uttar Pradesh</option>
+                  <option>Madhya Pradesh</option>
+                  <option>Gujarat</option>
+                  <option>Rajasthan</option>
+                  <option>Karnataka</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Nearest mandi</label>
+                <input type="text" id="mandi" placeholder="e.g. Nashik APMC">
+              </div>
+            </div>
+            <div class="field">
+              <label>Pickup preference</label>
+              <select id="pickup">
+                <option>Buyer arranges pickup</option>
+                <option>Farmer delivers to mandi</option>
+                <option>Either works</option>
+                <option>Require TechSetu transport</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: PHOTOS -->
+        <div class="section-card">
+          <div class="section-head">
+            <div class="section-num">5</div>
+            <div class="section-title">Crop photos</div>
+          </div>
+          <div class="section-body">
+            <div class="upload-box" id="uploadBox" onclick="document.getElementById('photoInput').click()">
+              <div class="upload-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 5l3-3 3 3" stroke="#4CAF50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="10" width="12" height="4" rx="1" stroke="#81C784" stroke-width="1.2"/></svg>
+              </div>
+              <div class="upload-label">Tap to upload crop photos</div>
+              <div class="upload-hint">JPG, PNG up to 5 MB each · Up to 6 photos</div>
+              <div class="upload-previews" id="uploadPreviews"></div>
+            </div>
+            <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
+            <div class="field-hint" style="margin-top:8px">Clear photos increase buyer trust and improve offer quality</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: preview & confirm -->
+      <div>
+
+        <!-- PRICE PREVIEW -->
+        <div class="section-card" style="margin-bottom:14px">
+          <div class="section-head">
+            <div class="section-num" style="background:#E8F5E9;color:#2E7D32">₹</div>
+            <div class="section-title">Earnings estimate</div>
+          </div>
+          <div class="section-body">
+            <div class="price-preview">
+              <div class="price-preview-head">Estimated payout</div>
+              <div class="price-preview-row">
+                <span class="price-preview-label">Quantity</span>
+                <span class="price-preview-val" id="pvQty">—</span>
+              </div>
+              <div class="price-preview-row">
+                <span class="price-preview-label">Asking price</span>
+                <span class="price-preview-val" id="pvPrice">—</span>
+              </div>
+              <div class="price-preview-row">
+                <span class="price-preview-label">Gross total</span>
+                <span class="price-preview-val" id="pvGross">—</span>
+              </div>
+              <div class="price-preview-row">
+                <span class="price-preview-label">Platform fee (1%)</span>
+                <span class="price-preview-val" id="pvFee" style="color:#D32F2F">—</span>
+              </div>
+              <div class="price-preview-row">
+                <span class="price-preview-label">Net payout (est.)</span>
+                <span class="price-preview-val" id="pvNet" style="font-weight:700;color:#1B5E20;font-size:14px">—</span>
+              </div>
+            </div>
+            <div class="field-hint">Actual payout may vary based on final negotiated price and applicable charges.</div>
+          </div>
+        </div>
+
+        <!-- LISTING SUMMARY (confirm) -->
+        <div class="section-card" style="margin-bottom:14px">
+          <div class="section-head">
+            <div class="section-num">✓</div>
+            <div class="section-title">Listing summary</div>
+          </div>
+          <div class="section-body">
+            <div class="confirm-row"><span class="confirm-key">Crop</span><span class="confirm-val" id="scCrop">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Variety</span><span class="confirm-val" id="scVariety">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Grade</span><span class="confirm-val" id="scGrade">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Quantity</span><span class="confirm-val" id="scQty">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Price</span><span class="confirm-val" id="scPrice" style="color:#2E7D32">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Negotiable</span><span class="confirm-val" id="scNeg">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Location</span><span class="confirm-val" id="scLoc">—</span></div>
+            <div class="confirm-row"><span class="confirm-key">Listing ID</span><span class="confirm-val" id="scId" style="font-family:monospace;font-size:12px">LST-2026-031</span></div>
+          </div>
+          <div class="submit-actions">
+            <button class="btn btn-primary" onclick="publishListing()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3.5 7l3.5 4 3.5-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Publish listing
+            </button>
+            <button class="btn btn-secondary" onclick="saveDraft()">Save draft</button>
+            <button class="btn btn-ghost" onclick="window.location.href='techsetu_farmer_dashboard.html'">Cancel</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+var selectedGrade = '';
+var photoCount = 0;
+var listingSeq = 31;
+
+function selectGrade(val, el) {
+  selectedGrade = val;
+  document.getElementById('gradeVal').value = val;
+  document.querySelectorAll('.grade-btn').forEach(function(b){ b.classList.remove('selected'); });
+  el.classList.add('selected');
+  updatePreview();
+}
+
+function updatePreview() {
+  var crop    = document.getElementById('cropName').value;
+  var variety = document.getElementById('variety').value;
+  var qty     = parseFloat(document.getElementById('quantity').value) || 0;
+  var price   = parseFloat(document.getElementById('price').value) || 0;
+  var district = document.getElementById('district').value;
+  var state    = document.getElementById('state').value;
+  var neg      = document.getElementById('negotiable').value;
+
+  document.getElementById('pvQty').textContent   = qty   ? qty + ' qtl'      : '—';
+  document.getElementById('pvPrice').textContent = price ? '₹' + price + '/qtl' : '—';
+  var gross = qty * price;
+  var fee   = Math.round(gross * 0.01);
+  var net   = gross - fee;
+  document.getElementById('pvGross').textContent = gross ? '₹' + formatAmt(gross) : '—';
+  document.getElementById('pvFee').textContent   = fee   ? '− ₹' + formatAmt(fee) : '—';
+  document.getElementById('pvNet').textContent   = net   ? '₹' + formatAmt(net)   : '—';
+
+  document.getElementById('scCrop').textContent    = crop    || '—';
+  document.getElementById('scVariety').textContent = variety || '—';
+  document.getElementById('scGrade').textContent   = selectedGrade || '—';
+  document.getElementById('scQty').textContent     = qty   ? qty + ' qtl' : '—';
+  document.getElementById('scPrice').textContent   = price ? '₹' + price + '/qtl' : '—';
+  document.getElementById('scNeg').textContent     = neg === 'yes' ? 'Yes' : 'No';
+  document.getElementById('scLoc').textContent     = (district && state) ? district + ', ' + state : (district || state || '—');
+}
+
+function checkMSP() {
+  var crop  = document.getElementById('cropName').value;
+  var price = parseFloat(document.getElementById('price').value) || 0;
+  var mspMap = { 'Wheat': 2275, 'Rice': 2183, 'Maize': 1962, 'Soybean': 4600, 'Cotton': 6620 };
+  var msp = mspMap[crop];
+  var alertEl = document.getElementById('mspAlert');
+  if (msp && price > 0 && price < msp) {
+    alertEl.style.display = 'block';
+  } else {
+    alertEl.style.display = 'none';
+  }
+}
+
+function handlePhotos(input) {
+  var files = Array.from(input.files).slice(0, 6);
+  if (!files.length) return;
+  photoCount = files.length;
+  var box = document.getElementById('uploadBox');
+  var prev = document.getElementById('uploadPreviews');
+  box.classList.add('has-file');
+  prev.innerHTML = files.map(function(f, i) {
+    return '<div class="upload-thumb">Photo '+(i+1)+'</div>';
+  }).join('');
+}
+
+function validate() {
+  var ok = true;
+  var fields = [
+    { id: 'cropName', check: function(v){ return v !== ''; } },
+    { id: 'quantity', check: function(v){ return parseFloat(v) > 0; } },
+    { id: 'price',    check: function(v){ return parseFloat(v) > 0; } },
+    { id: 'village',  check: function(v){ return v.trim() !== ''; } },
+    { id: 'district', check: function(v){ return v.trim() !== ''; } }
+  ];
+  fields.forEach(function(f) {
+    var el = document.getElementById(f.id);
+    var parent = el.closest('.field');
+    if (!f.check(el.value)) {
+      parent.classList.add('error'); ok = false;
+    } else {
+      parent.classList.remove('error');
+    }
+  });
+  return ok;
+}
+
+function publishListing() {
+  if (!validate()) return;
+  var d = {
+    cropId: document.getElementById('draftId').textContent,
+    cropName: document.getElementById('cropName').value,
+    variety: document.getElementById('variety').value,
+    grade: selectedGrade,
+    quantity: document.getElementById('quantity').value,
+    price: document.getElementById('price').value
+  };
+  sessionStorage.setItem('ts_new_listing', JSON.stringify(d));
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('successId').textContent = d.cropId;
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function saveDraft() {
+  alert('Draft saved as ' + document.getElementById('draftId').textContent);
+}
+
+function resetForm() {
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('formWrap').style.display = '';
+  listingSeq++;
+  var newId = 'LST-2026-0' + (listingSeq < 10 ? '0'+listingSeq : listingSeq);
+  document.getElementById('draftId').textContent = newId;
+  document.getElementById('scId').textContent = newId;
+  selectedGrade = '';
+  document.querySelectorAll('.grade-btn').forEach(function(b){ b.classList.remove('selected'); });
+}
+
+function formatAmt(n) {
+  if (n >= 100000) return (n/100000).toFixed(2) + 'L';
+  if (n >= 1000) { var s = Math.round(n).toString(); return s.length <= 5 ? s.slice(0,s.length-3)+','+s.slice(s.length-3) : s.slice(0,s.length-5)+','+s.slice(s.length-5,s.length-3)+','+s.slice(s.length-3); }
+  return Math.round(n).toString();
+}
+</script>
+</body>
+</html>

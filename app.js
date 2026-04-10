@@ -1,3 +1,8 @@
+// ─── ORDER FEE CONSTANTS (single source of truth) ───
+const DELIVERY_FEE = 40;
+const PACKAGING_FEE = 15;
+const ORDER_FEES_TOTAL = DELIVERY_FEE + PACKAGING_FEE; // 55
+
 // ─── TICKER ───
 const crops = [
   {name:'Tomatoes 🍅',price:'₹20/kg',change:'+2.5%',up:true},
@@ -56,6 +61,22 @@ function readJsonStorage(key, fallback) {
   }
 }
 
+// Scrub any password values that may have been stored by older versions of this app.
+(function purgeLegacyPasswordDrafts() {
+  try {
+    const drafts = JSON.parse(localStorage.getItem(AUTH_DRAFTS_KEY) || '{}');
+    let changed = false;
+    for(const key of Object.keys(drafts)) {
+      if(drafts[key] && ('auth-password' in drafts[key] || 'auth-confirm-password' in drafts[key])) {
+        delete drafts[key]['auth-password'];
+        delete drafts[key]['auth-confirm-password'];
+        changed = true;
+      }
+    }
+    if(changed) localStorage.setItem(AUTH_DRAFTS_KEY, JSON.stringify(drafts));
+  } catch(_) {}
+})();
+
 function writeJsonStorage(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
@@ -70,9 +91,10 @@ function saveAuthState() {
 
 function snapshotAuthInputs() {
   if(!currentRole) return;
+  // Deliberately exclude password fields — never persist passwords to localStorage.
   const ids = [
     'auth-first-name','auth-last-name','auth-state','auth-primary-crop',
-    'auth-organisation','auth-phone','auth-otp','auth-email','auth-password','auth-confirm-password'
+    'auth-organisation','auth-phone','auth-otp','auth-email'
   ];
   const key = getAuthKey(currentRole, currentLoginTab);
   const drafts = readJsonStorage(AUTH_DRAFTS_KEY, {});
@@ -112,7 +134,20 @@ function showRoleSelect() {
 }
 
 function openTransport() {
-  window.location.href = 'request-transport.html';
+  window.location.href = 'techsetu-request-transport.html';
+}
+
+function openFarmerPage(page) {
+  const routes = {
+    dashboard: 'techsetu_farmer_dashboard.html',
+    listing: 'techsetu-add-listing.html',
+    offers: 'techsetu-incoming-buyer-offers.html',
+    payments: 'techsetu-payment-history.html',
+    transport: 'techsetu-request-transport.html',
+  };
+  if(routes[page]) {
+    window.location.href = routes[page];
+  }
 }
 
 function goToLogin(role) {
@@ -137,7 +172,7 @@ function loginSuccess(role) {
   if(role === 'buyer') {
     showScreen('screen-buyer-type');
   } else {
-    showScreen('screen-farmer');
+    window.location.href = 'techsetu_farmer_dashboard.html';
   }
 }
 
@@ -180,6 +215,10 @@ function googleLoginSuccess(role) {
   saveAuthState();
   saveHomeRoleBadge(role);
   setHomeRoleBadge(role);
+  if(role === 'farmer') {
+    window.location.href = 'techsetu_farmer_dashboard.html';
+    return;
+  }
   showScreen('screen-home');
 }
 
@@ -256,6 +295,7 @@ async function apiPost(path, data) {
     err.code = parsed.code;
     err.message = parsed.message;
     err.payload = payload;
+    err.status = res.status;
     throw err;
   }
   return payload;
@@ -274,6 +314,7 @@ async function apiPatch(path, data) {
     err.code = parsed.code;
     err.message = parsed.message;
     err.payload = payload;
+    err.status = res.status;
     throw err;
   }
   return payload;
@@ -291,6 +332,7 @@ async function apiGet(path) {
     err.code = parsed.code;
     err.message = parsed.message;
     err.payload = payload;
+    err.status = res.status;
     throw err;
   }
   return payload;
@@ -535,9 +577,17 @@ async function ensureGooglePhoneVerified(role) {
       showScreen('screen-google-phone-verify');
       return;
     }
-    clearToken();
-    toast('⚠️ Could not verify account status. Please try again.');
-    showRoleSelect();
+    // Only clear the token for definitive auth failures (401/403).
+    // For transient errors (network down, 5xx), preserve the token and show a retry message.
+    const status = err?.payload?.status || err?.status;
+    if(status === 401 || status === 403) {
+      clearToken();
+      toast('⚠️ Session invalid. Please log in again.');
+      showRoleSelect();
+    } else {
+      toast('⚠️ Could not verify account status. Please try again.');
+      showRoleSelect();
+    }
   }
 }
 
@@ -985,15 +1035,12 @@ async function handleForgotPassword(role) {
     await apiPost('/auth/forgot-password', {email, role});
     persistForgotCooldownUntil(Date.now() + FORGOT_PASSWORD_COOLDOWN_MS);
     startForgotCooldownTicker();
-    setLoginStatus('success', 'Reset link sent. Please check your email inbox.');
+    // Generic message regardless of whether the email exists — prevents user enumeration.
+    setLoginStatus('success', 'If this email is registered, a reset link has been sent.');
     toast('✅ Password reset email sent');
   } catch (err) {
     if(err.code === 'PASSWORD_RESET_UNAVAILABLE') {
       setLoginStatus('error', 'Password reset is not configured on server yet.');
-      return;
-    }
-    if(err.code === 'PASSWORD_RESET_EMAIL_NOT_REGISTERED') {
-      setLoginStatus('error', 'This email is not registered with us.');
       return;
     }
     if(err.code === 'PASSWORD_RESET_CHECK_FAILED') {
@@ -1242,9 +1289,7 @@ async function changePassword() {
   }
 
   try {
-    const loginRes = await apiPost('/auth/login', {email, password: currentPassword, expected_role: role});
-    if(loginRes.access_token) setToken(loginRes.access_token);
-    await apiPost('/auth/change-password', {new_password: newPassword});
+    await apiPost('/auth/change-password', {current_password: currentPassword, new_password: newPassword});
     document.getElementById('profile-current-password').value = '';
     document.getElementById('profile-new-password').value = '';
     document.getElementById('profile-confirm-password').value = '';
@@ -1574,8 +1619,8 @@ function renderCart() {
     </div>`;
   }).join('');
 
-  const delivery = subtotal > 0 ? 40 : 0;
-  const packaging = subtotal > 0 ? 15 : 0;
+  const delivery = subtotal > 0 ? DELIVERY_FEE : 0;
+  const packaging = subtotal > 0 ? PACKAGING_FEE : 0;
   const total = subtotal + delivery + packaging;
 
   body.innerHTML = `
@@ -1620,7 +1665,7 @@ function renderPaySummary() {
   const keys = Object.keys(cart);
   let subtotal = 0;
   keys.forEach(id => { const {product:p, qty} = cart[id]; subtotal += p.price * qty; });
-  const delivery = 40, packaging = 15, total = subtotal + delivery + packaging;
+  const delivery = DELIVERY_FEE, packaging = PACKAGING_FEE, total = subtotal + delivery + packaging;
   const el = document.getElementById('pay-order-summary');
   if(el) el.innerHTML = `
     <div class="pay-order-summary-title">Order Summary</div>
@@ -1631,7 +1676,7 @@ function renderPaySummary() {
   `;
 }
 
-function completeOrderAfterPayment() {
+function completeOrderAfterPayment(razorpayOrderId) {
   cart = {};
   updateCartCount();
   const now = new Date();
@@ -1640,7 +1685,9 @@ function completeOrderAfterPayment() {
   document.getElementById('step1-time').textContent = f(new Date(now-15*60000));
   document.getElementById('step2-time').textContent = f(new Date(now-8*60000));
   document.getElementById('step3-time').textContent = f(new Date(now-3*60000));
-  document.getElementById('order-num').textContent = Math.floor(3000+Math.random()*1000);
+  // Display the real Razorpay order ID (last 8 chars for brevity) so users can reference it in support.
+  const displayId = razorpayOrderId ? razorpayOrderId.slice(-8).toUpperCase() : '—';
+  document.getElementById('order-num').textContent = displayId;
   showScreen('screen-tracking');
   startCountdown(32*60);
 }
@@ -1649,10 +1696,13 @@ function getCheckoutTotal() {
   const keys = Object.keys(cart);
   let subtotal = 0;
   keys.forEach(id => { const {product:p, qty} = cart[id]; subtotal += p.price * qty; });
-  return subtotal + (keys.length ? 55 : 0);
+  return subtotal + (keys.length ? ORDER_FEES_TOTAL : 0);
 }
 
+let _placeOrderInFlight = false;
+
 async function placeOrder() {
+  if(_placeOrderInFlight) return;
   const total = getCheckoutTotal();
   if(total <= 0) {
     toast('Your cart is empty!');
@@ -1664,6 +1714,10 @@ async function placeOrder() {
     toast('Razorpay SDK failed to load');
     return;
   }
+
+  _placeOrderInFlight = true;
+  const placeBtn = document.getElementById('place-order-btn');
+  if(placeBtn) { placeBtn.disabled = true; placeBtn.textContent = 'Processing…'; }
 
   try {
     toast('🔒 Creating secure Razorpay order...');
@@ -1680,15 +1734,20 @@ async function placeOrder() {
       handler: async function (response) {
         try {
           await apiPost('/payments/verify', response);
-          completeOrderAfterPayment();
+          completeOrderAfterPayment(order.id);
           toast('🎉 Payment successful and verified!');
         } catch (err) {
           toast(`⚠️ ${err.message}`);
+        } finally {
+          _placeOrderInFlight = false;
+          if(placeBtn) { placeBtn.disabled = false; placeBtn.textContent = 'Pay Now →'; }
         }
       },
       modal: {
         ondismiss: function() {
           toast('Payment cancelled');
+          _placeOrderInFlight = false;
+          if(placeBtn) { placeBtn.disabled = false; placeBtn.textContent = 'Pay Now →'; }
         }
       }
     };
@@ -1696,6 +1755,8 @@ async function placeOrder() {
     rz.open();
   } catch (err) {
     toast(`⚠️ ${err.message}`);
+    _placeOrderInFlight = false;
+    if(placeBtn) { placeBtn.disabled = false; placeBtn.textContent = 'Pay Now →'; }
   }
 }
 
@@ -1732,11 +1793,27 @@ function offerAction(btn, action) {
   toast(action==='accepted'?'✅ Offer accepted — '+crop:'❌ Offer declined — '+crop);
 }
 
-// ─── TOAST ───
+// ─── TOAST (queue-based — rapid calls no longer overwrite each other) ───
+const _toastQueue = [];
+let _toastActive = false;
+
 function toast(msg) {
+  _toastQueue.push(msg);
+  if(!_toastActive) _processToastQueue();
+}
+
+function _processToastQueue() {
+  if(!_toastQueue.length) { _toastActive = false; return; }
+  _toastActive = true;
+  const msg = _toastQueue.shift();
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2500);
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => {
+    t.classList.remove('show');
+    // Small gap between toasts so the hide transition completes cleanly.
+    setTimeout(_processToastQueue, 200);
+  }, 2500);
 }
 
 // ─── FARMER MODAL ───
@@ -1791,6 +1868,30 @@ if(savedAuthState.currentLoginTab) currentLoginTab = savedAuthState.currentLogin
       openProfile();
       return;
     }
+
+    // For any protected screen, verify the token is still valid before restoring.
+    const protectedScreens = [
+      'screen-home','screen-farmer','screen-buyer-type','screen-cart',
+      'screen-product','screen-address','screen-payment','screen-tracking','screen-profile'
+    ];
+    if(protectedScreens.includes(savedScreen)) {
+      const token = getToken();
+      if(!token) {
+        // No token at all — go to login.
+        showPageMain();
+        return;
+      }
+      try {
+        await apiGet('/auth/me');
+      } catch(_) {
+        // Token invalid or expired — clear and restart.
+        clearToken();
+        localStorage.removeItem(SCREEN_STORAGE_KEY);
+        showPageMain();
+        return;
+      }
+    }
+
     showScreen(savedScreen);
     if(savedScreen === 'screen-login' && currentRole) renderLoginScreen(currentRole);
     if(savedScreen === 'screen-home') {

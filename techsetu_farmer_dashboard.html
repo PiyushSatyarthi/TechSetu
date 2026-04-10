@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechSetu — Farmer Dashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; min-height: 100%; background: #F7F9F7; color: #2E2E2E; }
+
+:root {
+  --p:      #4CAF50;
+  --p-hov:  #3E8E41;
+  --p-soft: #6FBF73;
+  --bg-app:  #F7F9F7;
+  --bg-mint: #E8F5E9;
+  --bg-soft: #DFF0E3;
+  --bg-card: #C8E6C9;
+  --ac1: #81C784;
+  --ac2: #66BB6A;
+  --ac3: #A5D6A7;
+  --white:  #FFFFFF;
+  --border: #E0E0E0;
+  --tx:     #2E2E2E;
+  --tx-sub: #616161;
+  --tx-sec: #9E9E9E;
+  --nav:     #1B5E20;
+  --nav-hov: #2E7D32;
+  --nav-act: #388E3C;
+  --nav-tx:  #E8F5E9;
+  --nav-sub: #81C784;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/*NAV*/
+nav {
+  background: var(--nav);
+  height: 54px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #145214;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 32px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nav-logo-leaf {
+  width: 10px; height: 10px;
+  background: var(--ac3);
+  border-radius: 50% 0 50% 0;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+.nav-logo-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+  color: var(--nav-tx);
+  letter-spacing: 0.2px;
+}
+.nav-links { display: flex; gap: 2px; flex: 1; overflow: hidden; }
+.nav-link {
+  font-size: 12.5px;
+  color: var(--nav-sub);
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--nav-tx); background: var(--nav-hov); }
+.nav-link.active { color: var(--nav-tx); background: var(--nav-act); }
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.nav-bell {
+  width: 32px; height: 32px;
+  background: var(--nav-hov);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; cursor: pointer;
+}
+.nav-bell-dot {
+  position: absolute; top: 6px; right: 7px;
+  width: 6px; height: 6px;
+  background: #FFD54F;
+  border-radius: 50%;
+  border: 1.5px solid var(--nav);
+}
+.nav-lang {
+  font-size: 11px; color: var(--nav-sub);
+  border: 1px solid #2E7D32;
+  border-radius: 4px;
+  padding: 3px 8px; cursor: pointer;
+  background: transparent;
+}
+.nav-avatar {
+  width: 32px; height: 32px;
+  background: var(--nav-act);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  color: var(--nav-tx);
+  border: 1.5px solid var(--ac2);
+  cursor: pointer;
+}
+
+/*PAGE WRAP*/
+.page-wrap { background: var(--bg-app); min-height: calc(100vh - 54px); }
+.main { padding: 18px 24px 32px; }
+
+/* ── GREETING ── */
+.greet {
+  background: linear-gradient(135deg, #A5D6A7 0%, #4CAF50 100%);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.greet-name {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 19px;
+  font-weight: 400;
+  color: #1B5E20;
+  margin-bottom: 3px;
+}
+.greet-sub { font-size: 11.5px; color: #2E7D32; }
+.greet-right { display: flex; gap: 8px; flex-shrink: 0; }
+.season-badge {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: var(--r-md);
+  padding: 8px 14px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+.season-label { font-size: 10px; color: #2E7D32; margin-bottom: 3px; }
+.season-value { font-size: 13px; font-weight: 600; color: #1B5E20; }
+.season-value.up { color: #1B5E20; }
+.season-value.hi { color: #E65100; }
+
+/* METRICS */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.metric {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  border-top: 3px solid var(--bg-card);
+}
+.metric.accent { border-top-color: var(--p); }
+.metric-label {
+  font-size: 10.5px;
+  color: var(--tx-sec);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.metric-value {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--tx);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.metric-value.green { color: #2E7D32; }
+.metric-delta { font-size: 11px; color: var(--tx-sec); }
+.metric-delta.up { color: var(--p-hov); }
+.metric-delta.msp { color: #388E3C; }
+
+/* LAYOUT */
+.row { display: grid; gap: 12px; margin-bottom: 12px; }
+.row-main { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.row-half { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.card-head {
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid #F0F4F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14.5px;
+  font-weight: 400;
+  color: var(--tx);
+}
+.card-action { font-size: 11.5px; color: var(--p); cursor: pointer; font-weight: 500; }
+.card-body { padding: 12px 16px; }
+
+/* ── CROP TABLE ── */
+.crop-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.crop-table-wrap { overflow-x: auto; }
+.crop-head { padding: 13px 16px 11px; border-bottom: 1px solid #F0F4F0; display: flex; align-items: center; justify-content: space-between; background: #FAFAFA; }
+.crop-head-left .card-title { color: var(--tx); }
+.crop-head-sub { font-size: 11px; color: var(--tx-sec); margin-top: 2px; }
+.crop-table th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--tx-sub);
+  padding: 7px 10px;
+  background: var(--bg-mint);
+  border-bottom: 1px solid var(--bg-card);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.crop-table th:first-child { padding-left: 16px; }
+.crop-table td {
+  padding: 10px;
+  border-bottom: 1px solid #F5F5F5;
+  color: var(--tx);
+  vertical-align: middle;
+}
+.crop-table td:first-child { padding-left: 16px; }
+.crop-table tr:last-child td { border-bottom: none; }
+.crop-table tr:hover td { background: #FAFFFE; }
+.crop-name { font-weight: 600; font-size: 13px; color: var(--tx); }
+.crop-variety { font-size: 10.5px; color: var(--tx-sec); margin-top: 1px; }
+.crop-price { font-weight: 600; color: #2E7D32; }
+.crop-offers { font-weight: 500; color: #388E3C; }
+.tbl-action { font-size: 11px; color: var(--p); cursor: pointer; font-weight: 500; white-space: nowrap; }
+.tbl-action.publish { color: #E65100; }
+.badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+.badge-active   { background: #E8F5E9; color: #2E7D32; }
+.badge-pending  { background: #FFF8E1; color: #E65100; }
+.badge-sold     { background: #F5F5F5; color: #757575; }
+.badge-draft    { background: #F5F5F5; color: #9E9E9E; }
+.btn-add-listing {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: background 0.15s;
+}
+.btn-add-listing:hover { background: var(--p-hov); }
+
+/*OFFERS */
+.offer {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 11px 13px;
+  margin-bottom: 9px;
+  transition: box-shadow 0.15s;
+}
+.offer:last-child { margin-bottom: 0; }
+.offer:hover { box-shadow: 0 2px 8px rgba(76,175,80,0.08); }
+.offer.top {
+  border-color: var(--p);
+  border-left-width: 3px;
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+}
+.offer-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+.offer-buyer { font-size: 12.5px; font-weight: 600; color: var(--tx); }
+.offer-crop { font-size: 11px; color: var(--tx-sub); margin-top: 1px; }
+.offer-price { font-size: 15px; font-weight: 700; color: #2E7D32; text-align: right; }
+.offer-total { font-size: 10.5px; color: var(--tx-sec); text-align: right; margin-top: 1px; }
+.offer-meta { font-size: 10.5px; color: var(--tx-sec); margin-bottom: 8px; }
+.offer-actions { display: flex; gap: 6px; }
+.btn-accept {
+  flex: 1; background: var(--p); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: 6px 10px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-accept:hover { background: var(--p-hov); }
+.btn-counter {
+  background: var(--white); color: var(--p);
+  border: 1px solid var(--p);
+  border-radius: var(--r-sm); padding: 6px 10px;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-counter:hover { background: var(--bg-mint); }
+.btn-decline {
+  background: transparent; color: var(--tx-sec);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 10px;
+  font-size: 12px; cursor: pointer;
+}
+
+/* ── DEMAND ── */
+.demand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.demand-row:last-child { margin-bottom: 0; }
+.demand-crop { width: 70px; font-size: 12.5px; color: var(--tx-sub); flex-shrink: 0; }
+.demand-track { flex: 1; background: #F0F4F0; border-radius: 3px; height: 7px; overflow: hidden; }
+.demand-bar { height: 100%; border-radius: 3px; background: var(--ac2); }
+.demand-bar.hi { background: var(--p); }
+.demand-pct { font-size: 11.5px; font-weight: 600; color: var(--tx-sub); width: 30px; text-align: right; flex-shrink: 0; }
+.demand-pct.hi { color: var(--p-hov); }
+.demand-note { font-size: 11px; color: var(--tx-sec); margin-bottom: 12px; }
+.demand-alert {
+  margin-top: 13px;
+  padding: 10px 12px;
+  background: #FFF8E1;
+  border-radius: var(--r-md);
+  border-left: 3px solid #FFA000;
+}
+.demand-alert-head { font-size: 11px; font-weight: 600; color: #E65100; margin-bottom: 2px; }
+.demand-alert-body { font-size: 11.5px; color: #6D4C41; line-height: 1.45; }
+
+/* ── ORDERS ── */
+.order { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F5F5F5; }
+.order:last-child { border-bottom: none; }
+.order-icon {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.order-icon.transit  { background: #E3F2FD; }
+.order-icon.payment  { background: #FFF8E1; }
+.order-icon.done     { background: var(--bg-mint); }
+.order-icon.check    { background: #F1F8E9; }
+.order-info { flex: 1; min-width: 0; }
+.order-title { font-size: 12.5px; font-weight: 600; color: var(--tx); }
+.order-meta  { font-size: 10.5px; color: var(--tx-sec); margin-top: 1px; }
+.order-right { text-align: right; flex-shrink: 0; }
+.order-amt  { font-size: 13px; font-weight: 700; color: #2E7D32; }
+.order-date { font-size: 10.5px; color: var(--tx-sec); margin-top: 2px; }
+.order-prog { display: flex; align-items: center; gap: 3px; margin-top: 5px; }
+.pdot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.pdot.done { background: var(--p); }
+.pdot.cur  { background: #FF9800; width: 8px; height: 8px; }
+.pline { width: 14px; height: 2px; background: var(--border); flex-shrink: 0; }
+.pline.done { background: var(--ac2); }
+
+/* STATUS CHIPS */
+.chip-transit  { background: #E3F2FD; color: #1565C0; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-paypend  { background: #FFF8E1; color: #E65100; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-done     { background: var(--bg-mint); color: #2E7D32; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+.chip-qc       { background: #F1F8E9; color: #558B2F; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+
+/* ── QUICK ACTIONS ── */
+.qa-head {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px;
+  color: var(--tx-sub);
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+.actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.action-btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 12px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  cursor: pointer; text-align: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.action-btn:hover { border-color: var(--p); box-shadow: 0 2px 8px rgba(76,175,80,0.1); }
+.action-btn.primary { background: var(--p); border-color: var(--p); }
+.action-btn.primary:hover { background: var(--p-hov); border-color: var(--p-hov); }
+.action-icon {
+  width: 36px; height: 36px;
+  background: var(--bg-mint);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.action-icon.pr { background: rgba(255,255,255,0.2); }
+.action-label { font-size: 12.5px; font-weight: 600; color: var(--tx); }
+.action-label.lt { color: #fff; }
+.action-sub { font-size: 10.5px; color: var(--tx-sec); }
+.action-sub.lt { color: rgba(255,255,255,0.8); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #2E7D32; color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500;
+  z-index: 999;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0; white-space: nowrap;
+  border: 1px solid #388E3C;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ── NEW ROW FLASH ── */
+@keyframes hlRow { 0%{ background: #FFFDE7; } 100%{ background: transparent; } }
+.new-row td { animation: hlRow 2.5s ease forwards; }
+
+/* ── BEST OFFER TAG ── */
+.best-offer-tag {
+  font-size: 10px; font-weight: 600;
+  background: var(--bg-mint); color: #2E7D32;
+  border: 1px solid var(--ac3);
+  border-radius: 3px; padding: 1px 7px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .row-main { grid-template-columns: 1fr; }
+  .metrics  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .main { padding: 12px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .row-half { grid-template-columns: 1fr; }
+  .actions  { grid-template-columns: repeat(2, 1fr); }
+  .greet { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .greet-right { flex-wrap: wrap; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="ts-toast" class="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <span class="nav-logo-leaf"></span>
+    <span class="nav-logo-text">TechSetu</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link active" href="#">Dashboard</a>
+    <a class="nav-link" href="#">My crops</a>
+    <a class="nav-link" href="techsetu-add-listing.html">Add listing</a>
+    <a class="nav-link" href="techsetu-incoming-buyer-offers.html">Orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html">Payments</a>
+    <a class="nav-link" href="#">Mandi rates</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-bell">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#A5D6A7" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#A5D6A7" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div class="nav-bell-dot"></div>
+    </div>
+    <div class="nav-lang">हि | EN</div>
+    <div class="nav-avatar">RS</div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+<main class="main">
+
+  <!-- GREETING -->
+  <div class="greet">
+    <div>
+      <div class="greet-name">Namaste, Rajesh Singh ji</div>
+      <div class="greet-sub">Mandi ID: MH-2847 &nbsp;·&nbsp; Nashik District, Maharashtra &nbsp;·&nbsp; Rabi season 2025–26</div>
+    </div>
+    <div class="greet-right">
+      <div class="season-badge">
+        <div class="season-label">Active listings</div>
+        <div class="season-value" id="stat-active">5 crops</div>
+      </div>
+      <div class="season-badge">
+        <div class="season-label">New offers today</div>
+        <div class="season-value hi">3 offers</div>
+      </div>
+      <div class="season-badge">
+        <div class="season-label">Wheat mandi rate</div>
+        <div class="season-value up">↑ +4% today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Crops listed</div>
+      <div class="metric-value" id="metric-total">6</div>
+      <div class="metric-delta up" id="metric-delta">↑ 2 added this week</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Pending offers</div>
+      <div class="metric-value">8</div>
+      <div class="metric-delta">3 new since morning</div>
+    </div>
+    <div class="metric accent">
+      <div class="metric-label">Season revenue</div>
+      <div class="metric-value green">₹1.84L</div>
+      <div class="metric-delta up">↑ 12% vs last season</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Avg rate / qtl</div>
+      <div class="metric-value">₹2,340</div>
+      <div class="metric-delta msp">MSP: ₹2,275 · +3%</div>
+    </div>
+  </div>
+
+  <!-- MAIN ROW: crop listings + buyer offers -->
+  <div class="row row-main">
+
+    <!-- CROP LISTINGS (dominant) -->
+    <div class="card">
+      <div class="crop-head">
+        <div class="crop-head-left">
+          <div class="card-title">My crop listings</div>
+          <div class="crop-head-sub" id="listing-subtitle">5 active · 1 draft · Rabi 2025–26</div>
+        </div>
+        <button class="btn-add-listing" onclick="goAddListing()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Add listing
+        </button>
+      </div>
+      <div class="crop-table-wrap">
+        <table class="crop-table">
+          <thead>
+            <tr>
+              <th>Crop &amp; variety</th>
+              <th>Qty available</th>
+              <th>Asking price</th>
+              <th>Offers</th>
+              <th>Quality grade</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="crop-tbody">
+            <tr>
+              <td><div class="crop-name">Wheat</div><div class="crop-variety">Lok-1 variety</div></td>
+              <td>120 qtl</td>
+              <td><span class="crop-price">₹2,480/qtl</span></td>
+              <td><span class="crop-offers">4 offers</span></td>
+              <td><span style="font-size:11px;color:#616161">Grade A</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td><span class="tbl-action">Manage →</span></td>
+            </tr>
+            <tr>
+              <td><div class="crop-name">Onion</div><div class="crop-variety">Nashik Red</div></td>
+              <td>80 qtl</td>
+              <td><span class="crop-price">₹1,850/qtl</span></td>
+              <td><span class="crop-offers">2 offers</span></td>
+              <td><span style="font-size:11px;color:#616161">Grade A</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td><span class="tbl-action">Manage →</span></td>
+            </tr>
+            <tr>
+              <td><div class="crop-name">Grapes</div><div class="crop-variety">Thompson Seedless</div></td>
+              <td>30 qtl</td>
+              <td><span class="crop-price">₹6,200/qtl</span></td>
+              <td><span class="crop-offers" style="color:#E65100">1 offer</span></td>
+              <td><span style="font-size:11px;color:#616161">Export grade</span></td>
+              <td><span class="badge badge-pending">Negotiating</span></td>
+              <td><span class="tbl-action">Manage →</span></td>
+            </tr>
+            <tr>
+              <td><div class="crop-name">Tomato</div><div class="crop-variety">Hybrid F1</div></td>
+              <td>50 qtl</td>
+              <td><span class="crop-price">₹920/qtl</span></td>
+              <td><span class="crop-offers">3 offers</span></td>
+              <td><span style="font-size:11px;color:#616161">Grade B+</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td><span class="tbl-action">Manage →</span></td>
+            </tr>
+            <tr>
+              <td><div class="crop-name">Soybean</div><div class="crop-variety">JS-335</div></td>
+              <td>200 qtl</td>
+              <td><span class="crop-price">₹4,100/qtl</span></td>
+              <td style="color:#C8E6C9">—</td>
+              <td><span style="font-size:11px;color:#616161">Grade A</span></td>
+              <td><span class="badge badge-draft">Draft</span></td>
+              <td><span class="tbl-action publish">Publish →</span></td>
+            </tr>
+            <tr>
+              <td><div class="crop-name">Pomegranate</div><div class="crop-variety">Bhagwa</div></td>
+              <td>—</td>
+              <td><span style="font-size:12px;color:#9E9E9E">₹8,500/qtl</span></td>
+              <td style="color:#C8E6C9">—</td>
+              <td><span style="font-size:11px;color:#616161">Export grade</span></td>
+              <td><span class="badge badge-sold">Sold out</span></td>
+              <td><span class="tbl-action">Relist →</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BUYER OFFERS -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Incoming buyer offers</div>
+        <span class="card-action">See all (8)</span>
+      </div>
+      <div class="card-body">
+
+        <div class="offer top">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+            <span class="best-offer-tag">Best offer</span>
+            <span style="font-size:10.5px;color:#9E9E9E">2 hrs ago</span>
+          </div>
+          <div class="offer-top">
+            <div>
+              <div class="offer-buyer">Bharat Agro Pvt Ltd</div>
+              <div class="offer-crop">Wheat &nbsp;·&nbsp; 80 qtl</div>
+            </div>
+            <div>
+              <div class="offer-price">₹2,520/qtl</div>
+              <div class="offer-total">Total: ₹2.02 lakh</div>
+            </div>
+          </div>
+          <div class="offer-meta">Verified buyer · Pune · 4.8 ★ · Payment within 3 days</div>
+          <div class="offer-actions">
+            <button class="btn-accept">Accept</button>
+            <button class="btn-counter">Counter</button>
+            <button class="btn-decline">Decline</button>
+          </div>
+        </div>
+
+        <div class="offer">
+          <div style="font-size:10.5px;color:#9E9E9E;margin-bottom:5px">5 hrs ago</div>
+          <div class="offer-top">
+            <div>
+              <div class="offer-buyer">Ramesh Traders</div>
+              <div class="offer-crop">Onion &nbsp;·&nbsp; 50 qtl</div>
+            </div>
+            <div>
+              <div class="offer-price">₹1,780/qtl</div>
+              <div class="offer-total">Total: ₹89,000</div>
+            </div>
+          </div>
+          <div class="offer-meta">Individual buyer · Nashik · 4.2 ★</div>
+          <div class="offer-actions">
+            <button class="btn-accept">Accept</button>
+            <button class="btn-counter">Counter</button>
+            <button class="btn-decline">Decline</button>
+          </div>
+        </div>
+
+        <div class="offer">
+          <div style="font-size:10.5px;color:#9E9E9E;margin-bottom:5px">Yesterday</div>
+          <div class="offer-top">
+            <div>
+              <div class="offer-buyer">FreshMart Exports</div>
+              <div class="offer-crop">Grapes &nbsp;·&nbsp; 30 qtl</div>
+            </div>
+            <div>
+              <div class="offer-price">₹5,900/qtl</div>
+              <div class="offer-total">Total: ₹1.77 lakh</div>
+            </div>
+          </div>
+          <div class="offer-meta">Export house · Mumbai · 4.9 ★ · Pickup arranged</div>
+          <div class="offer-actions">
+            <button class="btn-accept">Accept</button>
+            <button class="btn-counter">Counter</button>
+            <button class="btn-decline">Decline</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM ROW: demand + orders -->
+  <div class="row row-half">
+
+    <!-- MARKET DEMAND -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Market demand insights</div>
+        <span class="card-action">This week ↓</span>
+      </div>
+      <div class="card-body">
+        <div class="demand-note">Buyer search volume · Nashik &amp; nearby mandis</div>
+        <div class="demand-row"><div class="demand-crop">Onion</div><div class="demand-track"><div class="demand-bar hi" style="width:92%"></div></div><div class="demand-pct hi">92%</div></div>
+        <div class="demand-row"><div class="demand-crop">Wheat</div><div class="demand-track"><div class="demand-bar hi" style="width:88%"></div></div><div class="demand-pct hi">88%</div></div>
+        <div class="demand-row"><div class="demand-crop">Grapes</div><div class="demand-track"><div class="demand-bar hi" style="width:76%"></div></div><div class="demand-pct hi">76%</div></div>
+        <div class="demand-row"><div class="demand-crop">Tomato</div><div class="demand-track"><div class="demand-bar" style="width:63%"></div></div><div class="demand-pct">63%</div></div>
+        <div class="demand-row"><div class="demand-crop">Potato</div><div class="demand-track"><div class="demand-bar" style="width:44%"></div></div><div class="demand-pct">44%</div></div>
+        <div class="demand-row"><div class="demand-crop">Soybean</div><div class="demand-track"><div class="demand-bar" style="width:29%"></div></div><div class="demand-pct">29%</div></div>
+        <div class="demand-alert">
+          <div class="demand-alert-head">Demand alert — Onion</div>
+          <div class="demand-alert-body">Onion prices likely to rise 8–12% in the next 7 days. Consider waiting before accepting low offers.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE ORDERS -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Active orders tracker</div>
+        <span class="card-action">Track all</span>
+      </div>
+      <div class="card-body" style="padding-top:8px;padding-bottom:8px">
+
+        <div class="order">
+          <div class="order-icon transit">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1" y="7" width="10" height="5" rx="1" stroke="#1565C0" stroke-width="1.2"/><path d="M11 9l2.5-1.5V12H11V9z" stroke="#1565C0" stroke-width="1.2" stroke-linejoin="round" fill="none"/><circle cx="4" cy="13" r="1.2" stroke="#1565C0" stroke-width="1"/><circle cx="12.5" cy="13" r="1.2" stroke="#1565C0" stroke-width="1"/></svg>
+          </div>
+          <div class="order-info">
+            <div class="order-title">Wheat &nbsp;·&nbsp; 120 qtl</div>
+            <div class="order-meta">Bharat Agro Pvt Ltd &nbsp;·&nbsp; <span class="chip-transit">In transit</span></div>
+            <div class="order-prog">
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot cur"></div><div class="pline"></div>
+              <div class="pdot"></div>
+            </div>
+          </div>
+          <div class="order-right">
+            <div class="order-amt">₹2.97L</div>
+            <div class="order-date">Due Apr 12</div>
+          </div>
+        </div>
+
+        <div class="order">
+          <div class="order-icon payment">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="9" rx="1.5" stroke="#E65100" stroke-width="1.2"/><path d="M1.5 7h13" stroke="#E65100" stroke-width="1.2"/><rect x="3.5" y="9.5" width="3" height="1.5" rx=".5" fill="#E65100"/></svg>
+          </div>
+          <div class="order-info">
+            <div class="order-title">Tomato &nbsp;·&nbsp; 40 qtl</div>
+            <div class="order-meta">Delhi Fresh Mart &nbsp;·&nbsp; <span class="chip-paypend">Payment pending</span></div>
+            <div class="order-prog">
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot done"></div><div class="pline"></div>
+              <div class="pdot cur"></div>
+            </div>
+          </div>
+          <div class="order-right">
+            <div class="order-amt">₹36,800</div>
+            <div class="order-date" style="color:#E65100">Overdue 1 day</div>
+          </div>
+        </div>
+
+        <div class="order">
+          <div class="order-icon done">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#2E7D32" stroke-width="1.2"/><path d="M5.5 8.5l2 2 3-4" stroke="#2E7D32" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="order-info">
+            <div class="order-title">Pomegranate &nbsp;·&nbsp; 15 qtl</div>
+            <div class="order-meta">FreshMart Exports &nbsp;·&nbsp; <span class="chip-done">Completed</span></div>
+            <div class="order-prog">
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot done"></div>
+            </div>
+          </div>
+          <div class="order-right">
+            <div class="order-amt">₹1.27L</div>
+            <div class="order-date">Apr 7, 2026</div>
+          </div>
+        </div>
+
+        <div class="order">
+          <div class="order-icon check">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#558B2F" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="#558B2F" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div class="order-info">
+            <div class="order-title">Onion &nbsp;·&nbsp; 30 qtl</div>
+            <div class="order-meta">Ramesh Traders &nbsp;·&nbsp; <span class="chip-qc">Quality check</span></div>
+            <div class="order-prog">
+              <div class="pdot done"></div><div class="pline done"></div>
+              <div class="pdot cur"></div><div class="pline"></div>
+              <div class="pdot"></div><div class="pline"></div>
+              <div class="pdot"></div>
+            </div>
+          </div>
+          <div class="order-right">
+            <div class="order-amt">₹55,500</div>
+            <div class="order-date">Awaited</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div>
+    <div class="qa-head">Quick actions</div>
+    <div class="actions">
+      <div class="action-btn primary" onclick="goAddListing()">
+        <div class="action-icon pr">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div class="action-label lt">Add new listing</div>
+        <div class="action-sub lt">List your crop</div>
+      </div>
+      <div class="action-btn" onclick="window.location.href='techsetu-request-transport.html'">
+        <div class="action-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="7" width="10" height="5" rx="1" stroke="#4CAF50" stroke-width="1.2"/><path d="M11 9l2.5-1.5V12H11V9z" stroke="#4CAF50" stroke-width="1.2" stroke-linejoin="round" fill="none"/><circle cx="4" cy="13" r="1.1" stroke="#4CAF50" stroke-width="1"/><circle cx="12.5" cy="13" r="1.1" stroke="#4CAF50" stroke-width="1"/></svg>
+        </div>
+        <div class="action-label">Request transport</div>
+        <div class="action-sub">Book a vehicle</div>
+      </div>
+      <div class="action-btn" onclick="window.location.href='techsetu-payment-history.html'">
+        <div class="action-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#4CAF50" stroke-width="1.2"/><path d="M2 7.5h12" stroke="#4CAF50" stroke-width="1.2"/><rect x="4" y="10" width="2.5" height="1.5" rx=".5" fill="#4CAF50"/></svg>
+        </div>
+        <div class="action-label">Payment history</div>
+        <div class="action-sub">View all receipts</div>
+      </div>
+      <div class="action-btn" onclick="window.location.href='techsetu-incoming-buyer-offers.html'">
+        <div class="action-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="9" width="2" height="4" rx=".5" fill="#81C784"/><rect x="5.5" y="6" width="2" height="7" rx=".5" fill="#66BB6A"/><rect x="9" y="3.5" width="2" height="9.5" rx=".5" fill="#4CAF50"/><rect x="12.5" y="5" width="2" height="8" rx=".5" fill="#3E8E41"/></svg>
+        </div>
+        <div class="action-label">Incoming offers</div>
+        <div class="action-sub">Review buyer bids</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+var totalListings = 6, activeListings = 5, newThisWeek = 2;
+
+function showToast(msg) {
+  var t = document.getElementById('ts-toast');
+  t.textContent = msg;
+  setTimeout(function(){ t.classList.add('show'); }, 10);
+  setTimeout(function(){ t.classList.remove('show'); }, 3500);
+}
+
+function goAddListing() { window.location.href = 'techsetu-add-listing.html'; }
+
+function checkForNewListing() {
+  var data = sessionStorage.getItem('ts_new_listing');
+  if (!data) return;
+  sessionStorage.removeItem('ts_new_listing');
+  try {
+    var d = JSON.parse(data);
+    appendNewListing(d);
+    updateCounts();
+    setTimeout(function(){ showToast('✓ New listing added: ' + d.cropId); }, 400);
+  } catch(e){}
+}
+
+function appendNewListing(d) {
+  var tbody = document.getElementById('crop-tbody');
+  var tr = document.createElement('tr');
+  tr.className = 'new-row';
+  tr.innerHTML =
+    '<td><div class="crop-name">'+ esc(d.cropName) +'</div><div class="crop-variety">'+ esc(d.variety||'—') +'</div></td>'
+    + '<td>'+ esc(d.quantity ? d.quantity+' qtl' : '—') +'</td>'
+    + '<td><span class="crop-price">₹'+ esc(d.price||'—') +'/qtl</span></td>'
+    + '<td style="color:#C8E6C9">—</td>'
+    + '<td><span style="font-size:11px;color:#616161">'+ esc(d.grade||'Grade A') +'</span></td>'
+    + '<td><span class="badge badge-active">Active</span></td>'
+    + '<td><span class="tbl-action">Manage →</span></td>';
+  tbody.insertBefore(tr, tbody.firstChild);
+}
+
+function updateCounts() {
+  totalListings++; activeListings++; newThisWeek++;
+  document.getElementById('metric-total').textContent = totalListings;
+  document.getElementById('metric-delta').textContent = '↑ ' + newThisWeek + ' added this week';
+  document.getElementById('stat-active').textContent = activeListings + ' crops';
+  document.getElementById('listing-subtitle').textContent = activeListings + ' active · 1 draft · Rabi 2025–26';
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+window.addEventListener('load', checkForNewListing);
+</script>
+</body>
+</html>

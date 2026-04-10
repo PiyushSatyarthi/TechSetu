@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment History — TechSetu</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; background: #F7F9F7; color: #2E2E2E; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5; }
+
+:root {
+  --p: #4CAF50; --p-hov: #3E8E41; --p-soft: #6FBF73;
+  --bg-app: #F7F9F7; --bg-mint: #E8F5E9; --bg-soft: #DFF0E3; --bg-card: #C8E6C9;
+  --ac1: #81C784; --ac2: #66BB6A; --ac3: #A5D6A7;
+  --white: #FFFFFF; --border: #E0E0E0;
+  --tx: #2E2E2E; --tx-sub: #616161; --tx-sec: #9E9E9E; --tx-ph: #A0A0A0;
+  --nav: #1B5E20; --nav-hov: #2E7D32; --nav-act: #388E3C; --nav-tx: #E8F5E9; --nav-sub: #81C784;
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px;
+}
+
+/* ── NAV ── */
+nav {
+  background: var(--nav); height: 54px;
+  display: flex; align-items: center; padding: 0 24px;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid #145214;
+}
+.nav-logo { display: flex; align-items: center; gap: 8px; margin-right: 32px; text-decoration: none; flex-shrink: 0; }
+.nav-logo-leaf { width: 10px; height: 10px; background: var(--ac3); border-radius: 50% 0 50% 0; transform: rotate(45deg); }
+.nav-logo-text { font-family: Georgia,'Times New Roman',serif; font-size: 17px; color: var(--nav-tx); }
+.nav-links { display: flex; gap: 2px; flex: 1; overflow: hidden; }
+.nav-link { font-size: 12.5px; color: var(--nav-sub); text-decoration: none; padding: 5px 12px; border-radius: var(--r-sm); white-space: nowrap; transition: color 0.15s, background 0.15s; }
+.nav-link:hover { color: var(--nav-tx); background: var(--nav-hov); }
+.nav-link.active { color: var(--nav-tx); background: var(--nav-act); }
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.nav-bell { width: 32px; height: 32px; background: var(--nav-hov); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+.nav-bell-dot { position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; background: #FFD54F; border-radius: 50%; border: 1.5px solid var(--nav); }
+.nav-lang { font-size: 11px; color: var(--nav-sub); border: 1px solid #2E7D32; border-radius: 4px; padding: 3px 8px; cursor: pointer; background: transparent; }
+.nav-avatar { width: 32px; height: 32px; background: var(--nav-act); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--nav-tx); border: 1.5px solid var(--ac2); cursor: pointer; }
+
+/* ── MAIN ── */
+main { padding: 18px 24px 40px; max-width: 1300px; margin: 0 auto; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  background: linear-gradient(135deg, #A5D6A7 0%, #4CAF50 100%);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.page-header h1 { font-family: Georgia,'Times New Roman',serif; font-size: 19px; font-weight: 400; color: #1B5E20; margin-bottom: 3px; }
+.page-header p { font-size: 11.5px; color: #2E7D32; }
+.header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.header-badge {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: var(--r-md);
+  padding: 8px 14px; text-align: center; min-width: 100px;
+}
+.header-badge .badge-label { font-size: 10px; color: #2E7D32; display: block; margin-bottom: 3px; }
+.header-badge .badge-value { font-size: 15px; font-weight: 700; color: #1B5E20; font-variant-numeric: tabular-nums; }
+.header-badge .badge-value.rev { color: #1B5E20; }
+
+/* ── CARD ── */
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.card-header { padding: 13px 16px 11px; border-bottom: 1px solid #F0F4F0; display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-family: Georgia,'Times New Roman',serif; font-size: 14.5px; font-weight: 400; color: var(--tx); }
+.card-action { font-size: 12px; color: var(--p); cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+
+/* ── LAYOUT ── */
+.layout-split { display: grid; grid-template-columns: minmax(0,3fr) minmax(0,2fr); gap: 14px; }
+@media (max-width: 1000px) { .layout-split { grid-template-columns: 1fr; } }
+
+/* ── FILTERS ── */
+.filters-row {
+  padding: 12px 16px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+  border-bottom: 1px solid #F0F4F0;
+  align-items: center;
+  background: #FAFFFE;
+}
+.filter-input, .filter-select {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 7px 10px;
+  font-size: 12.5px; color: var(--tx);
+  font-family: inherit; outline: none;
+  transition: border-color 0.15s;
+}
+.filter-input { min-width: 180px; flex: 1; max-width: 220px; }
+.filter-select { cursor: pointer; }
+.filter-input:focus, .filter-select:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(76,175,80,0.1); }
+.filter-input::placeholder { color: var(--tx-ph); }
+.filter-reset { font-size: 12px; color: var(--tx-sub); cursor: pointer; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--white); transition: color 0.15s; }
+.filter-reset:hover { color: var(--p); border-color: var(--p); }
+
+/* ── SUMMARY CHIPS ── */
+.summary-chips { padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid #F0F4F0; background: var(--bg-mint); }
+.chip { font-size: 11.5px; padding: 4px 12px; border-radius: 20px; font-weight: 500; }
+.chip-in  { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+.chip-out { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; }
+.chip-net { background: #E8F5E9; color: #1B5E20; border: 1px solid #81C784; }
+.chip-label { font-size: 10.5px; font-weight: 400; color: var(--tx-sub); margin-right: 4px; }
+
+/* ── LEDGER TABLE ── */
+.ledger-wrap { overflow-x: auto; }
+.ledger-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ledger-table th {
+  text-align: left; font-size: 10.5px; font-weight: 600;
+  color: var(--tx-sub); padding: 7px 12px;
+  background: var(--bg-mint);
+  border-bottom: 1px solid var(--bg-card);
+  text-transform: uppercase; letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+.ledger-table td { padding: 10px 12px; border-bottom: 1px solid #F5F5F5; vertical-align: middle; color: var(--tx); }
+.ledger-table tr:last-child td { border-bottom: none; }
+.ledger-table tr:hover td { background: #F7FFF7; cursor: pointer; }
+.ledger-table tr.selected td { background: var(--bg-mint); }
+.ledger-date { font-size: 11px; color: var(--tx-sub); white-space: nowrap; }
+.ledger-id { font-size: 11px; color: var(--tx-sec); font-family: monospace; }
+.ledger-party { font-weight: 500; font-size: 12.5px; }
+.ledger-crop { font-size: 11px; color: var(--tx-sub); margin-top: 1px; }
+.ledger-amount { font-weight: 700; font-size: 13px; text-align: right; white-space: nowrap; }
+.ledger-amount.inc { color: #2E7D32; }
+.ledger-amount.out { color: #D32F2F; }
+
+/* ── BADGES ── */
+.badge { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+.badge-paid       { background: #E8F5E9; color: #2E7D32; }
+.badge-pending    { background: #FFF8E1; color: #E65100; }
+.badge-processing { background: #E3F2FD; color: #1565C0; }
+.badge-incoming   { background: #E8F5E9; color: #2E7D32; }
+.badge-outgoing   { background: #FFF3E0; color: #E65100; }
+
+/* ── DETAIL PANEL ── */
+.detail-header { padding: 13px 16px 11px; border-bottom: 1px solid #F0F4F0; display: flex; align-items: center; justify-content: space-between; }
+.detail-title { font-family: Georgia,'Times New Roman',serif; font-size: 14px; font-weight: 400; color: var(--tx); }
+.detail-body { padding: 14px 16px; }
+.detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid #F5F5F5; font-size: 12.5px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--tx-sub); flex-shrink: 0; margin-right: 12px; }
+.detail-val { color: var(--tx); font-weight: 500; text-align: right; }
+.detail-section-head { font-size: 11px; font-weight: 600; color: var(--tx-sub); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px; }
+
+/* ── BREAKDOWN TABLE ── */
+.breakdown-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+.breakdown-table td { padding: 5px 0; border-bottom: 1px solid #F5F5F5; }
+.breakdown-table td:last-child { text-align: right; font-weight: 500; }
+.breakdown-table tr:last-child td { border-bottom: none; }
+.breakdown-table tr.deduct-row td { color: #D32F2F; }
+.breakdown-table tr.total-row td { font-weight: 700; font-size: 13px; color: #1B5E20; border-top: 1.5px solid var(--bg-card); padding-top: 8px; }
+
+/* ── ACTION BUTTONS ── */
+.detail-actions { padding: 12px 16px; border-top: 1px solid #F0F4F0; display: flex; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--r-sm); font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; font-family: inherit; }
+.btn-primary { background: var(--p); color: #fff; }
+.btn-primary:hover { background: var(--p-hov); }
+.btn-secondary { background: var(--white); color: var(--p); border: 1px solid var(--p); }
+.btn-secondary:hover { background: var(--bg-mint); }
+.btn-ghost { background: var(--white); color: var(--tx-sub); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--p); color: var(--p); }
+
+/* ── BILL PANEL ── */
+.bill-panel { display: none; border-top: 1px solid #F0F4F0; padding: 16px; background: #FAFFFE; }
+.bill-panel.visible { display: block; }
+.bill-logo-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--bg-card); }
+.bill-logo-left { display: flex; align-items: center; gap: 10px; }
+.bill-brand { font-family: Georgia,'Times New Roman',serif; font-size: 16px; color: #1B5E20; font-weight: 400; }
+.bill-invoice-label { font-size: 9.5px; color: var(--tx-sec); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; }
+.bill-receipt-no { font-size: 12px; font-weight: 700; color: var(--tx); text-align: right; }
+.bill-receipt-date { font-size: 11px; color: var(--tx-sub); text-align: right; margin-top: 2px; }
+.bill-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.bill-party-label { font-size: 10px; color: var(--tx-sec); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+.bill-party-name { font-weight: 600; font-size: 12.5px; color: var(--tx); margin-bottom: 2px; }
+.bill-party-detail { font-size: 11px; color: var(--tx-sub); line-height: 1.5; }
+.bill-status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.payment-mode-chip { font-size: 11px; background: var(--bg-soft); color: #2E7D32; padding: 2px 8px; border-radius: 3px; }
+.bill-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+.bill-table th { background: var(--bg-mint); padding: 6px 8px; font-size: 10.5px; font-weight: 600; color: var(--tx-sub); border-bottom: 1px solid var(--bg-card); text-align: left; }
+.bill-table th.right, .bill-table td.right { text-align: right; }
+.bill-table td { padding: 7px 8px; border-bottom: 1px solid #F5F5F5; }
+.bill-totals { max-width: 260px; margin-left: auto; }
+.bill-total-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #F5F5F5; font-size: 12.5px; }
+.bill-total-row:last-child { border-bottom: none; }
+.bill-total-row.final { font-weight: 700; font-size: 13px; color: #1B5E20; border-top: 1.5px solid var(--bg-card); padding-top: 8px; }
+.bill-total-row.deduct { color: #D32F2F; }
+.bill-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid #F0F4F0; gap: 12px; flex-wrap: wrap; }
+.bill-footer-note { font-size: 10.5px; color: var(--tx-sec); line-height: 1.5; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--tx-sec); }
+.empty-state p { font-size: 13px; margin-top: 8px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .layout-split { grid-template-columns: 1fr; }
+  .header-badges { display: none; }
+  main { padding: 12px; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="techsetu_farmer_dashboard.html">
+    <span class="nav-logo-leaf"></span>
+    <span class="nav-logo-text">TechSetu</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+    <a class="nav-link" href="#">My crops</a>
+    <a class="nav-link" href="techsetu-add-listing.html">Add listing</a>
+    <a class="nav-link" href="techsetu-incoming-buyer-offers.html">Orders</a>
+    <a class="nav-link active" href="#">Payments</a>
+    <a class="nav-link" href="#">Mandi rates</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-bell">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#A5D6A7" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#A5D6A7" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div class="nav-bell-dot"></div>
+    </div>
+    <div class="nav-lang">हि | EN</div>
+    <div class="nav-avatar">RS</div>
+  </div>
+</nav>
+
+<main>
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Payment history</h1>
+      <p>Rajesh Singh &nbsp;·&nbsp; Farmer ID: MH-2847 &nbsp;·&nbsp; Rabi season 2025–26</p>
+    </div>
+    <div class="header-badges">
+      <div class="header-badge">
+        <span class="badge-label">Total received</span>
+        <div class="badge-value rev">₹5.84L</div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-label">Transactions</span>
+        <div class="badge-value">14</div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-label">Pending payout</span>
+        <div class="badge-value">₹92,300</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout-split">
+
+    <!-- LEDGER CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Transaction ledger</div>
+        <button class="btn btn-ghost" onclick="downloadAllReceipts()" style="padding:5px 10px;font-size:11.5px">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 2v7M4 7l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Export
+        </button>
+      </div>
+      <div class="filters-row">
+        <input type="text" id="searchInput" class="filter-input" placeholder="Search crop, buyer, receipt ID…" oninput="applyFilters()">
+        <select id="typeFilter" class="filter-select" onchange="applyFilters()">
+          <option value="all">All types</option>
+          <option value="incoming">Incoming</option>
+          <option value="outgoing">Outgoing</option>
+        </select>
+        <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+          <option value="all">All status</option>
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+        </select>
+        <select id="dateFilter" class="filter-select" onchange="applyFilters()">
+          <option value="season">This season</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+        <button class="filter-reset" onclick="resetFilters()">Reset</button>
+      </div>
+      <div class="summary-chips">
+        <span class="chip chip-in"><span class="chip-label">Incoming</span><span id="chipIncoming">₹5.84L</span></span>
+        <span class="chip chip-out"><span class="chip-label">Outgoing</span><span id="chipOutgoing">₹0</span></span>
+        <span class="chip chip-net"><span class="chip-label">Net</span><span id="chipNet">₹5.84L</span></span>
+      </div>
+      <div class="ledger-wrap">
+        <table class="ledger-table" aria-label="Payment transactions">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Receipt ID</th>
+              <th>Party &amp; crop</th>
+              <th>Type</th>
+              <th style="text-align:right">Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETAIL + BILL PANEL -->
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="detail-header">
+          <div class="detail-title">Transaction detail</div>
+          <span id="detailStatusBadge" class="badge badge-paid">Paid</span>
+        </div>
+        <div class="detail-body">
+          <div class="detail-section-head">Receipt info</div>
+          <div class="detail-row"><span class="detail-key">Receipt ID</span><span class="detail-val" id="dReceiptId">—</span></div>
+          <div class="detail-row"><span class="detail-key">Type</span><span class="detail-val" id="dType">—</span></div>
+          <div class="detail-row"><span class="detail-key">Party</span><span class="detail-val" id="dCounterparty">—</span></div>
+          <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val" id="dCategory">—</span></div>
+          <div class="detail-section-head">Produce details</div>
+          <div class="detail-row"><span class="detail-key">Crop</span><span class="detail-val" id="dCrop">—</span></div>
+          <div class="detail-row"><span class="detail-key">Grade</span><span class="detail-val" id="dGrade">—</span></div>
+          <div class="detail-row"><span class="detail-key">Quantity</span><span class="detail-val" id="dQty">—</span></div>
+          <div class="detail-row"><span class="detail-key">Rate / qtl</span><span class="detail-val" id="dRate">—</span></div>
+          <div class="detail-section-head">Dates &amp; location</div>
+          <div class="detail-row"><span class="detail-key">Dispatched</span><span class="detail-val" id="dDispatched">—</span></div>
+          <div class="detail-row"><span class="detail-key">Delivered</span><span class="detail-val" id="dDelivered">—</span></div>
+          <div class="detail-row"><span class="detail-key">Payment date</span><span class="detail-val" id="dPayDate">—</span></div>
+          <div class="detail-row"><span class="detail-key">Location</span><span class="detail-val" id="dLocation">—</span></div>
+          <div class="detail-section-head">Reference IDs</div>
+          <div class="detail-row"><span class="detail-key">Order ID</span><span class="detail-val" id="dOrderId" style="font-family:monospace;font-size:11.5px">—</span></div>
+          <div class="detail-row"><span class="detail-key">Listing ID</span><span class="detail-val" id="dListingId" style="font-family:monospace;font-size:11.5px">—</span></div>
+          <div class="detail-section-head">Breakdown</div>
+          <table class="breakdown-table" id="breakdownTable" aria-label="Amount breakdown"></table>
+          <div class="detail-section-head">Notes</div>
+          <div style="font-size:12.5px;color:var(--tx-sub);padding:4px 0" id="dNotes">—</div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-primary" onclick="downloadReceipt()">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 7l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download receipt
+          </button>
+          <button id="viewBillBtn" class="btn btn-secondary" onclick="toggleBill()" aria-expanded="false">View full bill</button>
+        </div>
+        <!-- BILL PANEL -->
+        <div id="billPanel" class="bill-panel">
+          <div id="billContent"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+var selectedId = 'RCP-2026-001';
+var billVisible = false;
+var filteredTxns = [];
+
+var transactions = [
+  {
+    id:'RCP-2026-001', date:'Apr 7, 2026', type:'incoming', status:'paid',
+    counterparty:'FreshMart Exports', category:'Export House', crop:'Pomegranate', grade:'Export grade',
+    qty:'15 qtl', rate:'₹8,500/qtl', amount:127500, netAmount:'₹1,27,500',
+    dispatched:'Apr 3, 2026', delivered:'Apr 6, 2026', payDate:'Apr 7, 2026',
+    location:'Mumbai APMC', orderId:'ORD-26-0041', listingId:'LST-2026-023',
+    payMode:'NEFT / Bank transfer', notes:'Full payment received on time. Export documentation attached.',
+    farmerName:'Rajesh Singh', farmerId:'MH-2847', farmerAddress:'Nashik, Maharashtra',
+    breakdown:[
+      {label:'Gross sale amount',amount:'₹1,27,500'},
+      {label:'Platform fee (1%)',amount:'− ₹1,275',type:'debit'},
+      {label:'Transport charges',amount:'− ₹0'},
+      {label:'GST (0.5%)',amount:'− ₹638',type:'debit'}
+    ],
+    billItems:[{item:'Pomegranate',variety:'Bhagwa — Export',qty:'15 qtl',rate:'₹8,500',subtotal:'₹1,27,500'}],
+    billTotals:[
+      {label:'Subtotal',val:'₹1,27,500'},
+      {label:'Platform fee',val:'− ₹1,275',deduct:true},
+      {label:'GST',val:'− ₹638',deduct:true},
+      {label:'Net received',val:'₹1,25,587',final:true}
+    ]
+  },
+  {
+    id:'RCP-2026-002', date:'Mar 28, 2026', type:'incoming', status:'paid',
+    counterparty:'Bharat Agro Pvt Ltd', category:'Verified Buyer', crop:'Wheat', grade:'Grade A',
+    qty:'120 qtl', rate:'₹2,480/qtl', amount:297600, netAmount:'₹2,97,600',
+    dispatched:'Mar 24, 2026', delivered:'Mar 27, 2026', payDate:'Mar 28, 2026',
+    location:'Pune Mandi', orderId:'ORD-26-0038', listingId:'LST-2026-019',
+    payMode:'RTGS', notes:'Bulk purchase. Quality approved on delivery.',
+    farmerName:'Rajesh Singh', farmerId:'MH-2847', farmerAddress:'Nashik, Maharashtra',
+    breakdown:[
+      {label:'Gross sale amount',amount:'₹2,97,600'},
+      {label:'Platform fee (1%)',amount:'− ₹2,976',type:'debit'},
+      {label:'GST',amount:'− ₹1,488',type:'debit'}
+    ],
+    billItems:[{item:'Wheat',variety:'Lok-1 — Grade A',qty:'120 qtl',rate:'₹2,480',subtotal:'₹2,97,600'}],
+    billTotals:[
+      {label:'Subtotal',val:'₹2,97,600'},
+      {label:'Platform fee',val:'− ₹2,976',deduct:true},
+      {label:'GST',val:'− ₹1,488',deduct:true},
+      {label:'Net received',val:'₹2,93,136',final:true}
+    ]
+  },
+  {
+    id:'RCP-2026-003', date:'Mar 18, 2026', type:'incoming', status:'paid',
+    counterparty:'Delhi Fresh Mart', category:'Retailer', crop:'Tomato', grade:'Grade B+',
+    qty:'40 qtl', rate:'₹920/qtl', amount:36800, netAmount:'₹36,800',
+    dispatched:'Mar 15, 2026', delivered:'Mar 17, 2026', payDate:'Mar 18, 2026',
+    location:'Delhi Azadpur', orderId:'ORD-26-0031', listingId:'LST-2026-015',
+    payMode:'UPI', notes:'',
+    farmerName:'Rajesh Singh', farmerId:'MH-2847', farmerAddress:'Nashik, Maharashtra',
+    breakdown:[
+      {label:'Gross sale amount',amount:'₹36,800'},
+      {label:'Platform fee (1%)',amount:'− ₹368',type:'debit'},
+      {label:'GST',amount:'− ₹184',type:'debit'}
+    ],
+    billItems:[{item:'Tomato',variety:'Hybrid F1 — Grade B+',qty:'40 qtl',rate:'₹920',subtotal:'₹36,800'}],
+    billTotals:[
+      {label:'Subtotal',val:'₹36,800'},
+      {label:'Platform fee',val:'− ₹368',deduct:true},
+      {label:'GST',val:'− ₹184',deduct:true},
+      {label:'Net received',val:'₹36,248',final:true}
+    ]
+  },
+  {
+    id:'RCP-2026-004', date:'Feb 22, 2026', type:'incoming', status:'paid',
+    counterparty:'Nashik Co-op Mandi', category:'Mandi / Co-op', crop:'Onion', grade:'Grade A',
+    qty:'50 qtl', rate:'₹1,780/qtl', amount:89000, netAmount:'₹89,000',
+    dispatched:'Feb 19, 2026', delivered:'Feb 21, 2026', payDate:'Feb 22, 2026',
+    location:'Nashik Mandi', orderId:'ORD-26-0027', listingId:'LST-2026-011',
+    payMode:'Cheque', notes:'Co-op procurement. Quality certificate attached.',
+    farmerName:'Rajesh Singh', farmerId:'MH-2847', farmerAddress:'Nashik, Maharashtra',
+    breakdown:[
+      {label:'Gross sale amount',amount:'₹89,000'},
+      {label:'Mandi cess (2%)',amount:'− ₹1,780',type:'debit'},
+      {label:'Platform fee',amount:'− ₹890',type:'debit'}
+    ],
+    billItems:[{item:'Onion',variety:'Nashik Red — Grade A',qty:'50 qtl',rate:'₹1,780',subtotal:'₹89,000'}],
+    billTotals:[
+      {label:'Subtotal',val:'₹89,000'},
+      {label:'Mandi cess',val:'− ₹1,780',deduct:true},
+      {label:'Platform fee',val:'− ₹890',deduct:true},
+      {label:'Net received',val:'₹86,330',final:true}
+    ]
+  },
+  {
+    id:'RCP-2026-005', date:'Feb 10, 2026', type:'incoming', status:'pending',
+    counterparty:'Ramesh Traders', category:'Individual Buyer', crop:'Onion', grade:'Grade A',
+    qty:'30 qtl', rate:'₹1,850/qtl', amount:55500, netAmount:'₹55,500',
+    dispatched:'Feb 7, 2026', delivered:'Feb 9, 2026', payDate:'Awaited',
+    location:'Nashik', orderId:'ORD-26-0025', listingId:'LST-2026-011',
+    payMode:'NEFT — Awaited', notes:'Delivery confirmed. Payment overdue by 2 days.',
+    farmerName:'Rajesh Singh', farmerId:'MH-2847', farmerAddress:'Nashik, Maharashtra',
+    breakdown:[
+      {label:'Gross sale amount',amount:'₹55,500'},
+      {label:'Platform fee (1%)',amount:'− ₹555',type:'debit'}
+    ],
+    billItems:[{item:'Onion',variety:'Nashik Red — Grade A',qty:'30 qtl',rate:'₹1,850',subtotal:'₹55,500'}],
+    billTotals:[
+      {label:'Subtotal',val:'₹55,500'},
+      {label:'Platform fee',val:'− ₹555',deduct:true},
+      {label:'Net due',val:'₹54,945',final:true}
+    ]
+  },
+  {
+    id:'RCP-2026-006', date:'Jan 30, 2026', type:'incoming', status:'processing',
+    counterparty:'Sun Agri Exports', category:'Export House', crop:'Grapes', grade:'Export grade',
+    qty:'30 qtl', rate:'₹5,900/qtl', amount:177000, netAmount:'₹1,77,000',
+    dispatched:'Jan 27, 2026', delivered:'Jan 29, 2026', payDate:'Processing',
+    location:'Mumbai Port Zone', orderId:'ORD-26-0021', listingId:'LST-2026-008',
+    payMode:'Wire Transfer — Processing', notes:'Export clearance done. Payment in process (2–3 business days).',
+    farmerName:'Rajesh Singh', farmerId:'MH-2847', farmerAddress:'Nashik, Maharashtra',
+    breakdown:[
+      {label:'Gross sale amount',amount:'₹1,77,000'},
+      {label:'Export handling',amount:'− ₹3,540',type:'debit'},
+      {label:'Platform fee',amount:'− ₹1,770',type:'debit'}
+    ],
+    billItems:[{item:'Grapes',variety:'Thompson Seedless — Export',qty:'30 qtl',rate:'₹5,900',subtotal:'₹1,77,000'}],
+    billTotals:[
+      {label:'Subtotal',val:'₹1,77,000'},
+      {label:'Export handling',val:'− ₹3,540',deduct:true},
+      {label:'Platform fee',val:'− ₹1,770',deduct:true},
+      {label:'Net payable',val:'₹1,71,690',final:true}
+    ]
+  }
+];
+
+filteredTxns = [...transactions];
+
+function renderLedger(data) {
+  var tbody = document.getElementById('ledgerBody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#9E9E9E">No transactions found</td></tr>';
+    updateChips(data); return;
+  }
+  tbody.innerHTML = data.map(function(t) {
+    return '<tr data-id="'+ t.id +'" onclick="selectTxn(\''+ t.id +'\')"' + (t.id === selectedId ? ' class="selected"' : '') + '>'
+      + '<td><div class="ledger-date">'+ t.date +'</div></td>'
+      + '<td><div class="ledger-id">'+ t.id +'</div></td>'
+      + '<td><div class="ledger-party">'+ esc(t.counterparty) +'</div><div class="ledger-crop">'+ esc(t.crop) +'</div></td>'
+      + '<td><span class="badge badge-'+ (t.type === 'incoming' ? 'incoming' : 'outgoing') +'">'+ (t.type === 'incoming' ? 'Incoming' : 'Outgoing') +'</span></td>'
+      + '<td class="ledger-amount '+ (t.type === 'incoming' ? 'inc' : 'out') +'">'+ (t.type === 'incoming' ? '+' : '−') +' ₹'+ formatAmt(t.amount) +'</td>'
+      + '<td><span class="badge badge-'+ t.status +'">'+ capitalize(t.status) +'</span></td>'
+      + '</tr>';
+  }).join('');
+  updateChips(data);
+}
+
+function selectTxn(id) {
+  selectedId = id;
+  document.querySelectorAll('#ledgerBody tr').forEach(function(tr) {
+    tr.classList.toggle('selected', tr.getAttribute('data-id') === id);
+  });
+  if (billVisible) {
+    billVisible = false;
+    document.getElementById('billPanel').classList.remove('visible');
+    document.getElementById('viewBillBtn').setAttribute('aria-expanded', 'false');
+  }
+  populateDetail(id);
+}
+
+function populateDetail(id) {
+  var t = transactions.find(function(x){ return x.id === id; });
+  if (!t) return;
+  var sb = document.getElementById('detailStatusBadge');
+  sb.className = 'badge badge-' + t.status;
+  sb.textContent = capitalize(t.status);
+  document.getElementById('dReceiptId').textContent = t.id;
+  document.getElementById('dType').innerHTML = '<span class="badge badge-'+(t.type==='incoming'?'incoming':'outgoing')+'">'+(t.type==='incoming'?'Incoming':'Outgoing')+'</span>';
+  document.getElementById('dCounterparty').textContent = t.counterparty;
+  document.getElementById('dCategory').textContent = t.category;
+  document.getElementById('dCrop').textContent = t.crop;
+  document.getElementById('dGrade').textContent = t.grade;
+  document.getElementById('dQty').textContent = t.qty;
+  document.getElementById('dRate').textContent = t.rate;
+  document.getElementById('dDispatched').textContent = t.dispatched;
+  document.getElementById('dDelivered').textContent = t.delivered;
+  document.getElementById('dPayDate').textContent = t.payDate;
+  document.getElementById('dLocation').textContent = t.location;
+  document.getElementById('dOrderId').textContent = t.orderId;
+  document.getElementById('dListingId').textContent = t.listingId;
+  document.getElementById('dNotes').textContent = t.notes || '—';
+  var bt = document.getElementById('breakdownTable');
+  bt.innerHTML = t.breakdown.map(function(row) {
+    return '<tr class="'+(row.type==='debit'?'deduct-row':'')+'"><td>'+row.label+'</td><td>'+row.amount+'</td></tr>';
+  }).join('') + '<tr class="total-row"><td>Net '+(t.type==='incoming'?'received':'paid')+'</td><td>'+t.netAmount+'</td></tr>';
+}
+
+function toggleBill() {
+  billVisible = !billVisible;
+  var panel = document.getElementById('billPanel');
+  var btn = document.getElementById('viewBillBtn');
+  panel.classList.toggle('visible', billVisible);
+  btn.setAttribute('aria-expanded', billVisible.toString());
+  btn.textContent = billVisible ? 'Hide bill' : 'View full bill';
+  if (billVisible) {
+    populateBill(selectedId);
+    setTimeout(function(){ panel.scrollIntoView({ behavior:'smooth', block:'nearest' }); }, 50);
+  }
+}
+
+function populateBill(id) {
+  var t = transactions.find(function(x){ return x.id === id; });
+  if (!t) return;
+  var html = '<div class="bill-logo-row">'
+    + '<div class="bill-logo-left">'
+    + '<svg width="28" height="28" viewBox="0 0 26 26" fill="none"><path d="M13 2L22 7.5V18.5L13 24L4 18.5V7.5L13 2Z" fill="#E8F5E9" stroke="#4CAF50" stroke-width="0.8"/><path d="M13 6L8 13L13 11L18 13L13 6Z" fill="#4CAF50"/><path d="M8 13L13 11L13 20L8 13Z" fill="#2E7D32"/><path d="M18 13L13 11L13 20L18 13Z" fill="#66BB6A"/></svg>'
+    + '<div><div class="bill-brand">TechSetu</div><div class="bill-invoice-label">Tax invoice / receipt</div></div>'
+    + '</div>'
+    + '<div><div class="bill-receipt-no">'+t.id+'</div><div class="bill-receipt-date">'+t.date+'</div><div class="bill-receipt-date" style="margin-top:2px">Order: '+t.orderId+'</div></div>'
+    + '</div>'
+    + '<div class="bill-parties">'
+    + '<div><div class="bill-party-label">From</div><div class="bill-party-name">'+esc(t.counterparty)+'</div><div class="bill-party-detail">'+esc(t.category)+'<br>'+esc(t.location)+'</div></div>'
+    + '<div><div class="bill-party-label">To</div><div class="bill-party-name">'+esc(t.farmerName)+'</div><div class="bill-party-detail">Farmer ID: '+esc(t.farmerId)+'<br>'+esc(t.farmerAddress)+'</div></div>'
+    + '</div>'
+    + '<div class="bill-status-row"><span class="badge badge-'+t.status+'">'+capitalize(t.status)+'</span><span class="payment-mode-chip">'+esc(t.payMode)+'</span></div>'
+    + '<table class="bill-table"><thead><tr><th>Item / Crop</th><th>Variety / Grade</th><th>Qty</th><th class="right">Unit rate</th><th class="right">Subtotal</th></tr></thead><tbody>'
+    + t.billItems.map(function(item){ return '<tr><td>'+item.item+'</td><td style="color:#616161">'+item.variety+'</td><td>'+item.qty+'</td><td class="right">'+item.rate+'</td><td class="right" style="font-weight:600">'+item.subtotal+'</td></tr>'; }).join('')
+    + '</tbody></table>'
+    + '<div class="bill-totals">'
+    + t.billTotals.map(function(row){ return '<div class="bill-total-row'+(row.final?' final':'')+(row.deduct?' deduct':'')+'"><span>'+row.label+'</span><span>'+row.val+'</span></div>'; }).join('')
+    + '</div>'
+    + '<div class="bill-footer"><div class="bill-footer-note">Listing: '+esc(t.listingId)+' &nbsp;·&nbsp; Generated: '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+'<br>System-generated TechSetu receipt. Not a valid tax document unless stamped.</div>'
+    + '<button class="btn btn-primary" onclick="downloadBill(\''+t.id+'\')">'
+    + '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 7l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Download PDF</button></div>';
+  document.getElementById('billContent').innerHTML = html;
+}
+
+function downloadReceipt() {
+  var t = transactions.find(function(x){ return x.id === selectedId; });
+  if (!t) return;
+  var win = window.open('', '_blank', 'width=700,height=900');
+  win.document.write('<!DOCTYPE html><html><head><title>Receipt '+t.id+' — TechSetu</title>'
+    + '<style>body{font-family:system-ui,sans-serif;font-size:13px;color:#2E2E2E;padding:30px;max-width:680px;margin:0 auto}'
+    + 'h1{font-family:Georgia,serif;font-size:20px;margin-bottom:4px;color:#1B5E20}'
+    + '.sub{color:#4CAF50;font-size:11px;margin-bottom:20px}'
+    + '.row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #C8E6C9}'
+    + '.total{font-weight:700;font-size:14px;background:#E8F5E9;color:#1B5E20;padding:7px 10px;border-radius:5px}'
+    + '.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px}'
+    + '.paid{background:#E8F5E9;color:#2E7D32}.pending{background:#FFF8E1;color:#E65100}.processing{background:#E3F2FD;color:#1565C0}'
+    + 'table{width:100%;border-collapse:collapse;margin:16px 0}'
+    + 'th{background:#E8F5E9;padding:7px;font-size:11px;text-align:left;border-bottom:0.5px solid #C8E6C9}'
+    + 'td{padding:7px;border-bottom:0.5px solid #E8F5E9;font-size:12px}'
+    + '.footer{font-size:10px;color:#81C784;margin-top:20px;border-top:0.5px solid #C8E6C9;padding-top:10px}'
+    + '@media print{button{display:none}}'
+    + '</style></head><body>'
+    + '<h1>TechSetu — Payment receipt</h1>'
+    + '<div class="sub">Receipt ID: <strong>'+t.id+'</strong> &nbsp;|&nbsp; Date: '+t.date+' &nbsp;|&nbsp; Order: '+t.orderId+'</div>'
+    + '<span class="badge '+t.status+'">'+capitalize(t.status)+'</span> &nbsp; <span style="font-size:11px;color:#4CAF50">'+t.payMode+'</span>'
+    + '<br><br>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">'
+    + '<div><strong>From:</strong><br>'+t.counterparty+'<br><span style="color:#4CAF50;font-size:11px">'+t.category+'</span></div>'
+    + '<div><strong>To:</strong><br>'+t.farmerName+'<br><span style="color:#4CAF50;font-size:11px">Farmer ID: '+t.farmerId+'</span></div>'
+    + '</div>'
+    + '<table><thead><tr><th>Item</th><th>Variety</th><th>Qty</th><th>Rate</th><th>Subtotal</th></tr></thead>'
+    + '<tbody>'+t.billItems.map(function(i){ return '<tr><td>'+i.item+'</td><td>'+i.variety+'</td><td>'+i.qty+'</td><td>'+i.rate+'</td><td>'+i.subtotal+'</td></tr>'; }).join('')+'</tbody></table>'
+    + '<div style="max-width:280px;margin-left:auto">'
+    + t.breakdown.map(function(row){ return '<div class="row"><span>'+row.label+'</span><span>'+row.amount+'</span></div>'; }).join('')
+    + '<div class="row total"><span>Net '+(t.type==='incoming'?'received':'paid')+'</span><span>'+t.netAmount+'</span></div>'
+    + '</div>'
+    + '<div class="footer">Listing: '+t.listingId+' &nbsp;·&nbsp; System-generated TechSetu receipt.</div>'
+    + '<br><button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;font-size:13px">Print / Save PDF</button>'
+    + '</body></html>');
+  win.document.close();
+}
+
+function downloadBill(id) { downloadReceipt(); }
+function downloadAllReceipts() { downloadReceipt(); }
+
+function applyFilters() {
+  var search = document.getElementById('searchInput').value.toLowerCase().trim();
+  var type   = document.getElementById('typeFilter').value;
+  var status = document.getElementById('statusFilter').value;
+  filteredTxns = transactions.filter(function(t) {
+    var ms = !search || t.id.toLowerCase().includes(search) || t.counterparty.toLowerCase().includes(search) || t.crop.toLowerCase().includes(search);
+    var mt = type === 'all' || t.type === type;
+    var mv = status === 'all' || t.status === status;
+    return ms && mt && mv;
+  });
+  renderLedger(filteredTxns);
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('typeFilter').value = 'all';
+  document.getElementById('statusFilter').value = 'all';
+  document.getElementById('dateFilter').value = 'season';
+  filteredTxns = [...transactions];
+  renderLedger(filteredTxns);
+}
+
+function updateChips(data) {
+  var inc = 0, out = 0;
+  data.forEach(function(t){ if (t.type==='incoming') inc += t.amount; else out += t.amount; });
+  document.getElementById('chipIncoming').textContent = '₹' + formatAmt(inc);
+  document.getElementById('chipOutgoing').textContent = '₹' + formatAmt(out);
+  document.getElementById('chipNet').textContent = '₹' + formatAmt(inc - out);
+}
+
+function formatAmt(n) {
+  if (n >= 100000) return (n/100000).toFixed(2) + 'L';
+  if (n >= 1000) { var s = n.toString(); return s.length <= 5 ? s.slice(0,s.length-3)+','+s.slice(s.length-3) : s.slice(0,s.length-5)+','+s.slice(s.length-5,s.length-3)+','+s.slice(s.length-3); }
+  return n.toString();
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function esc(s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+renderLedger(transactions);
+populateDetail(selectedId);
+</script>
+</body>
+</html>

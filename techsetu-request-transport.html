@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Transport — TechSetu</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; background: #F7F9F7; color: #2E2E2E; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5; }
+
+:root {
+  --p: #4CAF50; --p-hov: #3E8E41; --p-soft: #6FBF73;
+  --bg-app: #F7F9F7; --bg-mint: #E8F5E9; --bg-soft: #DFF0E3;
+  --ac1: #81C784; --ac2: #66BB6A; --ac3: #A5D6A7;
+  --white: #FFFFFF; --border: #E0E0E0;
+  --tx: #2E2E2E; --tx-sub: #616161; --tx-sec: #9E9E9E; --tx-ph: #A0A0A0;
+  --nav: #1B5E20; --nav-hov: #2E7D32; --nav-act: #388E3C; --nav-tx: #E8F5E9; --nav-sub: #81C784;
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px;
+}
+
+/* ── NAV ── */
+nav { background: var(--nav); height: 54px; display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #145214; }
+.nav-logo { display: flex; align-items: center; gap: 8px; margin-right: 32px; text-decoration: none; flex-shrink: 0; }
+.nav-logo-leaf { width: 10px; height: 10px; background: var(--ac3); border-radius: 50% 0 50% 0; transform: rotate(45deg); }
+.nav-logo-text { font-family: Georgia,'Times New Roman',serif; font-size: 17px; color: var(--nav-tx); }
+.nav-links { display: flex; gap: 2px; flex: 1; overflow: hidden; }
+.nav-link { font-size: 12.5px; color: var(--nav-sub); text-decoration: none; padding: 5px 12px; border-radius: var(--r-sm); white-space: nowrap; transition: color 0.15s, background 0.15s; }
+.nav-link:hover { color: var(--nav-tx); background: var(--nav-hov); }
+.nav-link.active { color: var(--nav-tx); background: var(--nav-act); }
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.nav-bell { width: 32px; height: 32px; background: var(--nav-hov); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+.nav-bell-dot { position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; background: #FFD54F; border-radius: 50%; border: 1.5px solid var(--nav); }
+.nav-lang { font-size: 11px; color: var(--nav-sub); border: 1px solid #2E7D32; border-radius: 4px; padding: 3px 8px; cursor: pointer; background: transparent; }
+.nav-avatar { width: 32px; height: 32px; background: var(--nav-act); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--nav-tx); border: 1.5px solid var(--ac2); cursor: pointer; }
+
+/* ── MAIN ── */
+main { padding: 20px 24px 40px; max-width: 860px; margin: 0 auto; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  background: linear-gradient(135deg, #A5D6A7 0%, #4CAF50 100%);
+  border-radius: var(--r-lg); padding: 15px 20px;
+  margin-bottom: 18px; display: flex; align-items: center; gap: 14px;
+}
+.page-header-icon { width: 44px; height: 44px; background: rgba(255,255,255,0.45); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.page-header h1 { font-family: Georgia,'Times New Roman',serif; font-size: 18px; font-weight: 400; color: #1B5E20; }
+.page-header p { font-size: 11.5px; color: #2E7D32; margin-top: 2px; }
+
+/* ── SECTION CARD ── */
+.section-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 14px; }
+.section-head { padding: 12px 16px; border-bottom: 1px solid #F0F4F0; display: flex; align-items: center; gap: 10px; }
+.section-num { width: 24px; height: 24px; background: var(--bg-mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; color: #2E7D32; flex-shrink: 0; }
+.section-title { font-family: Georgia,'Times New Roman',serif; font-size: 14px; font-weight: 400; color: var(--tx); }
+.section-body { padding: 16px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── FORM ── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--tx-sub); margin-bottom: 5px; }
+label .req { color: #D32F2F; margin-left: 2px; }
+input[type="text"], input[type="date"], input[type="number"], input[type="tel"], select, textarea {
+  width: 100%; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 9px 12px; font-size: 13.5px; color: var(--tx); font-family: inherit; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s; appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(76,175,80,0.12); }
+input::placeholder, textarea::placeholder { color: var(--tx-ph); }
+select { background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239E9E9E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+.field-hint { font-size: 11px; color: var(--tx-sec); margin-top: 4px; }
+.field-error { font-size: 11px; color: #D32F2F; margin-top: 4px; display: none; }
+.field.error input, .field.error select { border-color: #D32F2F; box-shadow: 0 0 0 3px rgba(211,47,47,0.1); }
+.field.error .field-error { display: block; }
+
+/* ── VEHICLE CARDS ── */
+.vehicle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.vehicle-card {
+  border: 1.5px solid var(--border); border-radius: var(--r-md);
+  padding: 12px 10px; text-align: center; cursor: pointer;
+  transition: all 0.15s;
+}
+.vehicle-card:hover { border-color: var(--p); }
+.vehicle-card.selected { background: var(--bg-mint); border-color: var(--p); }
+.vehicle-icon { font-size: 22px; margin-bottom: 5px; }
+.vehicle-name { font-size: 12.5px; font-weight: 600; color: var(--tx); }
+.vehicle-cap  { font-size: 11px; color: var(--tx-sec); margin-top: 2px; }
+.vehicle-rate { font-size: 12px; font-weight: 700; color: #2E7D32; margin-top: 4px; }
+
+/* ── COST ESTIMATE ── */
+.cost-box {
+  background: var(--bg-mint); border: 1px solid var(--bg-card);
+  border-radius: var(--r-md); padding: 13px 14px; margin-bottom: 14px;
+}
+.cost-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12.5px; border-bottom: 1px solid #C8E6C9; }
+.cost-row:last-child { border-bottom: none; font-weight: 700; color: #1B5E20; font-size: 13px; padding-top: 7px; }
+.cost-label { color: var(--tx-sub); }
+.cost-val { font-weight: 500; color: var(--tx); }
+.cost-head { font-size: 11px; font-weight: 600; color: #2E7D32; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 9px; }
+
+/* ── INFO BANNER ── */
+.info-banner { padding: 10px 12px; background: var(--bg-soft); border-radius: var(--r-sm); display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+.info-banner-icon { flex-shrink: 0; margin-top: 1px; }
+.info-banner-text { font-size: 12px; color: #2E7D32; line-height: 1.5; }
+
+/* ── SUBMIT ── */
+.submit-actions { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid #F0F4F0; background: #FAFFFE; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; font-family: inherit; }
+.btn-primary { background: var(--p); color: #fff; }
+.btn-primary:hover { background: var(--p-hov); }
+.btn-ghost { background: var(--white); color: var(--tx-sub); border: 1.5px solid var(--border); }
+.btn-ghost:hover { color: var(--tx); border-color: #9E9E9E; }
+
+/* ── SUCCESS ── */
+.success-screen { display: none; }
+.success-screen.show { display: block; }
+.success-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 36px 28px; text-align: center; max-width: 460px; margin: 0 auto; }
+.success-icon { width: 60px; height: 60px; background: var(--bg-mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; border: 2px solid var(--p); }
+.success-head { font-family: Georgia,'Times New Roman',serif; font-size: 19px; color: #1B5E20; margin-bottom: 6px; }
+.success-sub { font-size: 13px; color: var(--tx-sub); margin-bottom: 18px; }
+.success-id { font-family: monospace; font-size: 13px; font-weight: 700; color: var(--p-hov); background: var(--bg-mint); display: inline-block; padding: 5px 12px; border-radius: var(--r-sm); margin-bottom: 20px; border: 1px solid var(--ac3); }
+.booking-summary { text-align: left; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; margin-bottom: 20px; }
+.booking-row { display: flex; justify-content: space-between; padding: 8px 13px; border-bottom: 1px solid #F5F5F5; font-size: 12.5px; }
+.booking-row:last-child { border-bottom: none; }
+.booking-key { color: var(--tx-sub); }
+.booking-val { font-weight: 500; color: var(--tx); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  main { padding: 12px; }
+  .nav-links { display: none; }
+  .row2, .row3 { grid-template-columns: 1fr; }
+  .vehicle-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="techsetu_farmer_dashboard.html">
+    <span class="nav-logo-leaf"></span>
+    <span class="nav-logo-text">TechSetu</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+    <a class="nav-link" href="#">My crops</a>
+    <a class="nav-link" href="techsetu-add-listing.html">Add listing</a>
+    <a class="nav-link" href="techsetu-incoming-buyer-offers.html">Orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html">Payments</a>
+    <a class="nav-link" href="#">Mandi rates</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-bell">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2a3.5 3.5 0 00-3.5 3.5v2.8L3 10h10l-1.5-1.7V5.5A3.5 3.5 0 008 2z" stroke="#A5D6A7" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#A5D6A7" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div class="nav-bell-dot"></div>
+    </div>
+    <div class="nav-lang">हि | EN</div>
+    <div class="nav-avatar">RS</div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-card">
+      <div class="success-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M5 13l6 6 10-12" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="success-head">Transport booked!</div>
+      <div class="success-sub">A TechSetu logistics partner will contact you within 2 hours to confirm pickup.</div>
+      <div class="success-id" id="bookingId">TRP-2026-088</div>
+      <div class="booking-summary" id="bookingSummary"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="window.location.href='techsetu_farmer_dashboard.html'">Back to dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="formWrap">
+
+    <!-- HEADER -->
+    <div class="page-header">
+      <div class="page-header-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="9" width="14" height="7" rx="1.5" stroke="#1B5E20" stroke-width="1.5"/><path d="M15 12l4-2.5V16H15V12z" stroke="#1B5E20" stroke-width="1.5" stroke-linejoin="round" fill="none"/><circle cx="5" cy="17.5" r="1.8" stroke="#1B5E20" stroke-width="1.2"/><circle cx="17.5" cy="17.5" r="1.8" stroke="#1B5E20" stroke-width="1.2"/></svg>
+      </div>
+      <div>
+        <h1>Request transport</h1>
+        <p>Book a vehicle to move your produce to the buyer or mandi</p>
+      </div>
+    </div>
+
+    <!-- SECTION 1: CROP & PICKUP DETAILS -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-num">1</div>
+        <div class="section-title">Crop &amp; pickup details</div>
+      </div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field">
+            <label>Crop <span class="req">*</span></label>
+            <select id="tCrop" onchange="updateCostEstimate()">
+              <option value="">Select crop…</option>
+              <option>Wheat — 120 qtl (Listing LST-2026-019)</option>
+              <option>Onion — 80 qtl (Listing LST-2026-011)</option>
+              <option>Tomato — 50 qtl (Listing LST-2026-015)</option>
+              <option>Grapes — 30 qtl (Listing LST-2026-008)</option>
+              <option>Other (specify below)</option>
+            </select>
+            <div class="field-error">Please select a crop</div>
+          </div>
+          <div class="field">
+            <label>Quantity to transport (qtl) <span class="req">*</span></label>
+            <input type="number" id="tQty" placeholder="e.g. 80" min="1" oninput="updateCostEstimate()">
+            <div class="field-error">Enter quantity</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Pickup location <span class="req">*</span></label>
+            <input type="text" id="tPickup" placeholder="Village, district…">
+            <div class="field-error">Enter pickup location</div>
+          </div>
+          <div class="field">
+            <label>Delivery destination <span class="req">*</span></label>
+            <input type="text" id="tDest" placeholder="Mandi / buyer address…">
+            <div class="field-error">Enter delivery destination</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Pickup date <span class="req">*</span></label>
+            <input type="date" id="tDate">
+            <div class="field-error">Select pickup date</div>
+          </div>
+          <div class="field">
+            <label>Preferred time slot</label>
+            <select id="tTime">
+              <option>Morning (6 AM – 12 PM)</option>
+              <option>Afternoon (12 PM – 5 PM)</option>
+              <option>Evening (5 PM – 8 PM)</option>
+              <option>Flexible (any time)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Special instructions</label>
+          <textarea id="tNotes" placeholder="Fragile produce, temperature-sensitive, loading help needed…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: VEHICLE TYPE -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-num">2</div>
+        <div class="section-title">Vehicle type</div>
+      </div>
+      <div class="section-body">
+        <div class="vehicle-grid">
+          <div class="vehicle-card" id="v-mini" onclick="selectVehicle('mini', this)">
+            <div class="vehicle-icon">🛵</div>
+            <div class="vehicle-name">Mini truck</div>
+            <div class="vehicle-cap">Up to 30 qtl</div>
+            <div class="vehicle-rate">Est. ₹1,800–2,500</div>
+          </div>
+          <div class="vehicle-card selected" id="v-medium" onclick="selectVehicle('medium', this)">
+            <div class="vehicle-icon">🚛</div>
+            <div class="vehicle-name">Medium truck</div>
+            <div class="vehicle-cap">30–100 qtl</div>
+            <div class="vehicle-rate">Est. ₹3,500–5,000</div>
+          </div>
+          <div class="vehicle-card" id="v-large" onclick="selectVehicle('large', this)">
+            <div class="vehicle-icon">🚚</div>
+            <div class="vehicle-name">Large truck</div>
+            <div class="vehicle-cap">100–250 qtl</div>
+            <div class="vehicle-rate">Est. ₹6,000–9,000</div>
+          </div>
+          <div class="vehicle-card" id="v-tempo" onclick="selectVehicle('tempo', this)">
+            <div class="vehicle-icon">🚐</div>
+            <div class="vehicle-name">Tempo</div>
+            <div class="vehicle-cap">Up to 15 qtl</div>
+            <div class="vehicle-rate">Est. ₹900–1,400</div>
+          </div>
+          <div class="vehicle-card" id="v-cold" onclick="selectVehicle('cold', this)">
+            <div class="vehicle-icon">❄️</div>
+            <div class="vehicle-name">Cold storage van</div>
+            <div class="vehicle-cap">Fruits &amp; veggies</div>
+            <div class="vehicle-rate">Est. ₹5,500–8,000</div>
+          </div>
+          <div class="vehicle-card" id="v-tractor" onclick="selectVehicle('tractor', this)">
+            <div class="vehicle-icon">🚜</div>
+            <div class="vehicle-name">Tractor trolley</div>
+            <div class="vehicle-cap">Local haul only</div>
+            <div class="vehicle-rate">Est. ₹600–1,000</div>
+          </div>
+        </div>
+        <input type="hidden" id="vehicleType" value="medium">
+        <div class="field-hint" style="margin-top:10px">Final cost confirmed by logistics partner after booking</div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: CONTACT -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-num">3</div>
+        <div class="section-title">Contact for pickup</div>
+      </div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field">
+            <label>Contact name <span class="req">*</span></label>
+            <input type="text" id="tContact" value="Rajesh Singh" placeholder="Name at pickup location">
+            <div class="field-error">Enter contact name</div>
+          </div>
+          <div class="field">
+            <label>Mobile number <span class="req">*</span></label>
+            <input type="tel" id="tPhone" placeholder="+91 XXXXX XXXXX">
+            <div class="field-error">Enter mobile number</div>
+          </div>
+        </div>
+        <div class="info-banner">
+          <div class="info-banner-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#4CAF50" stroke-width="1.2"/><path d="M8 7.5v4" stroke="#4CAF50" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="5.5" r="0.7" fill="#4CAF50"/></svg>
+          </div>
+          <div class="info-banner-text">The logistics partner will call this number 1–2 hours before arrival to confirm pickup time and location.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COST ESTIMATE + SUBMIT -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-num">₹</div>
+        <div class="section-title">Cost estimate</div>
+      </div>
+      <div class="section-body">
+        <div class="cost-box">
+          <div class="cost-head">Transport estimate</div>
+          <div class="cost-row"><span class="cost-label">Vehicle type</span><span class="cost-val" id="costVehicle">Medium truck</span></div>
+          <div class="cost-row"><span class="cost-label">Quantity</span><span class="cost-val" id="costQty">—</span></div>
+          <div class="cost-row"><span class="cost-label">Estimated distance</span><span class="cost-val" id="costDist">—</span></div>
+          <div class="cost-row"><span class="cost-label">Transport estimate</span><span class="cost-val" id="costEst">₹3,500 – ₹5,000</span></div>
+        </div>
+        <div class="info-banner">
+          <div class="info-banner-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#4CAF50" stroke-width="1.2"/><path d="M8 7.5v4" stroke="#4CAF50" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="5.5" r="0.7" fill="#4CAF50"/></svg>
+          </div>
+          <div class="info-banner-text">Payment is made directly to the driver after successful delivery. TechSetu does not collect transport fees.</div>
+        </div>
+      </div>
+      <div class="submit-actions">
+        <button class="btn btn-primary" onclick="submitRequest()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="9" width="9" height="4" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M10 11l2.5-1.5V13H10V11z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>
+          Book transport
+        </button>
+        <button class="btn btn-ghost" onclick="window.location.href='techsetu_farmer_dashboard.html'">Cancel</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+var selectedVehicle = 'medium';
+var bookingSeq = 88;
+
+var vehicleRates = {
+  mini: '₹1,800 – ₹2,500', medium: '₹3,500 – ₹5,000',
+  large: '₹6,000 – ₹9,000', tempo: '₹900 – ₹1,400',
+  cold: '₹5,500 – ₹8,000', tractor: '₹600 – ₹1,000'
+};
+var vehicleNames = {
+  mini: 'Mini truck', medium: 'Medium truck',
+  large: 'Large truck', tempo: 'Tempo',
+  cold: 'Cold storage van', tractor: 'Tractor trolley'
+};
+
+function selectVehicle(type, el) {
+  selectedVehicle = type;
+  document.getElementById('vehicleType').value = type;
+  document.querySelectorAll('.vehicle-card').forEach(function(c){ c.classList.remove('selected'); });
+  el.classList.add('selected');
+  updateCostEstimate();
+}
+
+function updateCostEstimate() {
+  var qty = document.getElementById('tQty').value;
+  document.getElementById('costVehicle').textContent = vehicleNames[selectedVehicle] || '—';
+  document.getElementById('costQty').textContent = qty ? qty + ' qtl' : '—';
+  document.getElementById('costDist').textContent = 'Calculated on booking';
+  document.getElementById('costEst').textContent = vehicleRates[selectedVehicle] || '—';
+}
+
+function validate() {
+  var ok = true;
+  var checks = [
+    { id: 'tCrop', fn: function(v){ return v !== ''; } },
+    { id: 'tQty', fn: function(v){ return parseFloat(v) > 0; } },
+    { id: 'tPickup', fn: function(v){ return v.trim() !== ''; } },
+    { id: 'tDest', fn: function(v){ return v.trim() !== ''; } },
+    { id: 'tDate', fn: function(v){ return v !== ''; } },
+    { id: 'tContact', fn: function(v){ return v.trim() !== ''; } },
+    { id: 'tPhone', fn: function(v){ return v.trim().length >= 10; } }
+  ];
+  checks.forEach(function(c) {
+    var el = document.getElementById(c.id);
+    var parent = el.closest('.field');
+    if (!c.fn(el.value)) { parent.classList.add('error'); ok = false; }
+    else { parent.classList.remove('error'); }
+  });
+  return ok;
+}
+
+function submitRequest() {
+  if (!validate()) return;
+  var id = 'TRP-2026-0' + (bookingSeq < 10 ? '0'+bookingSeq : bookingSeq);
+  document.getElementById('bookingId').textContent = id;
+  var summary = document.getElementById('bookingSummary');
+  summary.innerHTML =
+    row('Booking ID', id) +
+    row('Crop', document.getElementById('tCrop').value.split(' (')[0]) +
+    row('Quantity', document.getElementById('tQty').value + ' qtl') +
+    row('Vehicle', vehicleNames[selectedVehicle]) +
+    row('Pickup', document.getElementById('tPickup').value) +
+    row('Destination', document.getElementById('tDest').value) +
+    row('Date', document.getElementById('tDate').value) +
+    row('Contact', document.getElementById('tContact').value + ' · ' + document.getElementById('tPhone').value);
+
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function row(k, v) {
+  return '<div class="booking-row"><span class="booking-key">'+k+'</span><span class="booking-val">'+esc(v)+'</span></div>';
+}
+function esc(s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+</script>
+</body>
+</html>

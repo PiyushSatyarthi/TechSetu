@@ -510,8 +510,14 @@
       <div class="farmer-stat-card"><div class="farmer-stat-val">18</div><div class="farmer-stat-lbl">Orders fulfilled</div><div class="farmer-stat-trend">This month</div></div>
       <div class="farmer-stat-card"><div class="farmer-stat-val">⭐ 4.9</div><div class="farmer-stat-lbl">Your rating</div><div class="farmer-stat-trend">Excellent</div></div>
     </div>
-    <button class="add-listing-btn" onclick="openFarmerModal()">+ Add New Crop Listing</button>
-    <button class="add-listing-btn" style="margin-top:10px;background:#f7cf59;color:#3a2900" onclick="openTransport()">🚚 Request Transport</button>
+    <div class="farmer-section-label">Farmer Quick Links</div>
+    <div class="farmer-quick-links">
+      <button class="farmer-quick-link" onclick="openFarmerPage('dashboard')">Dashboard</button>
+      <button class="farmer-quick-link" onclick="openFarmerPage('listing')">Add Listing</button>
+      <button class="farmer-quick-link" onclick="openFarmerPage('offers')">Incoming Offers</button>
+      <button class="farmer-quick-link" onclick="openFarmerPage('payments')">Payments</button>
+      <button class="farmer-quick-link" onclick="openFarmerPage('transport')">Request Transport</button>
+    </div>
     <div class="farmer-section-label">Pending Buyer Offers</div>
     <div class="farmer-offer-card">
       <div class="farmer-offer-header"><span class="farmer-offer-crop">🍅 Tomatoes — 200kg</span><span class="farmer-offer-time">2h ago</span></div>
@@ -529,6 +535,7 @@
         <button class="farmer-offer-btn decline" onclick="offerAction(this,'declined')">✗ Decline</button>
       </div>
     </div>
+    <button class="farmer-offers-page-btn" onclick="openFarmerPage('offers')">View All Incoming Offers</button>
     <button style="width:100%;padding:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:50px;font-size:14px;color:rgba(255,255,255,.7);cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px" onclick="goBack('screen-farmer','page-main');showPageMain()">← Back to Home</button>
   </div>
 </div>

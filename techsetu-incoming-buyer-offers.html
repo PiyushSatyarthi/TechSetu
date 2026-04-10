@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechSetu – Incoming Buyer Offers</title>
+<style>
+:root{
+  --p:#4CAF50;
+  --p-hov:#3E8E41;
+  --p-soft:#6FBF73;
+  --bg-app:#F7F9F7;
+  --bg-mint:#E8F5E9;
+  --bg-soft:#DFF0E3;
+  --bg-card:#C8E6C9;
+  --ac1:#81C784;
+  --ac2:#66BB6A;
+  --ac3:#A5D6A7;
+  --white:#FFFFFF;
+  --border:#E0E0E0;
+  --tx:#2E2E2E;
+  --tx-sub:#616161;
+  --tx-sec:#9E9E9E;
+  --nav:#1B5E20;
+  --nav-hov:#2E7D32;
+  --nav-act:#388E3C;
+  --nav-tx:#E8F5E9;
+  --nav-sub:#81C784;
+  --r-sm:6px;
+  --r-md:8px;
+  --r-lg:12px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:0 2px 8px rgba(0,0,0,0.10);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg-app);color:var(--tx);font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ─── NAV ─── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--nav);
+  display:flex;align-items:center;gap:0;
+  height:56px;padding:0 20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.18);
+}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;margin-right:28px;flex-shrink:0}
+.nav-logo-icon{
+  width:32px;height:32px;background:var(--p);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.nav-logo-text{font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:700;color:var(--nav-tx);letter-spacing:-0.3px}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1}
+.nav-link{
+  color:var(--nav-sub);font-size:13px;font-weight:500;text-decoration:none;
+  padding:6px 12px;border-radius:var(--r-sm);transition:background .18s,color .18s;white-space:nowrap;
+}
+.nav-link:hover{background:var(--nav-hov);color:var(--nav-tx)}
+.nav-link.active{background:var(--nav-act);color:var(--nav-tx);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+.nav-bell{position:relative;cursor:pointer;color:var(--nav-sub);font-size:18px;padding:4px;border-radius:50%;transition:color .18s}
+.nav-bell:hover{color:var(--nav-tx)}
+.nav-bell-dot{
+  position:absolute;top:2px;right:2px;
+  width:8px;height:8px;background:#FFC107;border-radius:50%;border:2px solid var(--nav);
+}
+.nav-lang{
+  background:rgba(255,255,255,0.12);color:var(--nav-tx);border:1px solid rgba(255,255,255,0.2);
+  border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer;
+  transition:background .18s;
+}
+.nav-lang:hover{background:rgba(255,255,255,0.2)}
+.nav-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--ac2),var(--p-hov));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:12px;font-weight:700;cursor:pointer;
+  border:2px solid rgba(255,255,255,0.25);transition:border-color .18s;
+}
+.nav-avatar:hover{border-color:rgba(255,255,255,0.55)}
+.nav-hamburger{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:6px}
+.nav-hamburger span{width:20px;height:2px;background:var(--nav-sub);border-radius:2px;transition:.2s}
+
+/* ─── MAIN WRAPPER ─── */
+.main{max-width:1260px;margin:0 auto;padding:24px 20px 48px}
+
+/* ─── BANNER ─── */
+.banner{
+  background:linear-gradient(130deg,#1B5E20 0%,#2E7D32 40%,#388E3C 70%,#43A047 100%);
+  border-radius:var(--r-lg);padding:28px 32px;
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  margin-bottom:22px;overflow:hidden;position:relative;
+}
+.banner::before{
+  content:'';position:absolute;top:-30px;right:120px;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,0.04);
+}
+.banner::after{
+  content:'';position:absolute;bottom:-20px;right:60px;
+  width:100px;height:100px;border-radius:50%;
+  background:rgba(255,255,255,0.05);
+}
+.banner-left{flex:1;min-width:0}
+.banner-title{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:22px;font-weight:700;color:#fff;line-height:1.25;margin-bottom:6px;
+}
+.banner-sub{color:rgba(255,255,255,0.78);font-size:13px;line-height:1.5;max-width:520px}
+.banner-stats{display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.banner-badge{
+  background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);
+  border-radius:var(--r-md);padding:10px 16px;text-align:center;min-width:110px;
+  backdrop-filter:blur(4px);
+}
+.banner-badge-val{font-size:18px;font-weight:700;color:#fff;display:block;font-family:Georgia,serif}
+.banner-badge-lbl{font-size:11px;color:rgba(255,255,255,0.72);margin-top:2px;line-height:1.3}
+.badge-urgent .banner-badge-val{color:#FFD54F}
+
+/* ─── METRICS ROW ─── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.metric-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 20px;display:flex;align-items:flex-start;gap:14px;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;
+}
+.metric-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.metric-icon{
+  width:42px;height:42px;border-radius:var(--r-md);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.metric-icon.green{background:var(--bg-mint)}
+.metric-icon.teal{background:#E0F2F1}
+.metric-icon.amber{background:#FFF8E1}
+.metric-icon.blue{background:#E3F2FD}
+.metric-body{}
+.metric-val{font-size:24px;font-weight:700;color:var(--tx);font-family:Georgia,serif;line-height:1}
+.metric-lbl{font-size:12px;color:var(--tx-sub);margin-top:3px}
+.metric-sub{font-size:11px;color:var(--tx-sec);margin-top:2px}
+
+/* ─── FILTER CARD ─── */
+.filter-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow-sm);
+}
+.filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-search{
+  flex:1;min-width:180px;
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-app);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:8px 12px;
+}
+.filter-search input{border:none;background:transparent;font-size:13px;color:var(--tx);outline:none;width:100%}
+.filter-search input::placeholder{color:var(--tx-sec)}
+.filter-search svg{color:var(--tx-sec);flex-shrink:0}
+.filter-select{
+  background:var(--bg-app);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:8px 10px;font-size:13px;color:var(--tx);outline:none;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239E9E9E' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  padding-right:28px;
+  transition:border-color .18s;
+}
+.filter-select:focus{border-color:var(--p)}
+.filter-label{font-size:12px;color:var(--tx-sub);font-weight:500;white-space:nowrap}
+
+/* ─── SPLIT LAYOUT ─── */
+.split{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+
+/* ─── OFFER LIST ─── */
+.offer-list{display:flex;flex-direction:column;gap:12px}
+
+/* ─── OFFER CARD ─── */
+.offer-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 20px;cursor:pointer;
+  box-shadow:var(--shadow-sm);transition:box-shadow .18s,border-color .18s,transform .18s;
+  position:relative;overflow:hidden;
+}
+.offer-card:hover{box-shadow:var(--shadow-md);border-color:var(--ac3);transform:translateY(-1px)}
+.offer-card.selected{border-color:var(--p);box-shadow:0 0 0 2px rgba(76,175,80,0.18),var(--shadow-md)}
+.offer-card.selected::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--p);border-radius:4px 0 0 4px;
+}
+
+.offer-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}
+.offer-buyer-info{flex:1;min-width:0}
+.offer-buyer-name{font-family:Georgia,"Times New Roman",serif;font-size:15px;font-weight:700;color:var(--tx);line-height:1.2}
+.offer-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.offer-id{font-size:11px;color:var(--tx-sec);font-family:monospace}
+.offer-time{font-size:11px;color:var(--tx-sec)}
+.offer-location{font-size:11px;color:var(--tx-sec);display:flex;align-items:center;gap:3px}
+.offer-tags{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.tag{
+  font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;
+  letter-spacing:0.3px;text-transform:uppercase;
+}
+.tag-best{background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9}
+.tag-export{background:#E3F2FD;color:#1565C0;border:1px solid #BBDEFB}
+.tag-urgent{background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2}
+.tag-slow{background:#FCE4EC;color:#C62828;border:1px solid #F8BBD9}
+.tag-wholesaler{background:#F3E5F5;color:#6A1B9A;border:1px solid #E1BEE7}
+.tag-retailer{background:#E8EAF6;color:#283593;border:1px solid #C5CAE9}
+.tag-export-house{background:#E0F2F1;color:#00695C;border:1px solid #B2DFDB}
+
+.offer-card-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 14px;margin-bottom:14px}
+.offer-field{}
+.offer-field-label{font-size:10px;color:var(--tx-sec);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:2px}
+.offer-field-val{font-size:13px;color:var(--tx);font-weight:500;line-height:1.3}
+.offer-field-val.price{color:var(--p-hov);font-weight:700;font-size:14px;font-family:Georgia,serif}
+.offer-field-val.total{color:#1B5E20;font-weight:700;font-size:15px;font-family:Georgia,serif}
+
+.offer-review{
+  display:flex;align-items:center;gap:6px;background:var(--bg-mint);
+  border-radius:var(--r-sm);padding:6px 10px;margin-bottom:12px;
+}
+.offer-review-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.offer-review-text{font-size:12px;color:var(--tx-sub)}
+
+.offer-card-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 14px;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .18s,border-color .18s,color .18s,transform .1s;border:1px solid transparent;
+  text-decoration:none;white-space:nowrap;
+}
+.btn:active{transform:scale(0.97)}
+.btn-accept{background:var(--p);color:#fff;border-color:var(--p)}
+.btn-accept:hover{background:var(--p-hov);border-color:var(--p-hov)}
+.btn-decline{background:transparent;color:#C62828;border-color:#FFCDD2}
+.btn-decline:hover{background:#FCE4EC;border-color:#EF9A9A}
+.btn-breakdown{background:#fff;color:var(--p-hov);border-color:var(--ac1)}
+.btn-breakdown:hover{background:var(--bg-mint);border-color:var(--p)}
+.btn-full{background:var(--p);color:#fff;border-color:var(--p);width:100%;justify-content:center;padding:10px 14px;font-size:14px}
+.btn-full:hover{background:var(--p-hov)}
+.btn-full-outline{background:#fff;color:var(--p-hov);border-color:var(--p);width:100%;justify-content:center;padding:10px 14px;font-size:14px}
+.btn-full-outline:hover{background:var(--bg-mint)}
+.btn-decline-full{background:#fff;color:#C62828;border-color:#FFCDD2;width:100%;justify-content:center;padding:10px 14px;font-size:14px}
+.btn-decline-full:hover{background:#FCE4EC;border-color:#EF9A9A}
+
+/* ─── RIGHT PANEL ─── */
+.right-panel{display:flex;flex-direction:column;gap:14px;position:sticky;top:72px}
+
+.detail-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;box-shadow:var(--shadow-sm);
+}
+.detail-header{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.detail-offer-id{font-size:11px;color:var(--tx-sec);font-family:monospace;margin-bottom:4px}
+.detail-buyer-name{font-family:Georgia,"Times New Roman",serif;font-size:17px;font-weight:700;color:var(--tx)}
+.detail-buyer-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+
+.detail-section{margin-bottom:14px}
+.detail-section-title{font-size:10px;text-transform:uppercase;letter-spacing:0.7px;font-weight:700;color:var(--tx-sec);margin-bottom:8px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.detail-field{}
+.detail-field-label{font-size:11px;color:var(--tx-sec);margin-bottom:2px}
+.detail-field-val{font-size:13px;color:var(--tx);font-weight:500;line-height:1.35}
+.detail-field-val.highlight{color:#1B5E20;font-weight:700;font-size:15px;font-family:Georgia,serif}
+.detail-field-val.price-highlight{color:var(--p-hov);font-weight:700}
+
+.detail-review-bar{
+  background:var(--bg-mint);border-radius:var(--r-md);padding:10px 14px;
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.review-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.review-info{}
+.review-label{font-size:12px;font-weight:600;color:var(--tx)}
+.review-desc{font-size:11px;color:var(--tx-sub)}
+
+.detail-notes{
+  background:var(--bg-soft);border-radius:var(--r-md);padding:10px 14px;
+  font-size:12px;color:var(--tx-sub);border-left:3px solid var(--ac1);margin-bottom:14px;
+}
+
+.detail-actions{display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--border)}
+
+/* ─── BREAKDOWN CARD ─── */
+.breakdown-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;box-shadow:var(--shadow-sm);
+}
+.breakdown-title{
+  font-family:Georgia,"Times New Roman",serif;font-size:15px;font-weight:700;color:var(--tx);
+  margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:7px;
+}
+.breakdown-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px solid #F5F5F5;font-size:13px;
+}
+.breakdown-row:last-of-type{border-bottom:none}
+.breakdown-lbl{color:var(--tx-sub)}
+.breakdown-val{color:var(--tx);font-weight:500;text-align:right}
+.breakdown-row.deduction .breakdown-val{color:#C62828}
+.breakdown-row.final{
+  margin-top:8px;padding:12px 14px;background:var(--bg-mint);border-radius:var(--r-md);
+  border:1px solid var(--ac3);border-bottom:1px solid var(--ac3) !important;
+}
+.breakdown-row.final .breakdown-lbl{font-weight:700;color:var(--p-hov);font-size:14px}
+.breakdown-row.final .breakdown-val{font-weight:700;color:#1B5E20;font-size:18px;font-family:Georgia,serif}
+
+/* ─── EMPTY STATE ─── */
+.empty-state{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:48px 24px;text-align:center;box-shadow:var(--shadow-sm);
+}
+.empty-icon{font-size:48px;margin-bottom:14px;opacity:.55}
+.empty-title{font-family:Georgia,"Times New Roman",serif;font-size:17px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--tx-sub);max-width:320px;margin:0 auto}
+
+/* ─── TOAST ─── */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1B5E20;color:#fff;border-radius:var(--r-md);
+  padding:12px 24px;font-size:14px;font-weight:500;
+  box-shadow:0 4px 20px rgba(0,0,0,0.25);
+  opacity:0;pointer-events:none;z-index:9999;
+  transition:opacity .28s,transform .28s;
+  display:flex;align-items:center;gap:10px;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-icon{font-size:16px}
+
+/* ─── SECTION HEADER ─── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-family:Georgia,"Times New Roman",serif;font-size:16px;font-weight:700;color:var(--tx)}
+.section-count{font-size:12px;color:var(--tx-sec);background:var(--bg-soft);border-radius:20px;padding:2px 10px;font-weight:600}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1060px){
+  .split{grid-template-columns:1fr 340px}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:900px){
+  .split{grid-template-columns:1fr}
+  .right-panel{position:static}
+}
+@media(max-width:700px){
+  .nav-links{display:none}
+  .nav-hamburger{display:flex}
+  .banner{flex-direction:column;padding:20px}
+  .banner-stats{justify-content:flex-start}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .offer-card-body{grid-template-columns:1fr 1fr}
+  .detail-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .main{padding:16px 12px 40px}
+  .metrics{grid-template-columns:1fr 1fr}
+  .banner-stats{gap:8px}
+  .banner-badge{min-width:90px;padding:8px 10px}
+  .offer-card-body{grid-template-columns:1fr}
+}
+
+/* ─── DIVIDER ─── */
+hr.section-divider{border:none;border-top:1px solid var(--border);margin:6px 0 14px}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--ac1)}
+
+/* ─── MOBILE NAV ─── */
+.nav-mobile-panel{
+  display:none;background:var(--nav);padding:12px 20px;flex-direction:column;gap:4px;
+}
+.nav-mobile-panel.open{display:flex}
+.nav-mobile-link{
+  color:var(--nav-sub);font-size:14px;text-decoration:none;padding:8px 10px;border-radius:var(--r-sm);
+  transition:background .18s,color .18s;
+}
+.nav-mobile-link.active,.nav-mobile-link:hover{background:var(--nav-hov);color:var(--nav-tx)}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a class="nav-logo" href="techsetu_farmer_dashboard.html" aria-label="TechSetu home">
+    <div class="nav-logo-icon">🌿</div>
+    <span class="nav-logo-text">TechSetu</span>
+  </a>
+  <div class="nav-links" role="menubar">
+    <a class="nav-link" href="techsetu_farmer_dashboard.html" role="menuitem">Dashboard</a>
+    <a class="nav-link" href="#" role="menuitem">My Crops</a>
+    <a class="nav-link" href="techsetu-add-listing.html" role="menuitem">Add Listing</a>
+    <a class="nav-link active" href="techsetu-incoming-buyer-offers.html" role="menuitem">Orders</a>
+    <a class="nav-link" href="techsetu-payment-history.html" role="menuitem">Payments</a>
+    <a class="nav-link" href="#" role="menuitem">Mandi Rates</a>
+    <a class="nav-link" href="#" role="menuitem">Help</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-bell" role="button" aria-label="Notifications" tabindex="0">
+      🔔
+      <span class="nav-bell-dot" aria-hidden="true"></span>
+    </div>
+    <div class="nav-lang" role="button" tabindex="0" aria-label="Language selector">EN</div>
+    <div class="nav-avatar" role="button" tabindex="0" aria-label="User profile">RS</div>
+    <div class="nav-hamburger" role="button" aria-label="Toggle menu" tabindex="0" id="hamburger" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+<div class="nav-mobile-panel" id="mobileNav" aria-label="Mobile navigation">
+  <a class="nav-mobile-link" href="techsetu_farmer_dashboard.html">Dashboard</a>
+  <a class="nav-mobile-link" href="#">My Crops</a>
+  <a class="nav-mobile-link" href="techsetu-add-listing.html">Add Listing</a>
+  <a class="nav-mobile-link active" href="techsetu-incoming-buyer-offers.html">Orders</a>
+  <a class="nav-mobile-link" href="techsetu-payment-history.html">Payments</a>
+  <a class="nav-mobile-link" href="#">Mandi Rates</a>
+  <a class="nav-mobile-link" href="#">Help</a>
+</div>
+
+<main class="main" id="main">
+
+  <!-- ─── BANNER ─── -->
+  <section class="banner" aria-label="Page overview">
+    <div class="banner-left">
+      <h1 class="banner-title">Incoming Buyer Offers</h1>
+      <p class="banner-sub">Review buyer terms, compare payment reliability, inspect total earnings, and decide whether to accept or decline the offer.</p>
+    </div>
+    <div class="banner-stats" role="list">
+      <div class="banner-badge" role="listitem">
+        <span class="banner-badge-val">5</span>
+        <div class="banner-badge-lbl">New offers today</div>
+      </div>
+      <div class="banner-badge" role="listitem">
+        <span class="banner-badge-val">₹2,520</span>
+        <div class="banner-badge-lbl">Best rate /qtl</div>
+      </div>
+      <div class="banner-badge badge-urgent" role="listitem">
+        <span class="banner-badge-val">3</span>
+        <div class="banner-badge-lbl">Awaiting response — Urgent</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── METRICS ─── -->
+  <section class="metrics" aria-label="Summary metrics">
+    <div class="metric-card">
+      <div class="metric-icon green" aria-hidden="true">📩</div>
+      <div class="metric-body">
+        <div class="metric-val">12</div>
+        <div class="metric-lbl">Total offers received</div>
+        <div class="metric-sub">This week</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon teal" aria-hidden="true">✅</div>
+      <div class="metric-body">
+        <div class="metric-val">7</div>
+        <div class="metric-lbl">High trust buyers</div>
+        <div class="metric-sub">Excellent / Good rating</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon amber" aria-hidden="true">💰</div>
+      <div class="metric-body">
+        <div class="metric-val">₹5.84L</div>
+        <div class="metric-lbl">Expected value</div>
+        <div class="metric-sub">All open offers</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon blue" aria-hidden="true">⚡</div>
+      <div class="metric-body">
+        <div class="metric-val">4</div>
+        <div class="metric-lbl">Fast payment offers</div>
+        <div class="metric-sub">Within 24 hrs</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FILTERS ─── -->
+  <div class="filter-card" role="search" aria-label="Filter offers">
+    <div class="filter-row">
+      <div class="filter-search" style="flex:2;min-width:200px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="searchInput" placeholder="Search buyer name, crop, offer ID…" aria-label="Search offers">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <label class="filter-label" for="cropFilter" style="display:none">Crop</label>
+        <select class="filter-select" id="cropFilter" aria-label="Filter by crop">
+          <option value="">All Crops</option>
+          <option>Wheat</option>
+          <option>Tomato</option>
+          <option>Pomegranate</option>
+          <option>Onion</option>
+          <option>Potato</option>
+          <option>Soybean</option>
+        </select>
+      </div>
+      <div>
+        <select class="filter-select" id="buyerTypeFilter" aria-label="Filter by buyer type">
+          <option value="">Buyer Type</option>
+          <option>Retailer</option>
+          <option>Wholesaler</option>
+          <option>Export house</option>
+        </select>
+      </div>
+      <div>
+        <select class="filter-select" id="paymentFilter" aria-label="Filter by payment mode">
+          <option value="">Payment Mode</option>
+          <option>UPI</option>
+          <option>Bank transfer</option>
+          <option>Cash</option>
+          <option>Platform settlement</option>
+        </select>
+      </div>
+      <div>
+        <select class="filter-select" id="transportFilter" aria-label="Filter by transport">
+          <option value="">Transport</option>
+          <option>Buyer arranged</option>
+          <option>Farmer arranged</option>
+          <option>Negotiable</option>
+          <option>Buyer pickup arranged</option>
+        </select>
+      </div>
+      <div>
+        <select class="filter-select" id="sortFilter" aria-label="Sort offers">
+          <option value="latest">Latest</option>
+          <option value="highest-total">Highest total</option>
+          <option value="fastest-payment">Fastest payment</option>
+          <option value="highest-trust">Highest trust</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SPLIT ─── -->
+  <div class="split">
+
+    <!-- ─── LEFT: OFFER LIST ─── -->
+    <div>
+      <div class="section-header">
+        <h2 class="section-title">Buyer Offers</h2>
+        <span class="section-count" id="offerCount">6 offers</span>
+      </div>
+      <div class="offer-list" id="offerList" role="list" aria-label="Incoming buyer offers"></div>
+    </div>
+
+    <!-- ─── RIGHT: DETAILS + BREAKDOWN ─── -->
+    <div class="right-panel" id="rightPanel">
+      <div class="detail-card" id="detailCard" aria-label="Selected offer details"></div>
+      <div class="breakdown-card" id="breakdownCard" aria-label="Price breakdown"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span id="toastMsg">Offer accepted successfully</span>
+</div>
+
+<script>
+// ─── DATA ───
+const offers = [
+  {
+    id:"OFF-2081",buyer:"Bharat Agro Pvt Ltd",crop:"Wheat",qty:80,unit:"qtl",buyerType:"Wholesaler",
+    rate:2520,total:201600,review:"Excellent",reviewDesc:"Verified fast payer — usually pays within 24 hrs",
+    paymentMode:"Bank transfer",paymentTiming:"Full payment within 24 hrs after dispatch",
+    transport:"Buyer arranged",quality:"Grade A, moisture below 12%",location:"Pune",
+    received:"2 hrs ago",tag:"Best offer",tagType:"best",
+    dispatch:"Within 3 days of acceptance",expiry:"Apr 13, 2026",
+    notes:"Buyer requires proper labelling and moisture certificate.",
+    packaging:1000,loading:400,transportCost:0,platformFee:600,
+    reviewColor:"#2E7D32",trustScore:5,paymentScore:1
+  },
+  {
+    id:"OFF-2082",buyer:"Delhi Fresh Mart",crop:"Tomato",qty:50,unit:"qtl",buyerType:"Retailer",
+    rate:980,total:49000,review:"Good",reviewDesc:"Reliable buyer — pays in 2–3 days",
+    paymentMode:"UPI / Bank transfer",paymentTiming:"Within 48 hrs after delivery confirmation",
+    transport:"Farmer arranged",quality:"Fresh Grade B+, medium firmness",location:"Delhi",
+    received:"5 hrs ago",tag:"",tagType:"",
+    dispatch:"Within 2 days",expiry:"Apr 12, 2026",
+    notes:"Tomatoes should be harvested freshly. Avoid overripe or damaged lot.",
+    packaging:600,loading:300,transportCost:1200,platformFee:300,
+    reviewColor:"#388E3C",trustScore:4,paymentScore:2
+  },
+  {
+    id:"OFF-2083",buyer:"FreshMart Exports",crop:"Pomegranate",qty:30,unit:"qtl",buyerType:"Export house",
+    rate:8400,total:252000,review:"Excellent",reviewDesc:"Verified fast settlement — platform certified",
+    paymentMode:"Platform settlement",paymentTiming:"70% after dispatch, balance after quality approval",
+    transport:"Buyer pickup arranged",quality:"Export grade, uniform fruit size, no cracking",location:"Mumbai",
+    received:"Yesterday",tag:"Export",tagType:"export",
+    dispatch:"Apr 12, 2026",expiry:"Apr 14, 2026",
+    notes:"Fruit must be individually wrapped. Rejects not acceptable.",
+    packaging:2500,loading:800,transportCost:0,platformFee:1800,
+    reviewColor:"#2E7D32",trustScore:5,paymentScore:1
+  },
+  {
+    id:"OFF-2084",buyer:"Ramesh Traders",crop:"Onion",qty:60,unit:"qtl",buyerType:"Wholesaler",
+    rate:1820,total:109200,review:"Average",reviewDesc:"Usually pays in 4–5 days — moderate delay risk",
+    paymentMode:"Bank transfer",paymentTiming:"Payment after unloading and verification",
+    transport:"Negotiable",quality:"Grade A, dry outer skin, sorted lot",location:"Nashik",
+    received:"Today, 9:20 AM",tag:"",tagType:"",
+    dispatch:"Apr 13–15, 2026",expiry:"Apr 15, 2026",
+    notes:"Net bags preferred. Moisture check will be done on arrival.",
+    packaging:800,loading:500,transportCost:900,platformFee:450,
+    reviewColor:"#F57F17",trustScore:3,paymentScore:3
+  },
+  {
+    id:"OFF-2085",buyer:"Green Basket Retail",crop:"Potato",qty:100,unit:"qtl",buyerType:"Retailer",
+    rate:1460,total:146000,review:"Good",reviewDesc:"Reliable — pays in 2–3 days via UPI",
+    paymentMode:"UPI",paymentTiming:"Full payment after pickup confirmation",
+    transport:"Buyer arranged",quality:"Grade A, medium-large size, sorted",location:"Noida",
+    received:"Today, 8:10 AM",tag:"",tagType:"",
+    dispatch:"Within 2 days",expiry:"Apr 13, 2026",
+    notes:"Bags of 50 kg preferred. No green or sprouted potatoes.",
+    packaging:1200,loading:600,transportCost:0,platformFee:650,
+    reviewColor:"#388E3C",trustScore:4,paymentScore:2
+  },
+  {
+    id:"OFF-2086",buyer:"Sunrise Foods",crop:"Soybean",qty:140,unit:"qtl",buyerType:"Wholesaler",
+    rate:4180,total:585200,review:"Slow",reviewDesc:"Delayed settlement risk — verify before accepting",
+    paymentMode:"Bank transfer",paymentTiming:"5 days after dispatch",
+    transport:"Farmer arranged",quality:"Grade A, low moisture, clean lot",location:"Indore",
+    received:"Apr 9, 2026",tag:"",tagType:"slow",
+    dispatch:"Apr 14–16, 2026",expiry:"Apr 17, 2026",
+    notes:"Buyer may request partial advance. Clarify before dispatch.",
+    packaging:2000,loading:900,transportCost:3500,platformFee:1200,
+    reviewColor:"#C62828",trustScore:1,paymentScore:5
+  }
+];
+
+let selectedId = "OFF-2081";
+let filteredOffers = [...offers];
+
+// ─── REVIEW DOT COLOR ───
+function reviewDotStyle(o){
+  return `background:${o.reviewColor}`;
+}
+
+// ─── BUYER TYPE TAG ───
+function buyerTypeTag(t){
+  const map={
+    "Wholesaler":["tag-wholesaler","Wholesaler"],
+    "Retailer":["tag-retailer","Retailer"],
+    "Export house":["tag-export-house","Export House"]
+  };
+  const v=map[t]||["",""];
+  return `<span class="tag ${v[0]}">${v[1]}</span>`;
+}
+
+// ─── SPECIAL TAG ───
+function specialTag(o){
+  if(o.tag==="Best offer") return `<span class="tag tag-best">⭐ Best Offer</span>`;
+  if(o.tagType==="export") return `<span class="tag tag-export">✈ Export</span>`;
+  if(o.tagType==="slow") return `<span class="tag tag-slow">⚠ Slow Payer</span>`;
+  return "";
+}
+
+// ─── FORMAT CURRENCY ───
+function fmt(n){return "₹"+n.toLocaleString("en-IN")}
+
+// ─── RENDER OFFER CARDS ───
+function renderOffers(){
+  const list=document.getElementById("offerList");
+  const count=document.getElementById("offerCount");
+  list.innerHTML="";
+  count.textContent=`${filteredOffers.length} offer${filteredOffers.length!==1?"s":""}`;
+
+  if(filteredOffers.length===0){
+    list.innerHTML=`
+      <div class="empty-state" role="region" aria-label="No results">
+        <div class="empty-icon" aria-hidden="true">🌾</div>
+        <div class="empty-title">No matching offers</div>
+        <p class="empty-sub">Try changing filters or search terms to view available buyer offers.</p>
+      </div>`;
+    return;
+  }
+
+  filteredOffers.forEach(o=>{
+    const isSelected=o.id===selectedId;
+    const card=document.createElement("article");
+    card.className=`offer-card${isSelected?" selected":""}`;
+    card.setAttribute("role","listitem");
+    card.setAttribute("aria-label",`Offer from ${o.buyer}`);
+    card.setAttribute("tabindex","0");
+    card.setAttribute("data-id",o.id);
+    card.innerHTML=`
+      <div class="offer-card-top">
+        <div class="offer-buyer-info">
+          <div class="offer-buyer-name">${o.buyer}</div>
+          <div class="offer-meta">
+            <span class="offer-id">${o.id}</span>
+            <span class="offer-time">🕐 ${o.received}</span>
+            <span class="offer-location">📍 ${o.location}</span>
+          </div>
+        </div>
+        <div class="offer-tags">
+          ${buyerTypeTag(o.buyerType)}
+          ${specialTag(o)}
+        </div>
+      </div>
+      <div class="offer-review">
+        <span class="offer-review-dot" style="${reviewDotStyle(o)}" aria-hidden="true"></span>
+        <span class="offer-review-text"><strong>${o.review}</strong> — ${o.reviewDesc}</span>
+      </div>
+      <div class="offer-card-body">
+        <div class="offer-field">
+          <div class="offer-field-label">Crop</div>
+          <div class="offer-field-val">🌾 ${o.crop}</div>
+        </div>
+        <div class="offer-field">
+          <div class="offer-field-label">Quantity</div>
+          <div class="offer-field-val">${o.qty} ${o.unit}</div>
+        </div>
+        <div class="offer-field">
+          <div class="offer-field-label">Rate</div>
+          <div class="offer-field-val price">${fmt(o.rate)}/${o.unit}</div>
+        </div>
+        <div class="offer-field">
+          <div class="offer-field-label">Payment</div>
+          <div class="offer-field-val">${o.paymentMode}</div>
+        </div>
+        <div class="offer-field">
+          <div class="offer-field-label">Transport</div>
+          <div class="offer-field-val">${o.transport}</div>
+        </div>
+        <div class="offer-field">
+          <div class="offer-field-label">Total value</div>
+          <div class="offer-field-val total">${fmt(o.total)}</div>
+        </div>
+      </div>
+      <div class="offer-card-actions">
+        <button class="btn btn-accept" data-action="accept" data-id="${o.id}" aria-label="Accept offer ${o.id}">✓ Accept</button>
+        <button class="btn btn-decline" data-action="decline" data-id="${o.id}" aria-label="Decline offer ${o.id}">✕ Decline</button>
+        <button class="btn btn-breakdown" data-action="breakdown" data-id="${o.id}" aria-label="View breakdown for ${o.id}">📊 Breakdown</button>
+      </div>
+    `;
+    list.appendChild(card);
+    card.addEventListener("click",e=>{
+      if(e.target.closest("button")) return;
+      selectOffer(o.id);
+    });
+    card.addEventListener("keydown",e=>{
+      if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button")){
+        e.preventDefault();selectOffer(o.id);
+      }
+    });
+  });
+
+  // button delegation
+  list.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      e.stopPropagation();
+      const action=btn.dataset.action;
+      const id=btn.dataset.id;
+      if(action==="accept"){selectOffer(id);showToast("✅","Offer accepted successfully");}
+      else if(action==="decline"){selectOffer(id);showToast("❌","Offer declined");}
+      else if(action==="breakdown"){selectOffer(id);setTimeout(()=>{document.getElementById("breakdownCard").scrollIntoView({behavior:"smooth",block:"center"})},100);}
+    });
+  });
+}
+
+// ─── RENDER DETAIL PANEL ───
+function renderDetail(){
+  const o=offers.find(x=>x.id===selectedId);
+  if(!o){document.getElementById("detailCard").innerHTML="";document.getElementById("breakdownCard").innerHTML="";return;}
+
+  const finalReceivable=o.total-o.packaging-o.loading-o.transportCost-o.platformFee;
+
+  document.getElementById("detailCard").innerHTML=`
+    <div class="detail-header">
+      <div class="detail-offer-id">${o.id} · ${o.received}</div>
+      <div class="detail-buyer-name">${o.buyer}</div>
+      <div class="detail-buyer-meta">
+        ${buyerTypeTag(o.buyerType)}
+        ${specialTag(o)}
+      </div>
+    </div>
+
+    <div class="detail-review-bar">
+      <span class="review-dot" style="background:${o.reviewColor}" aria-hidden="true"></span>
+      <div class="review-info">
+        <div class="review-label">${o.review} Buyer</div>
+        <div class="review-desc">${o.reviewDesc}</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Offer Details</div>
+      <div class="detail-grid">
+        <div class="detail-field">
+          <div class="detail-field-label">Crop</div>
+          <div class="detail-field-val">🌾 ${o.crop}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Quantity</div>
+          <div class="detail-field-val">${o.qty} ${o.unit}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Rate offered</div>
+          <div class="detail-field-val price-highlight">${fmt(o.rate)}/${o.unit}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Gross total</div>
+          <div class="detail-field-val highlight">${fmt(o.total)}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Location</div>
+          <div class="detail-field-val">📍 ${o.location}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Quality required</div>
+          <div class="detail-field-val">${o.quality}</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="detail-section">
+      <div class="detail-section-title">Payment &amp; Logistics</div>
+      <div class="detail-grid">
+        <div class="detail-field">
+          <div class="detail-field-label">Payment mode</div>
+          <div class="detail-field-val">💳 ${o.paymentMode}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Payment timing</div>
+          <div class="detail-field-val">${o.paymentTiming}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Transport</div>
+          <div class="detail-field-val">🚛 ${o.transport}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Dispatch by</div>
+          <div class="detail-field-val">📅 ${o.dispatch}</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="detail-section">
+      <div class="detail-section-title">Offer Terms</div>
+      <div class="detail-grid">
+        <div class="detail-field">
+          <div class="detail-field-label">Offer expiry</div>
+          <div class="detail-field-val">⏳ ${o.expiry}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Final receivable</div>
+          <div class="detail-field-val highlight">${fmt(finalReceivable)}</div>
+        </div>
+      </div>
+    </div>
+
+    ${o.notes?`<div class="detail-notes">📝 ${o.notes}</div>`:""}
+
+    <div class="detail-actions">
+      <button class="btn btn-full" data-action="accept-detail" aria-label="Accept this offer">✓ Accept Offer</button>
+      <button class="btn btn-full-outline" data-action="breakdown-detail" aria-label="View price breakdown">📊 View Full Breakdown</button>
+      <button class="btn btn-decline-full" data-action="decline-detail" aria-label="Decline this offer">✕ Decline Offer</button>
+    </div>
+  `;
+
+  // breakdown
+  document.getElementById("breakdownCard").innerHTML=`
+    <div class="breakdown-title">
+      <span>💹</span> Price Breakdown
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-lbl">Quantity</span>
+      <span class="breakdown-val">${o.qty} ${o.unit}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-lbl">Rate per ${o.unit}</span>
+      <span class="breakdown-val">${fmt(o.rate)}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-lbl">Gross crop value</span>
+      <span class="breakdown-val" style="font-weight:600">${fmt(o.total)}</span>
+    </div>
+    <div class="breakdown-row deduction">
+      <span class="breakdown-lbl">− Packaging cost</span>
+      <span class="breakdown-val">−${fmt(o.packaging)}</span>
+    </div>
+    <div class="breakdown-row deduction">
+      <span class="breakdown-lbl">− Loading / mandi charges</span>
+      <span class="breakdown-val">−${fmt(o.loading)}</span>
+    </div>
+    <div class="breakdown-row deduction">
+      <span class="breakdown-lbl">− Transport${o.transportCost===0?" (buyer arranged)":""}</span>
+      <span class="breakdown-val">${o.transportCost===0?"₹0":("−"+fmt(o.transportCost))}</span>
+    </div>
+    <div class="breakdown-row deduction">
+      <span class="breakdown-lbl">− Platform fee</span>
+      <span class="breakdown-val">−${fmt(o.platformFee)}</span>
+    </div>
+    <div class="breakdown-row final">
+      <span class="breakdown-lbl">✅ Final receivable</span>
+      <span class="breakdown-val">${fmt(finalReceivable)}</span>
+    </div>
+  `;
+
+  // bind detail buttons
+  document.getElementById("detailCard").querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const a=btn.dataset.action;
+      if(a==="accept-detail") showToast("✅","Offer accepted successfully");
+      else if(a==="decline-detail") showToast("❌","Offer declined");
+      else if(a==="breakdown-detail") document.getElementById("breakdownCard").scrollIntoView({behavior:"smooth",block:"center"});
+    });
+  });
+}
+
+// ─── SELECT OFFER ───
+function selectOffer(id){
+  selectedId=id;
+  renderOffers();
+  renderDetail();
+  // on mobile, scroll to details
+  if(window.innerWidth<900){
+    setTimeout(()=>document.getElementById("rightPanel").scrollIntoView({behavior:"smooth",block:"start"}),60);
+  }
+}
+
+// ─── TOAST ───
+let toastTimer=null;
+function showToast(icon,msg){
+  const t=document.getElementById("toast");
+  document.getElementById("toastIcon").textContent=icon;
+  document.getElementById("toastMsg").textContent=msg;
+  t.classList.add("show");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),3200);
+}
+
+// ─── APPLY FILTERS ───
+function applyFilters(){
+  const search=document.getElementById("searchInput").value.toLowerCase().trim();
+  const crop=document.getElementById("cropFilter").value;
+  const buyerType=document.getElementById("buyerTypeFilter").value;
+  const payment=document.getElementById("paymentFilter").value;
+  const transport=document.getElementById("transportFilter").value;
+  const sort=document.getElementById("sortFilter").value;
+
+  filteredOffers=offers.filter(o=>{
+    if(search&&!(o.buyer.toLowerCase().includes(search)||o.crop.toLowerCase().includes(search)||o.id.toLowerCase().includes(search))) return false;
+    if(crop&&o.crop!==crop) return false;
+    if(buyerType&&o.buyerType!==buyerType) return false;
+    if(payment&&!o.paymentMode.toLowerCase().includes(payment.toLowerCase())) return false;
+    if(transport&&o.transport.toLowerCase()!==transport.toLowerCase()) return false;
+    return true;
+  });
+
+  if(sort==="highest-total") filteredOffers.sort((a,b)=>b.total-a.total);
+  else if(sort==="fastest-payment") filteredOffers.sort((a,b)=>a.paymentScore-b.paymentScore);
+  else if(sort==="highest-trust") filteredOffers.sort((a,b)=>b.trustScore-a.trustScore);
+  // latest = default order
+
+  renderOffers();
+  // if selected offer no longer in filtered list, keep detail but no highlight
+}
+
+// ─── BIND FILTERS ───
+["searchInput","cropFilter","buyerTypeFilter","paymentFilter","transportFilter","sortFilter"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",applyFilters);
+  document.getElementById(id).addEventListener("change",applyFilters);
+});
+
+// ─── HAMBURGER ───
+document.getElementById("hamburger").addEventListener("click",function(){
+  const panel=document.getElementById("mobileNav");
+  const open=panel.classList.toggle("open");
+  this.setAttribute("aria-expanded",open?"true":"false");
+});
+document.getElementById("hamburger").addEventListener("keydown",function(e){
+  if(e.key==="Enter"||e.key===" "){e.preventDefault();this.click();}
+});
+
+// ─── INIT ───
+renderOffers();
+renderDetail();
+</script>
+</body>
+</html>
