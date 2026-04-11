@@ -1510,9 +1510,19 @@
             <div class="address-error" id="addrCity-error"></div>
           </div>
           <div class="address-field">
+            <label for="addrState">State</label>
+            <input id="addrState" type="text" placeholder="State" />
+            <div class="address-error" id="addrState-error"></div>
+          </div>
+          <div class="address-field">
             <label for="addrPincode">Pincode</label>
-            <input id="addrPincode" type="text" placeholder="6-digit pincode" />
+            <input id="addrPincode" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit pincode" />
             <div class="address-error" id="addrPincode-error"></div>
+          </div>
+          <div class="address-field full">
+            <label for="addrArea">Area / Locality</label>
+            <input id="addrArea" type="text" placeholder="Auto-filled from pincode" />
+            <div class="address-error" id="addrArea-error"></div>
           </div>
         </div>
         <div class="profile-actions">
@@ -1791,11 +1801,14 @@
     const profileBodyContainer = document.getElementById('profileBodyContainer');
     const addressOverlay = document.getElementById('addressOverlay');
     const addressCloseBtn = document.getElementById('addressCloseBtn');
+    const addrPincodeInput = document.getElementById('addrPincode');
 
     const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
       ? 'http://127.0.0.1:8000'
       : '';
     let profileOriginalPhone = '';
+    let pincodeLookupTimer = null;
+    let pincodeLookupSeq = 0;
 
     function getToken() {
       return localStorage.getItem('token') || null;
@@ -2172,7 +2185,6 @@
             </div>
             <div class="actions">
               <button class="btn-primary" type="button" onclick="addToCart(${p.id})">+ Add to Cart</button>
-              <button class="btn-outline" type="button" onclick="window.location.href='index.html'">Buy in App</button>
             </div>
           </div>
         </article>
@@ -2291,6 +2303,68 @@
       if(err) err.textContent = message;
     }
 
+    function normalizePincode(value) {
+      return String(value || '').replace(/\D/g, '').slice(0, 6);
+    }
+
+    async function lookupIndianPincode(pincode) {
+      const requestSeq = ++pincodeLookupSeq;
+      setAddressInlineStatus('', 'Checking pincode...');
+      clearAddressError('addrPincode');
+
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await res.json();
+
+        if(requestSeq !== pincodeLookupSeq) return;
+
+        const row = Array.isArray(data) ? data[0] : null;
+        const offices = row && Array.isArray(row.PostOffice) ? row.PostOffice : [];
+        if(!row || row.Status !== 'Success' || !offices.length) {
+          setAddressError('addrPincode', 'Pincode not found.');
+          setAddressInlineStatus('error', 'Could not find this pincode. Please enter city/state manually.');
+          return;
+        }
+
+        const office = offices[0] || {};
+        const city = office.District || office.Block || office.Name || '';
+        const state = office.State || '';
+        const area = office.Name || office.Block || '';
+
+        document.getElementById('addrCity').value = city;
+        document.getElementById('addrState').value = state;
+        document.getElementById('addrArea').value = area;
+
+        ['addrCity','addrState','addrArea'].forEach(clearAddressError);
+
+        const extra = offices.length > 1 ? ` (${offices.length} localities)` : '';
+        setAddressInlineStatus('success', `Pincode verified: ${city}, ${state}${extra}`);
+      } catch (_) {
+        if(requestSeq !== pincodeLookupSeq) return;
+        setAddressInlineStatus('error', 'Pincode lookup unavailable right now. Please fill details manually.');
+      }
+    }
+
+    function handlePincodeInput() {
+      const clean = normalizePincode(addrPincodeInput.value);
+      if(addrPincodeInput.value !== clean) addrPincodeInput.value = clean;
+
+      clearAddressError('addrPincode');
+      if(pincodeLookupTimer) {
+        clearTimeout(pincodeLookupTimer);
+        pincodeLookupTimer = null;
+      }
+
+      if(clean.length < 6) {
+        setAddressInlineStatus('', '');
+        return;
+      }
+
+      pincodeLookupTimer = setTimeout(function() {
+        lookupIndianPincode(clean);
+      }, 260);
+    }
+
     function openAddressModal() {
       let saved = {};
       try { saved = JSON.parse(localStorage.getItem('tsCustomerAddress') || '{}'); } catch (_) { saved = {}; }
@@ -2298,11 +2372,17 @@
       document.getElementById('addrPhone').value = saved.phone || '';
       document.getElementById('addrLine1').value = saved.line1 || '';
       document.getElementById('addrCity').value = saved.city || '';
+      document.getElementById('addrState').value = saved.state || '';
       document.getElementById('addrPincode').value = saved.pincode || '';
-      ['addrName','addrPhone','addrLine1','addrCity','addrPincode'].forEach(clearAddressError);
+      document.getElementById('addrArea').value = saved.area || '';
+      ['addrName','addrPhone','addrLine1','addrCity','addrState','addrPincode','addrArea'].forEach(clearAddressError);
       setAddressInlineStatus('', '');
       addressOverlay.classList.add('active');
       addressOverlay.setAttribute('aria-hidden', 'false');
+
+      if(normalizePincode(document.getElementById('addrPincode').value).length === 6) {
+        lookupIndianPincode(normalizePincode(document.getElementById('addrPincode').value));
+      }
     }
 
     function closeAddressModal() {
@@ -2343,7 +2423,7 @@
             contact: deliveryAddress.phone
           },
           notes: {
-            address: `${deliveryAddress.line1}, ${deliveryAddress.city} - ${deliveryAddress.pincode}`
+            address: `${deliveryAddress.line1}, ${deliveryAddress.area ? `${deliveryAddress.area}, ` : ''}${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}`
           },
           theme: {color: '#1F3A60'},
           handler: async function (response) {
@@ -2373,7 +2453,7 @@
     }
 
     async function confirmAddressAndPay() {
-      ['addrName','addrPhone','addrLine1','addrCity','addrPincode'].forEach(clearAddressError);
+      ['addrName','addrPhone','addrLine1','addrCity','addrState','addrPincode','addrArea'].forEach(clearAddressError);
       setAddressInlineStatus('', '');
 
       const deliveryAddress = {
@@ -2381,7 +2461,9 @@
         phone: document.getElementById('addrPhone').value.trim(),
         line1: document.getElementById('addrLine1').value.trim(),
         city: document.getElementById('addrCity').value.trim(),
-        pincode: document.getElementById('addrPincode').value.trim()
+        state: document.getElementById('addrState').value.trim(),
+        pincode: normalizePincode(document.getElementById('addrPincode').value),
+        area: document.getElementById('addrArea').value.trim()
       };
 
       let hasError = false;
@@ -2399,6 +2481,10 @@
       }
       if(!deliveryAddress.city) {
         setAddressError('addrCity', 'Enter city.');
+        hasError = true;
+      }
+      if(!deliveryAddress.state) {
+        setAddressError('addrState', 'Enter state.');
         hasError = true;
       }
       if(!/^\d{6}$/.test(deliveryAddress.pincode)) {
@@ -2461,6 +2547,8 @@
     addressOverlay.addEventListener('click', (e) => {
       if(e.target === addressOverlay) closeAddressModal();
     });
+    addrPincodeInput.addEventListener('input', handlePincodeInput);
+    addrPincodeInput.addEventListener('blur', handlePincodeInput);
 
     /* ── SCHEDULE DASHBOARD WIDGET ── */
     const cropEmoji = {
