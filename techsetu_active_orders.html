@@ -1006,8 +1006,49 @@ function showToast(msg) {
   setTimeout(function(){ t.classList.remove('show'); }, 3200);
 }
 
+function hydrateLatestCheckoutOrder() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var queryOrderId = (params.get('orderId') || '').trim();
+    var raw = localStorage.getItem('tsCustomerLastOrder');
+    if(!raw) return;
+
+    var last = JSON.parse(raw);
+    if(!last || !last.orderId) return;
+    if(queryOrderId && queryOrderId !== last.orderId) return;
+
+    var dynId = String(last.orderId).replace(/[^0-9A-Za-z]/g, '').slice(-8) || 'CUST001';
+    var displayOrder = 'ORD-' + dynId.toUpperCase();
+    var itemLabel = (last.items && last.items.length && last.items[0].name) ? last.items[0].name : 'Customer Order';
+    var qtyLabel = (last.itemCount || 1) + ' item' + ((last.itemCount || 1) > 1 ? 's' : '');
+    var amount = Number(last.total || 0);
+    var totalLabel = amount > 0 ? ('₹' + amount.toLocaleString('en-IN')) : '—';
+    var createdDate = last.createdAt ? new Date(last.createdAt) : new Date();
+    var createdStr = createdDate.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+
+    ORDERS[dynId] = {
+      orderId: displayOrder, farmerName:'Assigned Farmer', farmerId:'FRM-PENDING',
+      cropType:itemLabel, cropId:'CRP-CUST-' + dynId.toUpperCase(), qty:qtyLabel,
+      buyerName:'Customer Checkout', buyerId:'BUY-CUST',
+      delivery:'Delivery address from checkout',
+      vehType:'Assigned shortly', vehNum:'Pending', driver:'Pending', capacity:'Pending',
+      transStatus:'Payment verified. Preparing dispatch.', dispatchFrom:'Farm partner allocation in progress',
+      stage:1, lastUpd: createdStr + ' · Payment Verified', dest:'Your saved delivery address', eta:'To be updated',
+      chipClass:'chip-inprocess', chipText:'In Process',
+      poId:'PO-' + dynId.toUpperCase(), poDate:createdStr, poPrice:'—', poTotal:totalLabel,
+      soId:'SO-' + dynId.toUpperCase(), soDate:createdStr, soVal:totalLabel, soDispatch:'Pending allocation',
+      dueDate:'Expected soon'
+    };
+
+    selectedId = dynId;
+  } catch(_) {
+    // Do not block tracker rendering if dynamic hydration fails.
+  }
+}
+
 /* ── INIT ── */
 window.addEventListener('load', function(){
+  hydrateLatestCheckoutOrder();
   renderList();
   renderDetail(selectedId);
 });

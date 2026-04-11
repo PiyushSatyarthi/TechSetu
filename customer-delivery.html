@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Delivery Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:#0a1f6f;
+      --royal:#2f56d5;
+      --teal:#19b8b2;
+      --mint:#c8f3ef;
+      --bg:#f3f7fd;
+      --card:#ffffff;
+      --line:#dbe5f6;
+      --tx:#0a194d;
+      --sub:#5b6f9c;
+      --ok:#13b981;
+      --warn:#f59e0b;
+      --r:16px;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--tx); }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(10,31,111,.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .topbar-inner {
+      max-width: 1120px; margin: 0 auto; height: 68px; padding: 0 18px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .brand { color:#fff; text-decoration:none; font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; }
+    .nav-links { display:flex; gap:8px; }
+    .nav-links a {
+      color: rgba(255,255,255,.86);
+      text-decoration:none;
+      font-size:.83rem;
+      font-weight:700;
+      padding:8px 12px;
+      border-radius:10px;
+    }
+    .nav-links a.active { background: rgba(25,184,178,.16); color: var(--teal); border: 1px solid rgba(25,184,178,.3); }
+
+    .wrap { max-width: 1120px; margin: 20px auto 40px; padding: 0 18px; display:grid; gap:14px; }
+
+    .hero {
+      background: linear-gradient(125deg, var(--navy), #2043bb);
+      border-radius: 20px;
+      color: #fff;
+      padding: 18px;
+      box-shadow: 0 14px 40px rgba(10,31,111,.2);
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .hero h1 { font-family:'Playfair Display',serif; font-size: clamp(1.4rem,2.5vw,1.95rem); }
+    .hero p { margin-top: 7px; color: rgba(255,255,255,.84); font-size: .9rem; }
+    .chips { margin-top: 12px; display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.24); border-radius: 999px; padding: 6px 10px; font-size: .76rem; }
+
+    .eta-badge {
+      min-width: 132px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.24);
+      text-align:center;
+      padding: 10px 12px;
+    }
+    .eta-badge .l { font-size:.73rem; color: rgba(255,255,255,.78); }
+    .eta-badge .v { margin-top:4px; font-size: 1.85rem; font-weight: 800; line-height: 1; }
+
+    .grid { display:grid; grid-template-columns: 1.35fr .95fr; gap: 14px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: 0 8px 24px rgba(34,58,120,.08);
+    }
+    .card-head {
+      padding: 13px 14px 10px;
+      border-bottom: 1px solid #edf1fa;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card-head h3 { font-size: .98rem; font-weight: 800; }
+    .card-head .sub { font-size: .76rem; color: var(--sub); }
+
+    .map-wrap { padding: 12px; }
+    .map {
+      position: relative;
+      height: 360px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #d8e7df;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(25,184,178,.08), transparent 50%),
+        linear-gradient(160deg, #ebf4ec, #eef4fd);
+    }
+    .road { position:absolute; background:#fff; opacity:.95; }
+    .road.h1 { top:68px; left:0; right:0; height:11px; }
+    .road.h2 { top:162px; left:0; right:0; height:11px; }
+    .road.h3 { top:256px; left:0; right:0; height:11px; }
+    .road.v1 { left:110px; top:0; bottom:0; width:11px; }
+    .road.v2 { left:224px; top:0; bottom:0; width:11px; }
+    .road.v3 { left:338px; top:0; bottom:0; width:11px; }
+    .road.v4 { left:452px; top:0; bottom:0; width:11px; }
+    .labels {
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+    .node {
+      position:absolute;
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      box-shadow:0 4px 12px rgba(0,0,0,.18);
+      z-index:3;
+      font-size:16px;
+    }
+    .farm { left:40px; top:272px; background:#0a7f62; }
+    .home { right:34px; top:52px; background:#2244af; }
+    .route-svg {
+      position:absolute;
+      inset:0;
+      z-index:2;
+    }
+    .route-main { stroke:#2f56d5; stroke-width:4; fill:none; stroke-dasharray:8 8; opacity:.9; }
+    .route-bg { stroke:#c4d3f3; stroke-width:9; fill:none; opacity:.6; }
+    .vehicle {
+      position:absolute;
+      left: 56px;
+      top: 288px;
+      transform: translate(-50%,-50%);
+      font-size: 24px;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,.25));
+      z-index:4;
+      transition: left .35s linear, top .35s linear;
+    }
+
+    .status-area { padding: 0 12px 12px; }
+    .status-list { display:grid; gap:10px; }
+    .st {
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 11px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .dot {
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:#dde7f8;
+      color:#5b73a8;
+      display:grid;
+      place-items:center;
+      font-size:.8rem;
+      font-weight:800;
+      flex-shrink:0;
+    }
+    .st.done .dot { background:var(--ok); color:#fff; }
+    .st.active .dot { background:var(--warn); color:#fff; box-shadow:0 0 0 5px rgba(245,158,11,.16); }
+    .st h4 { font-size:.86rem; }
+    .st p { margin-top:2px; font-size:.77rem; color:var(--sub); }
+
+    .side { padding: 12px; display:grid; gap:10px; }
+    .kv {
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 11px;
+    }
+    .k { font-size:.73rem; color:var(--sub); }
+    .v { margin-top:4px; font-size:.92rem; font-weight:700; }
+    .driver {
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 11px;
+      background:#fbfdff;
+    }
+    .avatar {
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(145deg, #d7e7ff, #b8cff6);
+      color:#1d3788;
+      font-weight:800;
+      font-size:.95rem;
+    }
+    .driver-name { font-size:.9rem; font-weight:800; }
+    .driver-sub { margin-top:2px; font-size:.76rem; color:var(--sub); }
+    .call-btn {
+      border:1px solid #b8cef4;
+      background:#fff;
+      color:#2244af;
+      border-radius:10px;
+      padding:7px 10px;
+      font-size:.76rem;
+      font-weight:800;
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .map { height: 310px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="customer-home.html">TechSetu Market</a>
+      <nav class="nav-links">
+        <a href="customer-home.html#shop">Shop</a>
+        <a href="customer-scheduler.html">Plan Ahead</a>
+        <a class="active" href="customer-delivery.html">Delivery</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>Delivery in Progress</h1>
+        <p id="heroSub">Your order is confirmed and the rider is on route.</p>
+        <div class="chips">
+          <span class="chip" id="orderChip">Order #—</span>
+          <span class="chip" id="driverChip">Driver: —</span>
+          <span class="chip" id="vehicleChip">Vehicle: —</span>
+        </div>
+      </div>
+      <div class="eta-badge">
+        <div class="l">ETA Remaining</div>
+        <div class="v" id="eta">32m</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h3>Live Route Tracking</h3>
+            <div class="sub">Vehicle follows street turns in this demo map</div>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <div class="map" id="map">
+            <div class="road h1"></div><div class="road h2"></div><div class="road h3"></div>
+            <div class="road v1"></div><div class="road v2"></div><div class="road v3"></div><div class="road v4"></div>
+
+            <svg class="route-svg" viewBox="0 0 560 360" preserveAspectRatio="none" aria-hidden="true">
+              <polyline class="route-bg" points="58,288 224,288 224,168 340,168 340,84 510,84"></polyline>
+              <polyline class="route-main" points="58,288 224,288 224,168 340,168 340,84 510,84"></polyline>
+            </svg>
+
+            <div class="labels">
+              <div class="node farm">🌾</div>
+              <div class="node home">🏠</div>
+            </div>
+            <div class="vehicle" id="vehicle">🚚</div>
+          </div>
+        </div>
+        <div class="status-area">
+          <div class="status-list" id="statusList"></div>
+        </div>
+      </article>
+
+      <aside class="card side">
+        <div class="kv">
+          <div class="k">Current Status</div>
+          <div class="v" id="currentStatus">Picked up from farmer</div>
+        </div>
+        <div class="driver">
+          <div class="avatar" id="driverAvatar">RK</div>
+          <div>
+            <div class="driver-name" id="driverName">Ramesh Kumar</div>
+            <div class="driver-sub" id="driverVehicle">Eicher Mini Truck · MH12AB4582</div>
+          </div>
+          <button class="call-btn" type="button">Call</button>
+        </div>
+        <div class="kv">
+          <div class="k">Delivery Address</div>
+          <div class="v" id="address">—</div>
+        </div>
+        <div class="kv">
+          <div class="k">Items</div>
+          <div class="v" id="items">—</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const stages = [
+      { title: 'Order Confirmed', sub: 'Payment verified successfully.' },
+      { title: 'Picked Up', sub: 'Driver picked up produce from farm partner.' },
+      { title: 'On the Way', sub: 'Vehicle is following route towards your address.' },
+      { title: 'Delivered', sub: 'Order delivered to customer successfully.' }
+    ];
+
+    function getSnapshot() {
+      try { return JSON.parse(localStorage.getItem('tsCustomerLastOrder') || '{}'); }
+      catch (_) { return {}; }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const queryOrderId = (params.get('orderId') || '').trim();
+    const snap = getSnapshot();
+    const orderId = queryOrderId || snap.orderId || 'DEMO-ORDER';
+
+    document.getElementById('orderChip').textContent = `Order #${String(orderId).slice(-8).toUpperCase()}`;
+
+    const driverName = snap.driverName || 'Ramesh Kumar';
+    const vehicleLabel = snap.vehicleLabel || 'Eicher Mini Truck · MH12AB4582';
+    document.getElementById('driverChip').textContent = `Driver: ${driverName}`;
+    document.getElementById('vehicleChip').textContent = `Vehicle: ${vehicleLabel}`;
+    document.getElementById('driverName').textContent = driverName;
+    document.getElementById('driverVehicle').textContent = vehicleLabel;
+
+    const initials = driverName.split(' ').filter(Boolean).slice(0, 2).map(v => v[0]).join('').toUpperCase() || 'RK';
+    document.getElementById('driverAvatar').textContent = initials;
+
+    document.getElementById('heroSub').textContent = `Tracking order ${String(orderId).slice(-8).toUpperCase()} in real time.`;
+
+    const addr = snap.deliveryAddress
+      ? `${snap.deliveryAddress.line1}, ${snap.deliveryAddress.city} - ${snap.deliveryAddress.pincode}`
+      : 'Saved customer delivery address';
+    document.getElementById('address').textContent = addr;
+
+    const items = Array.isArray(snap.items) && snap.items.length
+      ? snap.items.map(i => i.name).join(', ')
+      : 'Tomatoes, Potatoes, Spinach';
+    document.getElementById('items').textContent = items;
+
+    let secondsLeft = Math.max(60, (snap.etaMinutes || 32) * 60);
+    let stageIndex = 1;
+
+    // Street-like turned path instead of straight-line movement.
+    const routePoints = [
+      {x:58, y:288},
+      {x:224, y:288},
+      {x:224, y:168},
+      {x:340, y:168},
+      {x:340, y:84},
+      {x:510, y:84}
+    ];
+
+    function routeLength(points) {
+      let len = 0;
+      for (let i = 1; i < points.length; i++) {
+        const dx = points[i].x - points[i-1].x;
+        const dy = points[i].y - points[i-1].y;
+        len += Math.hypot(dx, dy);
+      }
+      return len;
+    }
+
+    const totalRouteLength = routeLength(routePoints);
+
+    function pointAtDistance(points, d) {
+      let remaining = d;
+      for (let i = 1; i < points.length; i++) {
+        const p0 = points[i-1];
+        const p1 = points[i];
+        const seg = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+        if (remaining <= seg) {
+          const t = seg === 0 ? 0 : remaining / seg;
+          return {
+            x: p0.x + (p1.x - p0.x) * t,
+            y: p0.y + (p1.y - p0.y) * t
+          };
+        }
+        remaining -= seg;
+      }
+      return points[points.length - 1];
+    }
+
+    function renderStages() {
+      const list = document.getElementById('statusList');
+      list.innerHTML = stages.map((s, i) => {
+        const cls = i < stageIndex ? 'st done' : (i === stageIndex ? 'st active' : 'st');
+        const mark = i < stageIndex ? '✓' : (i === stageIndex ? '•' : i + 1);
+        return `<div class="${cls}"><div class="dot">${mark}</div><div><h4>${s.title}</h4><p>${s.sub}</p></div></div>`;
+      }).join('');
+      document.getElementById('currentStatus').textContent = stages[Math.min(stageIndex, stages.length - 1)].title;
+    }
+
+    function renderEta() {
+      const m = Math.floor(secondsLeft / 60);
+      const s = secondsLeft % 60;
+      document.getElementById('eta').textContent = `${m}m ${String(s).padStart(2, '0')}s`;
+    }
+
+    function updateVehiclePosition() {
+      const v = document.getElementById('vehicle');
+      const progress = 1 - (secondsLeft / Math.max(1, (snap.etaMinutes || 32) * 60));
+      const dist = Math.max(0, Math.min(1, progress)) * totalRouteLength;
+      const pt = pointAtDistance(routePoints, dist);
+      v.style.left = `${pt.x}px`;
+      v.style.top = `${pt.y}px`;
+
+      if (progress >= 0.2) stageIndex = Math.max(stageIndex, 2);
+      if (progress >= 0.7) stageIndex = Math.max(stageIndex, 3);
+      if (secondsLeft <= 0) stageIndex = 3;
+    }
+
+    renderStages();
+    renderEta();
+    updateVehiclePosition();
+
+    const timer = setInterval(() => {
+      if (secondsLeft > 0) secondsLeft -= 1;
+      renderEta();
+      updateVehiclePosition();
+      renderStages();
+      if (secondsLeft <= 0) clearInterval(timer);
+    }, 1000);
+  </script>
+</body>
+</html>

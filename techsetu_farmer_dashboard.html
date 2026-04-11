@@ -542,6 +542,334 @@ nav {
 .profile-status.error { color: #B23A3A; }
 .profile-status.success { color: #2E7D32; }
 
+/* ── PRICE CALCULATOR MODAL ── */
+@keyframes pcFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pcSlideIn { from { opacity: 0; transform: scale(0.96) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+.pc-overlay {
+  position: fixed; inset: 0;
+  background: rgba(27, 45, 27, 0.38);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: pcFadeIn 0.22s ease;
+}
+.pc-overlay.pc-hidden { display: none; }
+
+.pc-modal {
+  background: var(--white);
+  border: 1px solid #D8EDD8;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(27,94,32,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  width: 100%;
+  max-width: 480px;
+  animation: pcSlideIn 0.26s cubic-bezier(0.22,1,0.36,1);
+  overflow: hidden;
+}
+
+.pc-header {
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8F1 100%);
+  border-bottom: 1px solid #D8EDD8;
+  padding: 16px 20px 14px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.pc-header-left { display: flex; align-items: center; gap: 10px; }
+.pc-header-icon {
+  width: 36px; height: 36px;
+  background: var(--white);
+  border: 1px solid #C8E6C9;
+  border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pc-header-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px; font-weight: 400;
+  color: #1B5E20;
+  margin-bottom: 2px;
+}
+.pc-header-sub { font-size: 11px; color: #558B2F; }
+.pc-close {
+  width: 28px; height: 28px;
+  border: 1px solid #C8E6C9;
+  border-radius: var(--r-sm);
+  background: var(--white);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #558B2F;
+  font-size: 15px;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.pc-close:hover { background: #F1F8E9; border-color: var(--p); }
+
+.pc-steps {
+  display: flex; align-items: center;
+  padding: 12px 20px;
+  background: #FAFFFE;
+  border-bottom: 1px solid #F0F4F0;
+  gap: 0;
+}
+.pc-step-item { display: flex; align-items: center; flex: 1; }
+.pc-step-item:last-child { flex: 0; }
+.pc-step-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  color: var(--tx-sec);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.pc-step-dot.active { border-color: var(--p); background: var(--p); color: #fff; }
+.pc-step-dot.done   { border-color: var(--p); background: var(--bg-mint); color: #2E7D32; }
+.pc-step-label {
+  font-size: 10.5px; color: var(--tx-sec);
+  margin-left: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.pc-step-label.active { color: var(--p-hov); }
+.pc-step-line {
+  flex: 1; height: 1.5px;
+  background: var(--border);
+  margin: 0 8px;
+  transition: background 0.2s;
+}
+.pc-step-line.done { background: var(--ac2); }
+
+.pc-body { padding: 18px 20px; }
+
+.pc-crop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pc-crop-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 11px 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  background: var(--white);
+  position: relative;
+}
+.pc-crop-card:hover {
+  border-color: var(--p);
+  box-shadow: 0 2px 8px rgba(76,175,80,0.09);
+  background: #FAFFFE;
+}
+.pc-crop-card.selected {
+  border-color: var(--p);
+  background: var(--bg-mint);
+  box-shadow: 0 2px 10px rgba(76,175,80,0.12);
+}
+.pc-crop-card-check {
+  position: absolute; top: 8px; right: 8px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--p);
+  display: none; align-items: center; justify-content: center;
+}
+.pc-crop-card.selected .pc-crop-card-check { display: flex; }
+.pc-crop-card-name {
+  font-size: 13px; font-weight: 700;
+  color: var(--tx);
+  margin-bottom: 2px;
+}
+.pc-crop-card-variety {
+  font-size: 10.5px; color: var(--tx-sec);
+  margin-bottom: 6px;
+}
+.pc-crop-card-rate {
+  font-size: 12px; font-weight: 700;
+  color: #2E7D32;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-selected-crop-pill {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-mint);
+  border: 1px solid #C8E6C9;
+  border-radius: var(--r-md);
+  padding: 10px 13px;
+  margin-bottom: 16px;
+}
+.pc-pill-crop-name {
+  font-size: 13.5px; font-weight: 700;
+  color: #1B5E20;
+}
+.pc-pill-variety {
+  font-size: 11px; color: #388E3C;
+  margin-top: 1px;
+}
+.pc-pill-rate {
+  margin-left: auto;
+  font-size: 13px; font-weight: 700;
+  color: #2E7D32;
+  white-space: nowrap;
+}
+
+.pc-qty-row {
+  display: flex; gap: 8px;
+  margin-bottom: 10px;
+}
+.pc-qty-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 9px 13px;
+  font-size: 15px; font-weight: 600;
+  color: var(--tx);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.pc-qty-input:focus { border-color: var(--p); }
+.pc-qty-input.error { border-color: #E53935; }
+.pc-unit-select {
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 9px 11px;
+  font-size: 13px; font-weight: 600;
+  color: var(--tx);
+  outline: none;
+  cursor: pointer;
+  background: var(--white);
+  min-width: 100px;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.pc-unit-select:focus { border-color: var(--p); }
+
+.pc-error-msg {
+  font-size: 11px; color: #E53935;
+  margin-top: -4px; margin-bottom: 8px;
+  min-height: 15px;
+}
+
+.pc-helper {
+  background: #F7FBF7;
+  border: 1px solid #E0EEE0;
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  margin-top: 2px;
+}
+.pc-helper-title {
+  font-size: 10.5px; font-weight: 600;
+  color: var(--tx-sub);
+  margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.pc-helper-row {
+  display: flex; gap: 16px;
+}
+.pc-helper-item {
+  font-size: 11px; color: var(--tx-sec);
+  display: flex; align-items: center; gap: 5px;
+}
+.pc-helper-item::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--ac2);
+  flex-shrink: 0;
+}
+
+.pc-summary-crop-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8F1 100%);
+  border: 1px solid #C8E6C9;
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.pc-summary-crop-name {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px; color: #1B5E20;
+  margin-bottom: 2px;
+}
+.pc-summary-crop-variety {
+  font-size: 11px; color: #388E3C;
+}
+.pc-summary-earnings {
+  margin-left: auto; text-align: right;
+}
+.pc-summary-earnings-label {
+  font-size: 10px; color: #558B2F;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.pc-summary-earnings-value {
+  font-size: 22px; font-weight: 700;
+  color: #1B5E20;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pc-breakdown {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.pc-breakdown-title {
+  font-size: 10.5px; font-weight: 600;
+  color: var(--tx-sub);
+  text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 8px 13px;
+  background: #FAFAFA;
+  border-bottom: 1px solid var(--border);
+}
+.pc-breakdown-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 13px;
+  border-bottom: 1px solid #F5F5F5;
+  font-size: 12.5px;
+}
+.pc-breakdown-row:last-child { border-bottom: none; }
+.pc-breakdown-row.total {
+  background: #F7FBF7;
+  border-top: 1px solid #D8EDD8;
+}
+.pc-breakdown-key { color: var(--tx-sub); }
+.pc-breakdown-val { font-weight: 600; color: var(--tx); font-variant-numeric: tabular-nums; }
+.pc-breakdown-row.total .pc-breakdown-val { color: #2E7D32; font-size: 14px; }
+
+.pc-footer {
+  padding: 14px 20px 16px;
+  border-top: 1px solid #F0F4F0;
+  display: flex; gap: 8px;
+  background: #FAFFFE;
+}
+.pc-btn {
+  border: none; border-radius: var(--r-md);
+  padding: 9px 18px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pc-btn-primary {
+  background: var(--p); color: #fff; flex: 1;
+}
+.pc-btn-primary:hover { background: var(--p-hov); }
+.pc-btn-secondary {
+  background: var(--white); color: var(--tx-sub);
+  border: 1.5px solid var(--border);
+}
+.pc-btn-secondary:hover { background: var(--bg-mint); border-color: var(--p); color: #2E7D32; }
+.pc-btn-ghost {
+  background: transparent; color: var(--tx-sec);
+  border: 1.5px solid var(--border);
+}
+.pc-btn-ghost:hover { background: #F5F5F5; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .row-main { grid-template-columns: 1fr; }
@@ -556,6 +884,9 @@ nav {
   .greet-right { flex-wrap: wrap; }
   .nav-links { display: none; }
   .profile-grid { grid-template-columns: 1fr; }
+  .pc-crop-grid { grid-template-columns: 1fr; }
+  .pc-modal { max-width: 100%; border-radius: 14px; }
+  .pc-footer { flex-wrap: wrap; }
 }
 </style>
 </head>
@@ -944,17 +1275,120 @@ nav {
         <div class="action-label">Payment history</div>
         <div class="action-sub">View all receipts</div>
       </div>
-      <div class="action-btn" onclick="window.location.href='techsetu-incoming-buyer-offers.html'">
+      <div class="action-btn" onclick="pcOpen()">
         <div class="action-icon">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="9" width="2" height="4" rx=".5" fill="#81C784"/><rect x="5.5" y="6" width="2" height="7" rx=".5" fill="#66BB6A"/><rect x="9" y="3.5" width="2" height="9.5" rx=".5" fill="#4CAF50"/><rect x="12.5" y="5" width="2" height="8" rx=".5" fill="#3E8E41"/></svg>
         </div>
-        <div class="action-label">Incoming offers</div>
-        <div class="action-sub">Review buyer bids</div>
+        <div class="action-label">Price calculator</div>
+        <div class="action-sub">Estimate earnings</div>
       </div>
     </div>
   </div>
 
 </main>
+</div>
+
+<div id="pc-overlay" class="pc-overlay pc-hidden" role="dialog" aria-modal="true" aria-label="Crop Earnings Estimator">
+  <div class="pc-modal" id="pc-modal">
+    <div class="pc-header">
+      <div class="pc-header-left">
+        <div class="pc-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="9" width="2" height="4" rx=".5" fill="#81C784"/><rect x="5.5" y="6" width="2" height="7" rx=".5" fill="#66BB6A"/><rect x="9" y="3.5" width="2" height="9.5" rx=".5" fill="#4CAF50"/><rect x="12.5" y="5" width="2" height="8" rx=".5" fill="#3E8E41"/></svg>
+        </div>
+        <div>
+          <div class="pc-header-title">Crop Earnings Estimator</div>
+          <div class="pc-header-sub">Live mandi rates · Nashik District</div>
+        </div>
+      </div>
+      <button class="pc-close" id="pc-close-btn" aria-label="Close">✕</button>
+    </div>
+
+    <div class="pc-steps" id="pc-steps">
+      <div class="pc-step-item">
+        <div class="pc-step-dot active" id="pc-dot-1">1</div>
+        <div class="pc-step-label active" id="pc-lbl-1">Select crop</div>
+      </div>
+      <div class="pc-step-line" id="pc-line-1"></div>
+      <div class="pc-step-item">
+        <div class="pc-step-dot" id="pc-dot-2">2</div>
+        <div class="pc-step-label" id="pc-lbl-2">Enter quantity</div>
+      </div>
+      <div class="pc-step-line" id="pc-line-2"></div>
+      <div class="pc-step-item">
+        <div class="pc-step-dot" id="pc-dot-3">3</div>
+        <div class="pc-step-label" id="pc-lbl-3">Summary</div>
+      </div>
+    </div>
+
+    <div id="pc-step1" class="pc-body">
+      <div style="font-size:11.5px;color:var(--tx-sec);margin-bottom:12px;">Select the crop you want to estimate earnings for:</div>
+      <div class="pc-crop-grid" id="pc-crop-grid"></div>
+    </div>
+
+    <div id="pc-step2" class="pc-body" style="display:none">
+      <div class="pc-selected-crop-pill" id="pc-step2-pill">
+        <div>
+          <div class="pc-pill-crop-name" id="pc-pill-name">—</div>
+          <div class="pc-pill-variety" id="pc-pill-variety">—</div>
+        </div>
+        <div class="pc-pill-rate" id="pc-pill-rate">—</div>
+      </div>
+      <div style="font-size:11.5px;font-weight:600;color:var(--tx-sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px;">Quantity</div>
+      <div class="pc-qty-row">
+        <input class="pc-qty-input" id="pc-qty-input" type="number" min="0.01" step="any" placeholder="Enter amount…" autocomplete="off"/>
+        <select class="pc-unit-select" id="pc-unit-select">
+          <option value="quintal">Quintal</option>
+          <option value="kilogram">Kilogram</option>
+          <option value="ton">Ton</option>
+        </select>
+      </div>
+      <div class="pc-error-msg" id="pc-error"></div>
+      <div class="pc-helper">
+        <div class="pc-helper-title">Unit guide</div>
+        <div class="pc-helper-row">
+          <div class="pc-helper-item">1 quintal = 100 kg</div>
+          <div class="pc-helper-item">1 ton = 10 quintals</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pc-step3" class="pc-body" style="display:none">
+      <div class="pc-summary-crop-bar">
+        <div>
+          <div class="pc-summary-crop-name" id="pc-sum-crop">—</div>
+          <div class="pc-summary-crop-variety" id="pc-sum-variety">—</div>
+        </div>
+        <div class="pc-summary-earnings">
+          <div class="pc-summary-earnings-label">Est. earnings</div>
+          <div class="pc-summary-earnings-value" id="pc-sum-total">—</div>
+        </div>
+      </div>
+      <div class="pc-breakdown">
+        <div class="pc-breakdown-title">Earnings breakdown</div>
+        <div class="pc-breakdown-row">
+          <span class="pc-breakdown-key">Quantity entered</span>
+          <span class="pc-breakdown-val" id="pc-bd-qty">—</span>
+        </div>
+        <div class="pc-breakdown-row">
+          <span class="pc-breakdown-key">Converted to quintals</span>
+          <span class="pc-breakdown-val" id="pc-bd-qtl">—</span>
+        </div>
+        <div class="pc-breakdown-row">
+          <span class="pc-breakdown-key">Rate applied</span>
+          <span class="pc-breakdown-val" id="pc-bd-rate">—</span>
+        </div>
+        <div class="pc-breakdown-row total">
+          <span class="pc-breakdown-key" style="font-weight:600;color:var(--tx);">Estimated earnings</span>
+          <span class="pc-breakdown-val" id="pc-bd-total">—</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--tx-sec);line-height:1.5;">
+        * Estimate based on current mandi rates. Actual price may vary by grade, buyer, and market conditions.
+      </div>
+    </div>
+
+    <div class="pc-footer" id="pc-footer"></div>
+  </div>
 </div>
 
 <div class="profile-overlay" id="profileOverlay" aria-hidden="true">
@@ -1248,6 +1682,189 @@ function showToast(msg) {
 
 function goAddListing() { window.location.href = 'techsetu-add-listing.html'; }
 
+var PC_CROPS = [
+  { id: 'wheat',  name: 'Wheat',       variety: 'Lok-1 variety',      rate: 2480 },
+  { id: 'onion',  name: 'Onion',       variety: 'Nashik Red',         rate: 1850 },
+  { id: 'grapes', name: 'Grapes',      variety: 'Thompson Seedless',  rate: 6200 },
+  { id: 'tomato', name: 'Tomato',      variety: 'Hybrid F1',          rate:  920 },
+  { id: 'soy',    name: 'Soybean',     variety: 'JS-335',             rate: 4100 },
+  { id: 'pom',    name: 'Pomegranate', variety: 'Bhagwa',             rate: 8500 }
+];
+
+var pcState = { step: 1, cropId: null, qty: '', unit: 'quintal' };
+
+function pcOpen() {
+  pcState = { step: 1, cropId: null, qty: '', unit: 'quintal' };
+  document.getElementById('pc-qty-input').value = '';
+  document.getElementById('pc-unit-select').value = 'quintal';
+  document.getElementById('pc-error').textContent = '';
+  pcBuildCropGrid();
+  pcRenderStep(1);
+  var overlay = document.getElementById('pc-overlay');
+  overlay.classList.remove('pc-hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function pcClose() {
+  document.getElementById('pc-overlay').classList.add('pc-hidden');
+  document.body.style.overflow = '';
+}
+
+function pcBuildCropGrid() {
+  var grid = document.getElementById('pc-crop-grid');
+  grid.innerHTML = '';
+  PC_CROPS.forEach(function(c) {
+    var card = document.createElement('div');
+    card.className = 'pc-crop-card' + (pcState.cropId === c.id ? ' selected' : '');
+    card.setAttribute('data-id', c.id);
+    card.innerHTML =
+      '<div class="pc-crop-card-check">'
+      + '<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      + '</div>'
+      + '<div class="pc-crop-card-name">' + c.name + '</div>'
+      + '<div class="pc-crop-card-variety">' + c.variety + '</div>'
+      + '<div class="pc-crop-card-rate">₹' + c.rate.toLocaleString('en-IN') + '/qtl</div>';
+    card.addEventListener('click', function() { pcSelectCrop(c.id); });
+    grid.appendChild(card);
+  });
+}
+
+function pcSelectCrop(id) {
+  pcState.cropId = id;
+  pcBuildCropGrid();
+  setTimeout(function() { pcGoStep(2); }, 160);
+}
+
+function pcGoStep(n) {
+  pcState.step = n;
+  pcRenderStep(n);
+}
+
+function pcRenderStep(n) {
+  ['1','2','3'].forEach(function(s) {
+    document.getElementById('pc-step' + s).style.display = (parseInt(s, 10) === n ? '' : 'none');
+  });
+
+  for (var i = 1; i <= 3; i++) {
+    var dot = document.getElementById('pc-dot-' + i);
+    var lbl = document.getElementById('pc-lbl-' + i);
+    dot.className = 'pc-step-dot';
+    lbl.className = 'pc-step-label';
+    if (i < n) {
+      dot.className += ' done';
+      dot.innerHTML = '✓';
+    } else if (i === n) {
+      dot.className += ' active';
+      dot.textContent = i;
+      lbl.className += ' active';
+    } else {
+      dot.textContent = i;
+    }
+  }
+
+  document.getElementById('pc-line-1').className = 'pc-step-line' + (n > 1 ? ' done' : '');
+  document.getElementById('pc-line-2').className = 'pc-step-line' + (n > 2 ? ' done' : '');
+
+  if (n === 2) {
+    var crop = PC_CROPS.find(function(c){ return c.id === pcState.cropId; });
+    document.getElementById('pc-pill-name').textContent = crop.name;
+    document.getElementById('pc-pill-variety').textContent = crop.variety;
+    document.getElementById('pc-pill-rate').textContent = '₹' + crop.rate.toLocaleString('en-IN') + '/qtl';
+    var inp = document.getElementById('pc-qty-input');
+    if (pcState.qty) inp.value = pcState.qty;
+    document.getElementById('pc-unit-select').value = pcState.unit;
+    document.getElementById('pc-error').textContent = '';
+    inp.classList.remove('error');
+    setTimeout(function(){ inp.focus(); }, 80);
+  }
+
+  if (n === 3) pcPopulateSummary();
+  pcRenderFooter(n);
+}
+
+function pcRenderFooter(n) {
+  var footer = document.getElementById('pc-footer');
+  footer.innerHTML = '';
+  if (n === 1) {
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'pc-btn pc-btn-ghost';
+    closeBtn.textContent = 'Cancel';
+    closeBtn.onclick = pcClose;
+    footer.appendChild(closeBtn);
+  } else if (n === 2) {
+    var backBtn = document.createElement('button');
+    backBtn.className = 'pc-btn pc-btn-secondary';
+    backBtn.textContent = '← Back';
+    backBtn.onclick = function(){ pcGoStep(1); };
+    var contBtn = document.createElement('button');
+    contBtn.className = 'pc-btn pc-btn-primary';
+    contBtn.textContent = 'Calculate →';
+    contBtn.onclick = pcValidateAndContinue;
+    footer.appendChild(backBtn);
+    footer.appendChild(contBtn);
+  } else if (n === 3) {
+    var recalcBtn = document.createElement('button');
+    recalcBtn.className = 'pc-btn pc-btn-secondary';
+    recalcBtn.textContent = '← Recalculate';
+    recalcBtn.onclick = function(){ pcGoStep(2); };
+    var doneBtn = document.createElement('button');
+    doneBtn.className = 'pc-btn pc-btn-primary';
+    doneBtn.textContent = 'Done';
+    doneBtn.onclick = pcClose;
+    footer.appendChild(recalcBtn);
+    footer.appendChild(doneBtn);
+  }
+}
+
+function pcValidateAndContinue() {
+  var inp = document.getElementById('pc-qty-input');
+  var val = parseFloat(inp.value);
+  var errEl = document.getElementById('pc-error');
+  inp.classList.remove('error');
+  errEl.textContent = '';
+  if (!inp.value || isNaN(val) || val <= 0) {
+    inp.classList.add('error');
+    errEl.textContent = val < 0 ? 'Quantity cannot be negative.' : 'Please enter a valid quantity greater than zero.';
+    inp.focus();
+    return;
+  }
+  pcState.qty = inp.value;
+  pcState.unit = document.getElementById('pc-unit-select').value;
+  pcGoStep(3);
+}
+
+function pcToQuintal(qty, unit) {
+  if (unit === 'kilogram') return qty / 100;
+  if (unit === 'ton') return qty * 10;
+  return qty;
+}
+
+function pcFormatINR(n) {
+  if (n >= 100000) return '₹' + (n / 100000).toFixed(2) + ' lakh';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function pcUnitLabel(unit) {
+  return unit === 'kilogram' ? 'kg' : unit === 'ton' ? 'ton' : 'qtl';
+}
+
+function pcPopulateSummary() {
+  var crop = PC_CROPS.find(function(c){ return c.id === pcState.cropId; });
+  var qty = parseFloat(pcState.qty);
+  var unit = pcState.unit;
+  var qtls = pcToQuintal(qty, unit);
+  var total = qtls * crop.rate;
+
+  document.getElementById('pc-sum-crop').textContent = crop.name;
+  document.getElementById('pc-sum-variety').textContent = crop.variety;
+  document.getElementById('pc-sum-total').textContent = pcFormatINR(total);
+
+  document.getElementById('pc-bd-qty').textContent = qty + ' ' + pcUnitLabel(unit);
+  document.getElementById('pc-bd-qtl').textContent = qtls.toFixed(2) + ' qtl';
+  document.getElementById('pc-bd-rate').textContent = '₹' + crop.rate.toLocaleString('en-IN') + ' / qtl';
+  document.getElementById('pc-bd-total').textContent = pcFormatINR(total);
+}
+
 function offerActionLabel(actionObj) {
   if (!actionObj || !actionObj.action) return '';
   if (actionObj.action === 'accept') return 'Accepted';
@@ -1418,9 +2035,22 @@ window.addEventListener('load', function() {
   bindDashboardOfferButtons();
   loadDashboardOfferActions();
 });
+document.getElementById('pc-overlay').addEventListener('click', function(e) {
+  if (e.target === this) pcClose();
+});
+document.getElementById('pc-close-btn').addEventListener('click', pcClose);
+document.getElementById('pc-qty-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') pcValidateAndContinue();
+});
 document.getElementById('pfPhone').addEventListener('input', updateDashboardPhoneOtpUi);
 window.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeProfileModal();
+  if (e.key !== 'Escape') return;
+  var pcOverlay = document.getElementById('pc-overlay');
+  if (pcOverlay && !pcOverlay.classList.contains('pc-hidden')) {
+    pcClose();
+    return;
+  }
+  closeProfileModal();
 });
 document.getElementById('profileOverlay').addEventListener('click', function(e) {
   if (e.target.id === 'profileOverlay') closeProfileModal();

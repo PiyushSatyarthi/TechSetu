@@ -22,7 +22,10 @@ const makeItems = () => crops.map(c=>`
     <span class="ticker-change ${c.up?'ticker-up':'ticker-dn'}">${c.change}</span>
     <span class="ticker-sep">|</span>
   </span>`).join('');
-tickerEl.innerHTML = makeItems()+makeItems();
+// Some page variants do not include the ticker; skip setup instead of crashing app init.
+if (tickerEl) {
+  tickerEl.innerHTML = makeItems()+makeItems();
+}
 
 // ─── SCROLL ANIMATIONS ───
 const obs=new IntersectionObserver(entries=>{
@@ -1407,8 +1410,6 @@ function renderLoginScreen(role) {
     <img src="${vegImg}" class="login-veg-img" alt="${isBuyer ? 'Fresh vegetables' : 'Farm fresh produce'}" onerror="this.style.display='none'"/>
     <div class="login-right-stats">
       ${isBuyer ? `
-      <div class="lrs"><div class="lrs-icon">🌾</div><div><div class="lrs-val">2,400+</div><div class="lrs-lbl">Verified farmers</div></div></div>
-      <div class="lrs"><div class="lrs-icon">📦</div><div><div class="lrs-val">15,000+</div><div class="lrs-lbl">Orders fulfilled</div></div></div>
       <div class="lrs"><div class="lrs-icon">💰</div><div><div class="lrs-val">22% avg.</div><div class="lrs-lbl">Cost savings vs. market</div></div></div>
       ` : `
       <div class="lrs"><div class="lrs-icon">📈</div><div><div class="lrs-val">18%</div><div class="lrs-lbl">Average income increase</div></div></div>

@@ -101,6 +101,25 @@
     .brand-name span { font-size: .65rem; font-family: var(--font-body); font-weight: 500; color: rgba(255,255,255,.55); letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
 
     .top-actions { display: flex; align-items: center; gap: 6px; }
+    .profile-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.22);
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      transition: background .18s, border-color .18s, transform .14s;
+    }
+    .profile-btn:hover {
+      background: rgba(255,255,255,.18);
+      border-color: rgba(255,255,255,.38);
+      transform: translateY(-1px);
+    }
     .top-link {
       color: rgba(255,255,255,.82);
       font-size: .84rem;
@@ -1226,6 +1245,195 @@
     }
     .checkout:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(0,71,171,.42); }
 
+    /* ─── PROFILE MODAL ─────────────────────────────────── */
+    .profile-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 34, .58);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 1750;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .profile-overlay.active { display: flex; }
+    .profile-modal {
+      width: min(760px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-hover);
+    }
+    .profile-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 1;
+    }
+    .profile-head h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--navy);
+    }
+    .profile-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+    .profile-body-wrap { padding: 18px; display: grid; gap: 14px; }
+    .profile-card {
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-md);
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .profile-card h4 { color: var(--navy); font-size: 1rem; }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .profile-field { display: grid; gap: 4px; }
+    .profile-field label { font-size: .78rem; color: var(--text-secondary); font-weight: 600; }
+    .profile-field input {
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: .9rem;
+      color: var(--text-primary);
+      background: #fff;
+    }
+    .profile-field input:focus { outline: none; border-color: var(--royal); }
+    .profile-field input.has-error { border-color: #dc2626; }
+    .profile-field-error { min-height: 16px; font-size: .76rem; color: #dc2626; }
+    .profile-field.full { grid-column: 1 / -1; }
+    .profile-inline {
+      min-height: 18px;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .profile-inline.error { color: #dc2626; }
+    .profile-inline.success { color: #047857; }
+    .profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .profile-action-btn {
+      height: 40px;
+      border-radius: 11px;
+      border: 1px solid transparent;
+      padding: 0 14px;
+      font-size: .84rem;
+      font-weight: 700;
+    }
+    .profile-action-btn.primary {
+      background: linear-gradient(135deg, var(--royal), var(--sapphire));
+      color: #fff;
+    }
+    .profile-action-btn.secondary {
+      background: #fff;
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+    .profile-action-btn.danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+    .profile-otp-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .profile-loading { padding: 18px; color: var(--text-secondary); font-weight: 600; }
+
+    /* ─── ADDRESS MODAL ─────────────────────────────────── */
+    .address-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 34, .58);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 1740;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .address-overlay.active { display: flex; }
+    .address-modal {
+      width: min(640px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-hover);
+    }
+    .address-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 1;
+    }
+    .address-head h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--navy);
+    }
+    .address-body { padding: 18px; display: grid; gap: 12px; }
+    .address-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .address-field { display: grid; gap: 4px; }
+    .address-field label { font-size: .78rem; color: var(--text-secondary); font-weight: 600; }
+    .address-field input {
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: .9rem;
+      color: var(--text-primary);
+      background: #fff;
+    }
+    .address-field input:focus { outline: none; border-color: var(--royal); }
+    .address-field input.has-error { border-color: #dc2626; }
+    .address-field.full { grid-column: 1 / -1; }
+    .address-error { min-height: 16px; font-size: .76rem; color: #dc2626; }
+    .address-inline {
+      min-height: 18px;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .address-inline.error { color: #dc2626; }
+    .address-inline.success { color: #047857; }
+
     /* ─── RESPONSIVE ─────────────────────────────────────── */
     @media (max-width: 1080px) {
       .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1251,6 +1459,8 @@
       .shop { padding: 52px 0 60px; }
       .container { padding: 0 18px; }
       .schedule-section-inner { grid-template-columns: 1fr; }
+      .profile-grid { grid-template-columns: 1fr; }
+      .profile-otp-row { grid-template-columns: 1fr; }
     }
     @media (max-width: 420px) {
       .grid { grid-template-columns: 1fr; }
@@ -1260,6 +1470,59 @@
 <body>
   <div id="toast" class="toast">Added to cart</div>
   <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="profile-overlay" id="profileOverlay" aria-hidden="true">
+    <section class="profile-modal" aria-label="Customer Profile">
+      <div class="profile-head">
+        <h3>My Profile</h3>
+        <button class="profile-close" id="profileCloseBtn" type="button" aria-label="Close profile">×</button>
+      </div>
+      <div class="profile-body-wrap" id="profileBodyContainer">
+        <div class="profile-loading">Loading profile...</div>
+      </div>
+    </section>
+  </div>
+  <div class="address-overlay" id="addressOverlay" aria-hidden="true">
+    <section class="address-modal" aria-label="Delivery Address">
+      <div class="address-head">
+        <h3>Delivery Address</h3>
+        <button class="profile-close" id="addressCloseBtn" type="button" aria-label="Close address form">×</button>
+      </div>
+      <div class="address-body">
+        <div class="address-grid">
+          <div class="address-field">
+            <label for="addrName">Full Name</label>
+            <input id="addrName" type="text" placeholder="e.g. Rahul Sharma" />
+            <div class="address-error" id="addrName-error"></div>
+          </div>
+          <div class="address-field">
+            <label for="addrPhone">Phone Number</label>
+            <input id="addrPhone" type="tel" placeholder="+91 98765 43210" />
+            <div class="address-error" id="addrPhone-error"></div>
+          </div>
+          <div class="address-field full">
+            <label for="addrLine1">Address Line</label>
+            <input id="addrLine1" type="text" placeholder="House no, street, area" />
+            <div class="address-error" id="addrLine1-error"></div>
+          </div>
+          <div class="address-field">
+            <label for="addrCity">City</label>
+            <input id="addrCity" type="text" placeholder="City" />
+            <div class="address-error" id="addrCity-error"></div>
+          </div>
+          <div class="address-field">
+            <label for="addrPincode">Pincode</label>
+            <input id="addrPincode" type="text" placeholder="6-digit pincode" />
+            <div class="address-error" id="addrPincode-error"></div>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button class="profile-action-btn primary" type="button" onclick="confirmAddressAndPay()">Continue to Payment</button>
+          <button class="profile-action-btn secondary" type="button" onclick="closeAddressModal()">Cancel</button>
+        </div>
+        <div class="address-inline" id="addressInlineStatus"></div>
+      </div>
+    </section>
+  </div>
 
   <!-- NAV -->
   <header class="topbar">
@@ -1277,6 +1540,9 @@
           <span class="schedule-nav-dot"></span>
           Plan Ahead
         </a>
+        <button id="profileBtn" class="profile-btn" type="button" aria-label="Open profile">
+          👤 Profile
+        </button>
         <button id="cartBtn" class="cart-btn" type="button" aria-label="Open cart">
           <span class="cart-icon">🛒</span>
           Cart
@@ -1446,10 +1712,11 @@
         <span id="total">₹0</span>
       </div>
       <div class="cart-delivery-note">✓ Free delivery on orders above ₹299</div>
-      <button class="checkout" type="button" onclick="window.location.href='index.html'">Proceed to Checkout →</button>
+      <button class="checkout" type="button" onclick="proceedToCheckout()">Proceed to Checkout →</button>
     </div>
   </aside>
 
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
     /* ── HERO DATA ── */
     const heroSlides = [
@@ -1518,6 +1785,294 @@
     const drawerFoot = document.getElementById('drawerFoot');
     const toast     = document.getElementById('toast');
     let toastTimer  = null;
+    const profileBtn = document.getElementById('profileBtn');
+    const profileOverlay = document.getElementById('profileOverlay');
+    const profileCloseBtn = document.getElementById('profileCloseBtn');
+    const profileBodyContainer = document.getElementById('profileBodyContainer');
+    const addressOverlay = document.getElementById('addressOverlay');
+    const addressCloseBtn = document.getElementById('addressCloseBtn');
+
+    const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+      ? 'http://127.0.0.1:8000'
+      : '';
+    let profileOriginalPhone = '';
+
+    function getToken() {
+      return localStorage.getItem('token') || null;
+    }
+
+    async function apiRequest(path, options = {}) {
+      const token = getToken();
+      const headers = {...(options.headers || {})};
+      if(token) headers['Authorization'] = `Bearer ${token}`;
+      if(options.body && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const res = await fetch(`${API_BASE}${path}`, {...options, headers});
+      let data = null;
+      try { data = await res.json(); } catch (_) { data = null; }
+      if(!res.ok) {
+        const err = new Error(data?.error || data?.message || 'Request failed');
+        err.status = res.status;
+        err.code = data?.code || null;
+        throw err;
+      }
+      return data || {};
+    }
+
+    const apiGet = path => apiRequest(path, {method: 'GET'});
+    const apiPost = (path, payload) => apiRequest(path, {method: 'POST', body: JSON.stringify(payload || {})});
+    const apiPatch = (path, payload) => apiRequest(path, {method: 'PATCH', body: JSON.stringify(payload || {})});
+
+    function profileField(label, id, value, placeholder, type = 'text', full = false, disabled = false) {
+      return `
+        <div class="profile-field ${full ? 'full' : ''}">
+          <label for="${id}">${label}</label>
+          <input id="${id}" type="${type}" value="${String(value || '').replaceAll('"','&quot;')}" placeholder="${placeholder}" ${disabled ? 'disabled' : ''}/>
+          <div class="profile-field-error" id="${id}-error"></div>
+        </div>
+      `;
+    }
+
+    function clearProfileError(fieldId) {
+      const err = document.getElementById(`${fieldId}-error`);
+      const input = document.getElementById(fieldId);
+      if(err) err.textContent = '';
+      if(input) input.classList.remove('has-error');
+    }
+
+    function setProfileError(fieldId, message) {
+      const err = document.getElementById(`${fieldId}-error`);
+      const input = document.getElementById(fieldId);
+      if(err) err.textContent = message;
+      if(input) input.classList.add('has-error');
+    }
+
+    function setProfileInlineStatus(id, type, message) {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.className = `profile-inline ${type || ''}`.trim();
+      el.textContent = message || '';
+    }
+
+    function isProfilePhoneChanged() {
+      const phone = document.getElementById('profile-phone')?.value.trim() || '';
+      return phone !== profileOriginalPhone;
+    }
+
+    function updateProfileOtpVisibility() {
+      const row = document.getElementById('profile-otp-row');
+      const otp = document.getElementById('profile-phone-otp');
+      const otpStatus = document.getElementById('profileOtpStatus');
+      if(!row) return;
+      if(isProfilePhoneChanged()) {
+        row.style.display = 'grid';
+        return;
+      }
+      row.style.display = 'none';
+      if(otp) otp.value = '';
+      if(otpStatus) {
+        otpStatus.className = 'profile-inline';
+        otpStatus.textContent = '';
+      }
+      clearProfileError('profile-phone-otp');
+    }
+
+    function renderProfileModal(profile) {
+      const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim() || 'Customer';
+      profileOriginalPhone = (profile?.phone || '').trim();
+
+      profileBodyContainer.innerHTML = `
+        <div class="profile-card">
+          <h4>Customer Details</h4>
+          <div class="profile-inline">Signed in as ${customerName}</div>
+          <div class="profile-grid">
+            ${profileField('First Name', 'profile-first-name', profile?.first_name || '', 'First name')}
+            ${profileField('Last Name', 'profile-last-name', profile?.last_name || '', 'Last name')}
+          </div>
+          <div class="profile-grid">
+            ${profileField('Phone Number', 'profile-phone', profile?.phone || '', '+91 98765 43210', 'tel')}
+            ${profileField('Email', 'profile-email', profile?.email || '', '', 'email', false, true)}
+          </div>
+          <div class="profile-grid">
+            ${profileField('Organisation / Business', 'profile-organisation', profile?.organisation || '', 'Business / household name', 'text', true)}
+          </div>
+          <div class="profile-otp-row" id="profile-otp-row" style="display:none">
+            ${profileField('OTP for New Number', 'profile-phone-otp', '', 'Enter OTP sent to new number', 'text', true)}
+            <button class="profile-action-btn secondary" type="button" onclick="sendCustomerProfileOtp()">Send OTP</button>
+          </div>
+          <div class="profile-inline" id="profileOtpStatus"></div>
+          <div class="profile-actions">
+            <button class="profile-action-btn primary" type="button" onclick="saveCustomerProfile()">Save Profile</button>
+          </div>
+          <div class="profile-inline" id="profileInfoStatus"></div>
+        </div>
+
+        <div class="profile-card">
+          <h4>Change Password</h4>
+          <div class="profile-grid">
+            ${profileField('Current Password', 'profile-current-password', '', 'Current password', 'password')}
+            ${profileField('New Password', 'profile-new-password', '', '8+ chars, upper/lower/number', 'password')}
+          </div>
+          <div class="profile-grid">
+            ${profileField('Confirm New Password', 'profile-confirm-password', '', 'Confirm new password', 'password', true)}
+          </div>
+          <div class="profile-actions">
+            <button class="profile-action-btn secondary" type="button" onclick="changeCustomerPassword()">Update Password</button>
+          </div>
+          <div class="profile-inline" id="profilePasswordStatus"></div>
+        </div>
+
+        <div class="profile-card">
+          <h4>Session</h4>
+          <div class="profile-inline">Logout will end your current session on this device.</div>
+          <div class="profile-actions">
+            <button class="profile-action-btn danger" type="button" onclick="logoutCustomer()">Logout</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('profile-phone')?.addEventListener('input', updateProfileOtpVisibility);
+      updateProfileOtpVisibility();
+    }
+
+    async function openProfile() {
+      if(!getToken()) {
+        showToast('Please login first');
+        window.location.href = 'index.html';
+        return;
+      }
+      profileOverlay.classList.add('active');
+      profileOverlay.setAttribute('aria-hidden', 'false');
+      profileBodyContainer.innerHTML = '<div class="profile-loading">Loading profile...</div>';
+      try {
+        const data = await apiGet('/auth/profile');
+        renderProfileModal(data?.profile || {});
+      } catch (err) {
+        profileBodyContainer.innerHTML = `<div class="profile-loading">Could not load profile. ${err.message || 'Please try again.'}</div>`;
+      }
+    }
+
+    function closeProfile() {
+      profileOverlay.classList.remove('active');
+      profileOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    async function sendCustomerProfileOtp() {
+      clearProfileError('profile-phone-otp');
+      const phone = document.getElementById('profile-phone')?.value.trim() || '';
+      if(!phone) {
+        setProfileInlineStatus('profileOtpStatus', 'error', 'Enter new phone number first.');
+        return;
+      }
+      try {
+        await apiPost('/auth/send-phone-otp', {phone});
+        setProfileInlineStatus('profileOtpStatus', 'success', 'OTP sent to new number.');
+      } catch (err) {
+        setProfileInlineStatus('profileOtpStatus', 'error', err.message || 'Failed to send OTP.');
+      }
+    }
+
+    async function saveCustomerProfile() {
+      ['profile-first-name','profile-last-name','profile-phone','profile-organisation','profile-phone-otp'].forEach(clearProfileError);
+      setProfileInlineStatus('profileInfoStatus', '', '');
+
+      const payload = {
+        first_name: document.getElementById('profile-first-name')?.value.trim() || '',
+        last_name: document.getElementById('profile-last-name')?.value.trim() || '',
+        phone: document.getElementById('profile-phone')?.value.trim() || '',
+        phone_otp: document.getElementById('profile-phone-otp')?.value.trim() || '',
+        organisation: document.getElementById('profile-organisation')?.value.trim() || ''
+      };
+
+      let hasError = false;
+      if(payload.first_name.length < 2) {
+        setProfileError('profile-first-name', 'First name must be at least 2 characters.');
+        hasError = true;
+      }
+      if(!payload.last_name) {
+        setProfileError('profile-last-name', 'Last name is required.');
+        hasError = true;
+      }
+      if(!/^\+?[0-9\s-]{10,20}$/.test(payload.phone)) {
+        setProfileError('profile-phone', 'Enter a valid phone number.');
+        hasError = true;
+      }
+      if(!payload.organisation) {
+        setProfileError('profile-organisation', 'Organisation is required.');
+        hasError = true;
+      }
+      if(isProfilePhoneChanged() && !payload.phone_otp) {
+        setProfileError('profile-phone-otp', 'OTP is required to verify new number.');
+        hasError = true;
+      }
+      if(hasError) {
+        setProfileInlineStatus('profileInfoStatus', 'error', 'Please fix the highlighted fields.');
+        return;
+      }
+
+      try {
+        const data = await apiPatch('/auth/profile', payload);
+        renderProfileModal({...payload, ...(data?.profile || {}), email: document.getElementById('profile-email')?.value || ''});
+        setProfileInlineStatus('profileInfoStatus', 'success', 'Profile updated successfully.');
+      } catch (err) {
+        if(err.code === 'PHONE_OTP_REQUIRED' || err.code === 'INVALID_OTP') {
+          setProfileError('profile-phone-otp', 'Please enter valid OTP for new number.');
+        }
+        setProfileInlineStatus('profileInfoStatus', 'error', err.message || 'Could not update profile.');
+      }
+    }
+
+    async function changeCustomerPassword() {
+      ['profile-current-password','profile-new-password','profile-confirm-password'].forEach(clearProfileError);
+      setProfileInlineStatus('profilePasswordStatus', '', '');
+
+      const currentPassword = document.getElementById('profile-current-password')?.value || '';
+      const newPassword = document.getElementById('profile-new-password')?.value || '';
+      const confirmPassword = document.getElementById('profile-confirm-password')?.value || '';
+
+      let hasError = false;
+      if(!currentPassword) {
+        setProfileError('profile-current-password', 'Current password is required.');
+        hasError = true;
+      }
+      if(!(/[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword) && newPassword.length >= 8)) {
+        setProfileError('profile-new-password', 'Use 8+ chars with upper, lower, and number.');
+        hasError = true;
+      }
+      if(newPassword !== confirmPassword) {
+        setProfileError('profile-confirm-password', 'Passwords do not match.');
+        hasError = true;
+      }
+      if(hasError) {
+        setProfileInlineStatus('profilePasswordStatus', 'error', 'Please fix password fields.');
+        return;
+      }
+
+      try {
+        await apiPost('/auth/change-password', {current_password: currentPassword, new_password: newPassword});
+        document.getElementById('profile-current-password').value = '';
+        document.getElementById('profile-new-password').value = '';
+        document.getElementById('profile-confirm-password').value = '';
+        setProfileInlineStatus('profilePasswordStatus', 'success', 'Password updated successfully.');
+      } catch (err) {
+        if(err.code === 'INVALID_CREDENTIALS') {
+          setProfileError('profile-current-password', 'Current password is incorrect.');
+        }
+        setProfileInlineStatus('profilePasswordStatus', 'error', err.message || 'Could not update password.');
+      }
+    }
+
+    async function logoutCustomer() {
+      try { await apiPost('/auth/logout', {}); } catch (_) {}
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+
+    window.sendCustomerProfileOtp = sendCustomerProfileOtp;
+    window.saveCustomerProfile = saveCustomerProfile;
+    window.changeCustomerPassword = changeCustomerPassword;
+    window.logoutCustomer = logoutCustomer;
 
     function showToast(msg) {
       toast.childNodes[toast.childNodes.length - 1].textContent = msg;
@@ -1671,12 +2226,241 @@
     }
     window.removeItem = removeItem;
 
+    function getCartTotal() {
+      return cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    }
+
+    function resetCartAfterOrder() {
+      cart = [];
+      cartCount.textContent = '0';
+      renderCart();
+      closeCart();
+    }
+
+    async function ensureCheckoutAuth() {
+      const token = getToken();
+      if(!token) {
+        showToast('Please login to continue checkout');
+        window.location.href = 'index.html';
+        return false;
+      }
+      try {
+        await apiGet('/auth/me');
+        return true;
+      } catch (_) {
+        localStorage.removeItem('token');
+        showToast('Session expired. Please login again.');
+        window.location.href = 'index.html';
+        return false;
+      }
+    }
+
+    function persistDeliverySnapshot(razorpayOrderId, total, deliveryAddress) {
+      const snapshot = {
+        orderId: razorpayOrderId,
+        total,
+        itemCount: cart.length,
+        createdAt: new Date().toISOString(),
+        items: cart.map(p => ({id: p.id, name: p.name, price: p.price, img: p.img})),
+        deliveryAddress: deliveryAddress || null,
+        driverName: 'Ramesh Kumar',
+        vehicleLabel: 'Eicher Mini Truck · MH12AB4582',
+        etaMinutes: 32
+      };
+      localStorage.setItem('tsCustomerLastOrder', JSON.stringify(snapshot));
+    }
+
+    function setAddressInlineStatus(type, message) {
+      const el = document.getElementById('addressInlineStatus');
+      if(!el) return;
+      el.className = `address-inline ${type || ''}`.trim();
+      el.textContent = message || '';
+    }
+
+    function clearAddressError(fieldId) {
+      const input = document.getElementById(fieldId);
+      const err = document.getElementById(`${fieldId}-error`);
+      if(input) input.classList.remove('has-error');
+      if(err) err.textContent = '';
+    }
+
+    function setAddressError(fieldId, message) {
+      const input = document.getElementById(fieldId);
+      const err = document.getElementById(`${fieldId}-error`);
+      if(input) input.classList.add('has-error');
+      if(err) err.textContent = message;
+    }
+
+    function openAddressModal() {
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem('tsCustomerAddress') || '{}'); } catch (_) { saved = {}; }
+      document.getElementById('addrName').value = saved.name || '';
+      document.getElementById('addrPhone').value = saved.phone || '';
+      document.getElementById('addrLine1').value = saved.line1 || '';
+      document.getElementById('addrCity').value = saved.city || '';
+      document.getElementById('addrPincode').value = saved.pincode || '';
+      ['addrName','addrPhone','addrLine1','addrCity','addrPincode'].forEach(clearAddressError);
+      setAddressInlineStatus('', '');
+      addressOverlay.classList.add('active');
+      addressOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeAddressModal() {
+      addressOverlay.classList.remove('active');
+      addressOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    async function startCheckoutPayment(deliveryAddress) {
+      if(typeof Razorpay === 'undefined') {
+        setAddressInlineStatus('error', 'Payment SDK failed to load. Please retry.');
+        return;
+      }
+
+      const total = getCartTotal();
+      if(total <= 0) {
+        setAddressInlineStatus('error', 'Invalid order total.');
+        return;
+      }
+
+      try {
+        setAddressInlineStatus('success', 'Creating secure payment order...');
+        const orderRes = await apiPost('/payments/create-order', {amount_inr: total});
+        const {order, key_id} = orderRes || {};
+        if(!order?.id || !key_id) {
+          setAddressInlineStatus('error', 'Could not initialize payment. Please retry.');
+          return;
+        }
+
+        const rz = new Razorpay({
+          key: key_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'TechSetu',
+          description: 'Customer order payment',
+          order_id: order.id,
+          prefill: {
+            name: deliveryAddress.name,
+            contact: deliveryAddress.phone
+          },
+          notes: {
+            address: `${deliveryAddress.line1}, ${deliveryAddress.city} - ${deliveryAddress.pincode}`
+          },
+          theme: {color: '#1F3A60'},
+          handler: async function (response) {
+            try {
+              await apiPost('/payments/verify', response);
+              persistDeliverySnapshot(order.id, total, deliveryAddress);
+              resetCartAfterOrder();
+              closeAddressModal();
+              showToast('Payment verified. Redirecting to delivery tracking...');
+              setTimeout(() => {
+                window.location.href = `customer-delivery.html?orderId=${encodeURIComponent(order.id)}`;
+              }, 450);
+            } catch (err) {
+              setAddressInlineStatus('error', err.message || 'Payment verification failed');
+            }
+          },
+          modal: {
+            ondismiss: function() {
+              setAddressInlineStatus('error', 'Payment cancelled');
+            }
+          }
+        });
+        rz.open();
+      } catch (err) {
+        setAddressInlineStatus('error', err.message || 'Unable to start payment');
+      }
+    }
+
+    async function confirmAddressAndPay() {
+      ['addrName','addrPhone','addrLine1','addrCity','addrPincode'].forEach(clearAddressError);
+      setAddressInlineStatus('', '');
+
+      const deliveryAddress = {
+        name: document.getElementById('addrName').value.trim(),
+        phone: document.getElementById('addrPhone').value.trim(),
+        line1: document.getElementById('addrLine1').value.trim(),
+        city: document.getElementById('addrCity').value.trim(),
+        pincode: document.getElementById('addrPincode').value.trim()
+      };
+
+      let hasError = false;
+      if(deliveryAddress.name.length < 2) {
+        setAddressError('addrName', 'Enter a valid full name.');
+        hasError = true;
+      }
+      if(!/^\+?[0-9\s-]{10,20}$/.test(deliveryAddress.phone)) {
+        setAddressError('addrPhone', 'Enter a valid phone number.');
+        hasError = true;
+      }
+      if(deliveryAddress.line1.length < 6) {
+        setAddressError('addrLine1', 'Enter full street/address details.');
+        hasError = true;
+      }
+      if(!deliveryAddress.city) {
+        setAddressError('addrCity', 'Enter city.');
+        hasError = true;
+      }
+      if(!/^\d{6}$/.test(deliveryAddress.pincode)) {
+        setAddressError('addrPincode', 'Enter 6-digit pincode.');
+        hasError = true;
+      }
+      if(hasError) {
+        setAddressInlineStatus('error', 'Please fix the highlighted fields.');
+        return;
+      }
+
+      localStorage.setItem('tsCustomerAddress', JSON.stringify(deliveryAddress));
+      await startCheckoutPayment(deliveryAddress);
+    }
+    window.confirmAddressAndPay = confirmAddressAndPay;
+    window.closeAddressModal = closeAddressModal;
+
+    async function proceedToCheckout() {
+      if(!cart.length) {
+        showToast('Your cart is empty');
+        return;
+      }
+
+      const isAuthed = await ensureCheckoutAuth();
+      if(!isAuthed) return;
+
+      openAddressModal();
+    }
+    window.proceedToCheckout = proceedToCheckout;
+
     function openCart() { drawer.classList.add('open'); drawerOverlay.classList.add('active'); }
     function closeCart() { drawer.classList.remove('open'); drawerOverlay.classList.remove('active'); }
+
+    function handleCustomerPageAction() {
+      const params = new URLSearchParams(window.location.search);
+      const action = (params.get('action') || '').toLowerCase();
+      if(action === 'cart') {
+        openCart();
+      }
+      if(action === 'profile') {
+        openProfile();
+      }
+      if(action) {
+        params.delete('action');
+        const qs = params.toString();
+        const next = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash || ''}`;
+        window.history.replaceState({}, '', next);
+      }
+    }
 
     cartBtn.addEventListener('click', openCart);
     closeDrawer.addEventListener('click', closeCart);
     drawerOverlay.addEventListener('click', closeCart);
+    profileBtn.addEventListener('click', openProfile);
+    profileCloseBtn.addEventListener('click', closeProfile);
+    profileOverlay.addEventListener('click', (e) => {
+      if(e.target === profileOverlay) closeProfile();
+    });
+    addressCloseBtn.addEventListener('click', closeAddressModal);
+    addressOverlay.addEventListener('click', (e) => {
+      if(e.target === addressOverlay) closeAddressModal();
+    });
 
     /* ── SCHEDULE DASHBOARD WIDGET ── */
     const cropEmoji = {
@@ -1784,6 +2568,7 @@
     renderGrid();
     renderCart();
     renderScheduleWidget();
+    handleCustomerPageAction();
   </script>
 </body>
 </html>
