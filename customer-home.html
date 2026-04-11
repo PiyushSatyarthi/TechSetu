@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechSetu Customer Market</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:       #000080;
+      --royal:      #4169E1;
+      --sapphire:   #0F52BA;
+      --cobalt:     #0047AB;
+      --indigo:     #4B0082;
+      --teal:       #40E0D0;
+      --sky:        #87CEEB;
+      --white:      #FFFFFF;
+
+      --bg-main:    #F4F7FC;
+      --bg-section: #EEF3FB;
+      --border:     rgba(65,105,225,.13);
+      --border-soft:rgba(65,105,225,.07);
+
+      --text-primary:   #08103A;
+      --text-secondary: #3A4E7A;
+      --text-subtle:    #7A90C0;
+
+      --font-display: 'Playfair Display', serif;
+      --font-body:    'Plus Jakarta Sans', sans-serif;
+
+      --r-xs: 6px;
+      --r-sm: 10px;
+      --r-md: 16px;
+      --r-lg: 22px;
+      --r-xl: 32px;
+
+      --nav-h: 70px;
+      --shadow-card:  0 4px 24px rgba(0,0,128,.07), 0 1px 4px rgba(0,0,128,.04);
+      --shadow-hover: 0 12px 40px rgba(0,0,128,.14), 0 2px 8px rgba(0,0,128,.06);
+      --shadow-nav:   0 2px 20px rgba(0,0,128,.22);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font-body); background: var(--bg-main); color: var(--text-primary); }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+    img { display: block; }
+
+    .container { max-width: 1220px; margin: 0 auto; padding: 0 28px; }
+
+    /* ─── TOPBAR ─────────────────────────────────────────── */
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: var(--nav-h);
+      z-index: 1000;
+      transition: background .3s, box-shadow .3s, backdrop-filter .3s;
+      background: rgba(0,0,128,.96);
+      backdrop-filter: blur(14px) saturate(1.6);
+      -webkit-backdrop-filter: blur(14px) saturate(1.6);
+      box-shadow: var(--shadow-nav);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .topbar .container {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--sky) 100%);
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      box-shadow: 0 2px 12px rgba(64,224,208,.35);
+      flex-shrink: 0;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .brand:hover .brand-mark {
+      transform: scale(1.08) rotate(-3deg);
+      box-shadow: 0 4px 18px rgba(64,224,208,.5);
+    }
+    .brand-name { display: flex; flex-direction: column; line-height: 1; }
+    .brand-name span { font-size: .65rem; font-family: var(--font-body); font-weight: 500; color: rgba(255,255,255,.55); letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
+
+    .top-actions { display: flex; align-items: center; gap: 6px; }
+    .top-link {
+      color: rgba(255,255,255,.82);
+      font-size: .84rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: var(--r-sm);
+      background: transparent;
+      transition: background .18s, color .18s;
+      letter-spacing: .01em;
+    }
+    .top-link:hover { background: rgba(255,255,255,.12); color: white; }
+
+    /* Schedule nav button */
+    .schedule-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 15px;
+      border-radius: var(--r-sm);
+      background: rgba(64,224,208,.14);
+      border: 1px solid rgba(64,224,208,.3);
+      color: var(--teal);
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      transition: background .18s, border-color .18s, transform .14s;
+      text-decoration: none;
+    }
+    .schedule-nav-btn:hover {
+      background: rgba(64,224,208,.25);
+      border-color: rgba(64,224,208,.5);
+      transform: translateY(-1px);
+      color: var(--teal);
+    }
+    .schedule-nav-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      animation: pulse-dot 2s infinite;
+    }
+
+    .cart-btn {
+      background: rgba(64,224,208,.15);
+      border: 1px solid rgba(64,224,208,.35);
+      color: white;
+      border-radius: var(--r-md);
+      padding: 8px 16px 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      transition: background .18s, border-color .18s, transform .14s;
+      font-weight: 600;
+      font-size: .84rem;
+    }
+    .cart-btn:hover {
+      background: rgba(64,224,208,.28);
+      border-color: rgba(64,224,208,.55);
+      transform: translateY(-1px);
+    }
+    .cart-btn:active { transform: translateY(0); }
+    .cart-icon { font-size: 1rem; line-height: 1; }
+    #cartCount {
+      background: linear-gradient(135deg, var(--teal), var(--sky));
+      color: var(--navy);
+      font-size: .7rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      box-shadow: 0 2px 8px rgba(64,224,208,.4);
+      transition: transform .2s ease;
+    }
+    #cartCount.bump { transform: scale(1.4); }
+
+    /* ─── HERO ───────────────────────────────────────────── */
+    .hero {
+      margin-top: var(--nav-h);
+      position: relative;
+      overflow: hidden;
+      background: var(--navy);
+    }
+    .slides {
+      position: relative;
+      width: 100%;
+      height: 580px;
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .7s cubic-bezier(.4,0,.2,1);
+      background-size: cover;
+      background-position: center;
+    }
+    .slide::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        rgba(0,0,128,.92) 0%,
+        rgba(15,82,186,.80) 45%,
+        rgba(65,105,225,.4) 75%,
+        transparent 100%
+      );
+    }
+    .slide::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(64,224,208,.07) 0%, transparent 65%);
+    }
+    .slide.active { opacity: 1; }
+    .slide-content {
+      position: relative;
+      z-index: 2;
+      color: white;
+      max-width: 640px;
+      padding-top: 32px;
+    }
+    .slide-layout {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 13px;
+      border-radius: 50px;
+      border: 1px solid rgba(64,224,208,.4);
+      background: rgba(64,224,208,.12);
+      color: var(--teal);
+      font-size: .73rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.7); }
+    }
+
+    .slide h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+      line-height: 1.08;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -.02em;
+    }
+    .slide h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--teal), var(--sky));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .slide p {
+      color: rgba(255,255,255,.82);
+      line-height: 1.75;
+      margin-bottom: 28px;
+      font-size: .97rem;
+      max-width: 500px;
+      font-weight: 400;
+    }
+    .slide-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-cta {
+      padding: 13px 26px;
+      border: 0;
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--teal) 0%, #2BBFB0 100%);
+      color: var(--navy);
+      font-weight: 700;
+      font-size: .9rem;
+      letter-spacing: .01em;
+      box-shadow: 0 4px 20px rgba(64,224,208,.35);
+      transition: transform .18s, box-shadow .18s;
+    }
+    .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(64,224,208,.5); }
+    .hero-cta:active { transform: translateY(0); }
+    .hero-cta-ghost {
+      padding: 13px 22px;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: var(--r-md);
+      background: rgba(255,255,255,.08);
+      color: white;
+      font-weight: 600;
+      font-size: .9rem;
+      backdrop-filter: blur(8px);
+      transition: background .18s, border-color .18s;
+      cursor: pointer;
+    }
+    .hero-cta-ghost:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.5); }
+
+    .slide-chips {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 50px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      font-size: .74rem;
+      color: rgba(255,255,255,.82);
+      backdrop-filter: blur(6px);
+      font-weight: 500;
+    }
+
+    .slide-nav {
+      position: absolute;
+      left: 0; right: 0; bottom: 22px;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dot {
+      width: 28px; height: 4px;
+      border-radius: 2px;
+      border: 0;
+      background: rgba(255,255,255,.3);
+      cursor: pointer;
+      transition: background .22s, width .22s;
+      padding: 0;
+    }
+    .dot.active { background: var(--teal); width: 44px; }
+    .dot:hover:not(.active) { background: rgba(255,255,255,.6); }
+
+    /* ─── TRUST BAR ──────────────────────────────────────── */
+    .trust {
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px;
+      border-right: 1px solid var(--border-soft);
+      transition: background .18s;
+    }
+    .trust-item:last-child { border-right: 0; }
+    .trust-item:hover { background: var(--bg-section); }
+    .trust-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(65,105,225,.1), rgba(64,224,208,.08));
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      border: 1px solid rgba(65,105,225,.12);
+    }
+    .trust-text strong {
+      display: block;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .trust-text span {
+      font-size: .73rem;
+      color: var(--text-subtle);
+      font-weight: 400;
+    }
+
+    /* ─── SCHEDULE DASHBOARD SECTION ─────────────────────── */
+    .schedule-section {
+      padding: 52px 0 56px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-section-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1.15fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .sched-stat-card {
+      background: var(--bg-section);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 22px 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow .2s, border-color .2s, transform .2s;
+      cursor: default;
+    }
+    .sched-stat-card:hover {
+      box-shadow: var(--shadow-card);
+      border-color: rgba(65,105,225,.22);
+      transform: translateY(-2px);
+    }
+    .sched-stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+    }
+    .sched-stat-icon.blue { background: rgba(65,105,225,.12); border: 1px solid rgba(65,105,225,.18); }
+    .sched-stat-icon.teal { background: rgba(64,224,208,.12); border: 1px solid rgba(64,224,208,.25); }
+    .sched-stat-icon.amber { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.22); }
+    .sched-stat-label {
+      font-size: .71rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+    }
+    .sched-stat-value {
+      font-family: var(--font-display);
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -.02em;
+      line-height: 1;
+    }
+    .sched-stat-sub {
+      font-size: .74rem;
+      color: var(--text-subtle);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .sched-stat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .sched-mini-chip {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 50px;
+      background: rgba(65,105,225,.08);
+      color: var(--royal);
+      border: 1px solid rgba(65,105,225,.14);
+    }
+    .sched-mini-chip.urgent {
+      background: rgba(239,68,68,.07);
+      color: #DC2626;
+      border-color: rgba(239,68,68,.18);
+    }
+    .sched-mini-chip.green {
+      background: rgba(34,197,94,.08);
+      color: #16A34A;
+      border-color: rgba(34,197,94,.18);
+    }
+
+    /* CTA card */
+    .sched-cta-card {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--cobalt) 55%, #2244AA 100%);
+      border-radius: var(--r-lg);
+      padding: 24px 24px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: 0 6px 32px rgba(0,0,128,.18);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .sched-cta-card:hover {
+      box-shadow: 0 12px 44px rgba(0,0,128,.28);
+      transform: translateY(-2px);
+    }
+    .sched-cta-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 20%, rgba(64,224,208,.14) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .sched-cta-card::after {
+      content: '';
+      position: absolute;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.06);
+      right: -40px; bottom: -50px;
+      pointer-events: none;
+    }
+    .sched-cta-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      position: relative;
+      z-index: 1;
+    }
+    .sched-cta-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      line-height: 1.2;
+      letter-spacing: -.01em;
+      position: relative;
+      z-index: 1;
+    }
+    .sched-cta-desc {
+      font-size: .8rem;
+      color: rgba(255,255,255,.65);
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+    .sched-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--teal), #2BBFB0);
+      color: var(--navy);
+      padding: 11px 20px;
+      border-radius: var(--r-md);
+      font-weight: 800;
+      font-size: .83rem;
+      border: 0;
+      letter-spacing: .01em;
+      box-shadow: 0 3px 16px rgba(64,224,208,.35);
+      transition: transform .18s, box-shadow .18s;
+      text-decoration: none;
+      width: fit-content;
+      position: relative;
+      z-index: 1;
+      white-space: nowrap;
+    }
+    .sched-cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(64,224,208,.5);
+    }
+
+    /* upcoming schedule chips row */
+    .sched-upcoming-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      margin-top: 22px;
+      scrollbar-width: none;
+    }
+    .sched-upcoming-row::-webkit-scrollbar { display: none; }
+    .sched-upcoming-item {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      background: white;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, transform .18s;
+      text-decoration: none;
+    }
+    .sched-upcoming-item:hover {
+      border-color: rgba(65,105,225,.3);
+      box-shadow: 0 4px 16px rgba(0,0,128,.08);
+      transform: translateY(-1px);
+    }
+    .sui-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgba(65,105,225,.08);
+      display: grid;
+      place-items: center;
+      font-size: .9rem;
+      flex-shrink: 0;
+    }
+    .sui-info { display: flex; flex-direction: column; gap: 2px; }
+    .sui-name { font-size: .8rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+    .sui-date { font-size: .7rem; color: var(--text-subtle); font-weight: 500; white-space: nowrap; }
+    .sui-badge {
+      font-size: .65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 50px;
+      white-space: nowrap;
+    }
+    .sui-badge.upcoming { background: rgba(65,105,225,.1); color: var(--royal); border: 1px solid rgba(65,105,225,.18); }
+    .sui-badge.urgent { background: rgba(239,68,68,.08); color: #DC2626; border: 1px solid rgba(239,68,68,.18); }
+    .sui-badge.matched { background: rgba(34,197,94,.08); color: #16A34A; border: 1px solid rgba(34,197,94,.18); }
+
+    /* ─── SHOP ───────────────────────────────────────────── */
+    .shop { padding: 72px 0 80px; }
+    .shop-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--royal);
+      margin-bottom: 8px;
+    }
+    .section-label::before {
+      content: '';
+      width: 18px; height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--royal));
+      border-radius: 1px;
+    }
+    .shop h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3vw, 2.3rem);
+      color: var(--navy);
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+    .shop-sub {
+      color: var(--text-subtle);
+      font-size: .88rem;
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    .pills {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      border: 1.5px solid var(--border);
+      background: white;
+      border-radius: 50px;
+      padding: 7px 16px;
+      cursor: pointer;
+      font-size: .8rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      transition: all .18s ease;
+      letter-spacing: .01em;
+    }
+    .pill:hover {
+      border-color: var(--royal);
+      color: var(--royal);
+      background: rgba(65,105,225,.05);
+    }
+    .pill.active {
+      background: var(--navy);
+      color: white;
+      border-color: var(--navy);
+      box-shadow: 0 4px 14px rgba(0,0,128,.25);
+    }
+
+    /* ─── GRID ───────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    /* ─── CARD ───────────────────────────────────────────── */
+    .card {
+      background: white;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      transition: transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .24s cubic-bezier(.2,.8,.2,1), border-color .24s;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(65,105,225,.22);
+    }
+
+    .img-wrap {
+      height: 190px;
+      background: var(--bg-section);
+      position: relative;
+      overflow: hidden;
+    }
+    .img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .45s cubic-bezier(.2,.8,.2,1);
+    }
+    .card:hover .img-wrap img { transform: scale(1.06); }
+    .img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 55%, rgba(0,0,128,.14) 100%);
+      pointer-events: none;
+    }
+
+    .tag {
+      position: absolute;
+      top: 10px; left: 10px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #00C853, #00A846);
+      border-radius: 50px;
+      font-size: .68rem;
+      color: white;
+      font-weight: 700;
+      letter-spacing: .03em;
+      z-index: 1;
+      box-shadow: 0 2px 8px rgba(0,168,70,.3);
+    }
+    .fresh-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      padding: 3px 9px;
+      background: rgba(255,255,255,.92);
+      border-radius: 50px;
+      font-size: .65rem;
+      color: var(--sapphire);
+      font-weight: 700;
+      letter-spacing: .04em;
+      z-index: 1;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(65,105,225,.15);
+    }
+
+    .card-body {
+      padding: 16px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cat-label {
+      font-size: .67rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--royal);
+      opacity: .8;
+    }
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: .7rem;
+      font-weight: 700;
+      color: #F59E0B;
+    }
+
+    .name {
+      font-family: var(--font-display);
+      color: var(--text-primary);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      line-height: 1.2;
+    }
+    .desc {
+      color: var(--text-subtle);
+      font-size: .8rem;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+    .delivery-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .72rem;
+      color: var(--text-subtle);
+      font-weight: 500;
+    }
+    .delivery-row span { color: #22C55E; font-weight: 700; }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .price {
+      color: var(--navy);
+      font-size: 1.22rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+    .old {
+      color: var(--text-subtle);
+      text-decoration: line-through;
+      font-size: .78rem;
+      font-weight: 500;
+    }
+    .discount-pct {
+      font-size: .7rem;
+      font-weight: 700;
+      color: #22C55E;
+      background: rgba(34,197,94,.1);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .actions { display: flex; gap: 8px; margin-top: auto; }
+    .btn-primary {
+      flex: 1;
+      border: 0;
+      border-radius: var(--r-sm);
+      background: linear-gradient(135deg, var(--cobalt), var(--royal));
+      color: white;
+      padding: 11px 8px;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      box-shadow: 0 3px 12px rgba(0,71,171,.25);
+      transition: transform .16s, box-shadow .16s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,71,171,.38);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-outline {
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: var(--r-sm);
+      padding: 11px 10px;
+      font-size: .8rem;
+      font-weight: 700;
+      transition: border-color .16s, color .16s, background .16s;
+    }
+    .btn-outline:hover {
+      border-color: var(--royal);
+      color: var(--royal);
+      background: rgba(65,105,225,.05);
+    }
+
+    /* ─── PROMO ──────────────────────────────────────────── */
+    .promo { padding: 56px 0; background: var(--bg-section); }
+    .promo-box {
+      background: linear-gradient(125deg, var(--navy) 0%, var(--cobalt) 40%, var(--indigo) 100%);
+      color: white;
+      border-radius: var(--r-xl);
+      padding: 48px 48px 48px 52px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 50px rgba(0,0,128,.3);
+    }
+    .promo-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 50%, rgba(64,224,208,.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .promo-box::after {
+      content: '';
+      position: absolute;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.06);
+      right: -60px; top: -80px;
+      pointer-events: none;
+    }
+    .promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 12px;
+    }
+    .promo h3 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      margin-bottom: 8px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+    }
+    .promo p { color: rgba(255,255,255,.72); font-size: .9rem; max-width: 420px; line-height: 1.7; }
+    .promo-ctas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; position: relative; z-index: 1; }
+    .promo-cta {
+      background: linear-gradient(135deg, var(--teal) 0%, #2BBFB0 100%);
+      color: var(--navy);
+      padding: 14px 28px;
+      border-radius: var(--r-md);
+      font-weight: 800;
+      font-size: .9rem;
+      letter-spacing: .01em;
+      white-space: nowrap;
+      box-shadow: 0 4px 22px rgba(64,224,208,.4);
+      transition: transform .18s, box-shadow .18s;
+      display: inline-block;
+    }
+    .promo-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(64,224,208,.55); }
+    .promo-cta-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 14px 24px;
+      border-radius: var(--r-md);
+      border: 1.5px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.07);
+      color: white;
+      font-weight: 700;
+      font-size: .9rem;
+      white-space: nowrap;
+      transition: background .18s, border-color .18s;
+      backdrop-filter: blur(8px);
+    }
+    .promo-cta-ghost:hover { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.45); }
+
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    .footer {
+      background: linear-gradient(175deg, #000060, var(--navy));
+      color: rgba(255,255,255,.8);
+      padding: 56px 0 24px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 36px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      padding-bottom: 32px;
+      margin-bottom: 20px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .footer-brand-mark {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--teal), var(--sky));
+      display: grid;
+      place-items: center;
+      font-size: .9rem;
+    }
+    .footer-brand-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+    }
+    .footer-desc {
+      max-width: 280px;
+      color: rgba(255,255,255,.55);
+      font-size: .83rem;
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+    .footer-socials { display: flex; gap: 8px; }
+    .social-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      display: grid;
+      place-items: center;
+      font-size: .8rem;
+      color: rgba(255,255,255,.7);
+      transition: background .18s, color .18s;
+      cursor: pointer;
+    }
+    .social-btn:hover { background: rgba(64,224,208,.2); color: var(--teal); border-color: rgba(64,224,208,.35); }
+
+    .footer h4 {
+      color: rgba(255,255,255,.38);
+      margin-bottom: 14px;
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 700;
+    }
+    .footer a {
+      display: block;
+      margin-bottom: 9px;
+      font-size: .84rem;
+      color: rgba(255,255,255,.62);
+      transition: color .15s;
+    }
+    .footer a:hover { color: var(--teal); }
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: .76rem;
+      color: rgba(255,255,255,.35);
+    }
+    .footer-badges { display: flex; gap: 8px; }
+    .footer-badge {
+      padding: 3px 10px;
+      border-radius: 50px;
+      border: 1px solid rgba(255,255,255,.12);
+      font-size: .68rem;
+      color: rgba(255,255,255,.42);
+      font-weight: 600;
+      letter-spacing: .03em;
+    }
+
+    /* ─── TOAST ──────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      top: calc(var(--nav-h) + 14px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-12px);
+      background: var(--navy);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 20px 10px 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1);
+      z-index: 1500;
+      font-size: .84rem;
+      font-weight: 600;
+      border: 1px solid rgba(64,224,208,.3);
+      box-shadow: 0 8px 28px rgba(0,0,128,.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .toast::before { content: '✓'; background: var(--teal); color: var(--navy); border-radius: 50%; width: 20px; height: 20px; display: grid; place-items: center; font-size: .72rem; font-weight: 900; flex-shrink: 0; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── CART DRAWER ────────────────────────────────────── */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,80,.38);
+      z-index: 1600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .28s;
+      backdrop-filter: blur(2px);
+    }
+    .drawer-overlay.active { opacity: 1; pointer-events: all; }
+
+    .drawer {
+      position: fixed;
+      top: 0; right: 0;
+      height: 100vh;
+      width: min(400px, 94vw);
+      background: white;
+      box-shadow: -12px 0 50px rgba(0,0,128,.16);
+      z-index: 1700;
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(.2,.8,.2,1);
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-head {
+      padding: 20px 22px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+    }
+    .drawer-head-left h4 {
+      font-family: var(--font-display);
+      color: var(--navy);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .drawer-head-left span {
+      font-size: .75rem;
+      color: var(--text-subtle);
+      font-weight: 500;
+      margin-top: 1px;
+      display: block;
+    }
+    .close-btn {
+      width: 34px; height: 34px;
+      border: 1.5px solid var(--border);
+      background: white;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      color: var(--text-subtle);
+      transition: background .16s, border-color .16s, color .16s;
+      line-height: 1;
+    }
+    .close-btn:hover { background: #FEF2F2; border-color: #FECACA; color: #EF4444; }
+
+    .cart-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px;
+      text-align: center;
+    }
+    .cart-empty-icon { font-size: 3rem; opacity: .25; }
+    .cart-empty p { font-size: .88rem; color: var(--text-subtle); }
+
+    .cart-list { padding: 14px 22px; overflow-y: auto; flex: 1; }
+    .cart-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-soft);
+      align-items: center;
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .cart-item img {
+      width: 52px; height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: .88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cart-item-price { font-size: .8rem; color: var(--text-subtle); margin-top: 2px; }
+    .remove-btn {
+      width: 28px; height: 28px;
+      border: 1.5px solid var(--border);
+      background: white;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: .9rem;
+      color: var(--text-subtle);
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .remove-btn:hover { background: #FEF2F2; border-color: #FECACA; color: #EF4444; }
+
+    .drawer-foot {
+      padding: 20px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-section);
+    }
+    .cart-subtotal {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .cart-subtotal span:first-child { font-size: .82rem; color: var(--text-subtle); font-weight: 500; }
+    .cart-subtotal span:last-child { font-weight: 800; font-size: 1.18rem; color: var(--navy); }
+    .cart-delivery-note {
+      font-size: .73rem;
+      color: #22C55E;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .checkout {
+      width: 100%;
+      border: 0;
+      border-radius: var(--r-md);
+      padding: 14px;
+      background: linear-gradient(135deg, var(--cobalt), var(--royal));
+      color: white;
+      font-weight: 700;
+      font-size: .9rem;
+      box-shadow: 0 4px 18px rgba(0,71,171,.3);
+      transition: transform .16s, box-shadow .16s;
+      letter-spacing: .02em;
+    }
+    .checkout:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(0,71,171,.42); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .schedule-section-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .trust-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .trust-item { border-bottom: 1px solid var(--border-soft); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .hide-sm { display: none; }
+      .promo-box { padding: 34px 28px; }
+      .slides { height: 500px; }
+      .schedule-section-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 620px) {
+      .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .slides { height: 470px; }
+      .slide-content { padding-top: 12px; }
+      .brand-name span { display: none; }
+      .promo-box { padding: 28px 22px; }
+      .shop { padding: 52px 0 60px; }
+      .container { padding: 0 18px; }
+      .schedule-section-inner { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast">Added to cart</div>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- NAV -->
+  <header class="topbar">
+    <div class="container">
+      <a class="brand" href="customer-home.html">
+        <span class="brand-mark">🌿</span>
+        <span class="brand-name">
+          TechSetu Market
+          <span>Agritech Marketplace</span>
+        </span>
+      </a>
+      <div class="top-actions">
+        <a class="top-link hide-sm" href="#shop">Shop</a>
+        <a class="schedule-nav-btn hide-sm" href="customer-scheduler.html">
+          <span class="schedule-nav-dot"></span>
+          Plan Ahead
+        </a>
+        <button id="cartBtn" class="cart-btn" type="button" aria-label="Open cart">
+          <span class="cart-icon">🛒</span>
+          Cart
+          <span id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides"></div>
+    <div class="slide-nav" id="slideNav"></div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <section class="trust">
+    <div class="container">
+      <div class="trust-row">
+        <div class="trust-item">
+          <div class="trust-icon">✅</div>
+          <div class="trust-text">
+            <strong>Verified Farmers</strong>
+            <span>KYC-verified network</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🚚</div>
+          <div class="trust-text">
+            <strong>Same-Day Delivery</strong>
+            <span>Order before 11 AM</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">📍</div>
+          <div class="trust-text">
+            <strong>Region Pricing</strong>
+            <span>Rates by your mandi</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🔐</div>
+          <div class="trust-text">
+            <strong>Secure Checkout</strong>
+            <span>UPI, cards, wallets</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE INTELLIGENCE SECTION -->
+  <section class="schedule-section" id="schedule-section">
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="section-label">📅 Planned Requirements</div>
+          <h2 style="font-family:var(--font-display);font-size:clamp(1.4rem,2.5vw,2rem);color:var(--navy);letter-spacing:-.02em;line-height:1.1;">Your Crop Schedule</h2>
+          <div style="color:var(--text-subtle);font-size:.86rem;margin-top:5px;">Tell farmers what you'll need — so they can prepare supply in advance.</div>
+        </div>
+        <a href="customer-scheduler.html" style="display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;color:var(--royal);border:1.5px solid rgba(65,105,225,.22);padding:9px 18px;border-radius:50px;transition:all .18s;background:rgba(65,105,225,.05);" onmouseover="this.style.background='rgba(65,105,225,.1)';this.style.borderColor='rgba(65,105,225,.4)';" onmouseout="this.style.background='rgba(65,105,225,.05)';this.style.borderColor='rgba(65,105,225,.22)';">
+          View All Schedules →
+        </a>
+      </div>
+
+      <div class="schedule-section-inner" id="schedStatCards">
+        <!-- rendered by JS -->
+      </div>
+
+      <div id="schedUpcomingRow" style="display:none;">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-subtle);margin-top:26px;margin-bottom:12px;">Upcoming Requirements</div>
+        <div class="sched-upcoming-row" id="schedUpcoming"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOP -->
+  <section class="shop" id="shop">
+    <div class="container">
+      <div class="shop-head">
+        <div>
+          <div class="section-label">Fresh Arrivals</div>
+          <h2>Customer Market</h2>
+          <div class="shop-sub">Farm-fresh produce, transparent pricing, zero middlemen</div>
+        </div>
+        <div class="pills" id="pills"></div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <!-- PROMO -->
+  <section class="promo">
+    <div class="container">
+      <div class="promo-box">
+        <div style="position:relative;z-index:1;">
+          <div class="promo-badge">✦ Smart Planning</div>
+          <h3>Schedule Your Future Crop Needs</h3>
+          <p>Restaurants, retailers &amp; households — plan ahead and let verified farmers prepare your supply in advance. No last-minute shortages.</p>
+        </div>
+        <div class="promo-ctas">
+          <a class="promo-cta" href="customer-scheduler.html">📅 Schedule a Crop →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <div class="footer-brand-mark">🌿</div>
+            <div class="footer-brand-name">TechSetu Market</div>
+          </div>
+          <p class="footer-desc">Farmer-direct agritech marketplace connecting verified producers with customers across India. Premium quality, real prices.</p>
+          <div class="footer-socials">
+            <div class="social-btn">𝕏</div>
+            <div class="social-btn">in</div>
+            <div class="social-btn">ig</div>
+          </div>
+        </div>
+        <div>
+          <h4>Customer</h4>
+          <a href="index.html">Browse Main App</a>
+          <a href="#shop">Featured Produce</a>
+          <a href="customer-scheduler.html">My Schedules</a>
+          <a href="customer-scheduler.html?mode=new">Plan Crop Needs</a>
+        </div>
+        <div>
+          <h4>Support</h4>
+          <a href="index.html">Help Center</a>
+          <a href="index.html">Track Orders</a>
+          <a href="index.html">Returns</a>
+          <a href="index.html">Contact</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 TechSetu. All rights reserved.</span>
+        <div class="footer-badges">
+          <span class="footer-badge">🇮🇳 Made in India</span>
+          <span class="footer-badge">AGRITECH</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <aside class="drawer" id="drawer" aria-label="Cart Drawer">
+    <div class="drawer-head">
+      <div class="drawer-head-left">
+        <h4>Your Cart</h4>
+        <span id="cartCountLabel">0 items</span>
+      </div>
+      <button class="close-btn" id="closeDrawer" type="button" aria-label="Close cart">×</button>
+    </div>
+    <div class="cart-list" id="cartList">
+      <div class="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        <p>Your cart is empty.<br>Add some fresh produce!</p>
+      </div>
+    </div>
+    <div class="drawer-foot" id="drawerFoot" style="display:none">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="total">₹0</span>
+      </div>
+      <div class="cart-delivery-note">✓ Free delivery on orders above ₹299</div>
+      <button class="checkout" type="button" onclick="window.location.href='index.html'">Proceed to Checkout →</button>
+    </div>
+  </aside>
+
+  <script>
+    /* ── HERO DATA ── */
+    const heroSlides = [
+      {
+        eyebrow: 'Live Market View',
+        title: 'Farm Fresh Produce,\n<em>Direct to Customers</em>',
+        desc: 'Transparent pricing, trusted farmer listings, and clean delivery flow — the way agritech should be.',
+        cta: 'Shop Fresh Produce',
+        ctaGhost: 'Schedule Future Needs',
+        ctaGhostHref: 'customer-scheduler.html?mode=new',
+        chips: ['🌾 Harvested Today', '📦 Fast Delivery', '🔒 Verified Farms'],
+        bg: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&auto=format&fit=crop&q=70'
+      },
+      {
+        eyebrow: 'Smart Planning',
+        title: 'Plan Your Crop Needs,\n<em>Farmers Prepare Supply</em>',
+        desc: 'Restaurants, households, retailers — schedule future requirements so farmers can grow and prepare exactly what you need.',
+        cta: 'Browse Produce',
+        ctaGhost: '📅 Schedule a Crop',
+        ctaGhostHref: 'customer-scheduler.html?mode=new',
+        chips: ['📅 Schedule Ahead', '🤝 Farmer-Matched', '✅ Zero Shortages'],
+        bg: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1400&auto=format&fit=crop&q=70'
+      },
+      {
+        eyebrow: 'Trusted Network',
+        title: 'From <em>Verified Farmers</em>\nTo Your Kitchen',
+        desc: 'A seamless shopping experience built with the same care and standards as the TechSetu customer app.',
+        cta: 'Start Shopping',
+        ctaGhost: 'Plan Ahead',
+        ctaGhostHref: 'customer-scheduler.html',
+        chips: ['🌍 Pan-India Network', '📱 Real-Time Prices', '⭐ 4.8 Rated'],
+        bg: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400&auto=format&fit=crop&q=70'
+      }
+    ];
+
+    const products = [
+      {id:1,name:'Tomatoes',cat:'vegetables',price:20,old:25,desc:'Juicy farm tomatoes, same-day harvested.',img:'https://images.unsplash.com/photo-1558818498-28c1e002b655?w=600&auto=format&fit=crop&q=70',rating:'4.8',delivery:'Today'},
+      {id:2,name:'Potatoes',cat:'vegetables',price:15,old:null,desc:'Clean graded potatoes for daily use.',img:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=70',rating:'4.6',delivery:'Today'},
+      {id:3,name:'Spinach',cat:'leafy',price:25,old:30,desc:'Fresh leafy spinach, rich in iron.',img:'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=600&auto=format&fit=crop&q=70',rating:'4.9',delivery:'Today'},
+      {id:4,name:'Onions',cat:'vegetables',price:18,old:null,desc:'Nashik-style pungent onions, hand graded.',img:'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=70',rating:'4.5',delivery:'Today'},
+      {id:5,name:'Wheat',cat:'grains',price:28,old:32,desc:'High-quality grains directly from farms.',img:'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&auto=format&fit=crop&q=70',rating:'4.7',delivery:'2 days'},
+      {id:6,name:'Carrots',cat:'vegetables',price:22,old:null,desc:'Crisp carrots ideal for salads and juice.',img:'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=70',rating:'4.7',delivery:'Today'},
+      {id:7,name:'Green Chillies',cat:'spices',price:60,old:75,desc:'Spicy fresh chillies for bold flavor.',img:'https://imgs.search.brave.com/Q1eRlssfGGJovbAWcF37NpV2479zAs8I9byJ0EDreuw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wdW5q/YWJpZ3JvY2VyaWVz/LmNvbS9jZG4vc2hv/cC9wcm9kdWN0cy9n/cmVlbi1jaGlsbGkt/NTAweDUwMC0yNTB4/MjUwLTEuanBnP3Y9/MTU1NDY5OTYyMiZ3/aWR0aD0yNTA',rating:'4.6',delivery:'Today'},
+      {id:8,name:'Coriander',cat:'leafy',price:15,old:null,desc:'Fragrant coriander bunches, freshly tied.',img:'https://imgs.search.brave.com/SAT-EIOwIYhROKwlny6k5c9ivCh_4grW5ux4STrdhfY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy81/LzUxL0Ffc2NlbmVf/b2ZfQ29yaWFuZGVy/X2xlYXZlcy5KUEc',rating:'4.8',delivery:'Today'}
+    ];
+
+    const catLabels = { vegetables:'Vegetable', leafy:'Leafy Green', grains:'Grain', spices:'Spice' };
+    const filters = ['all','vegetables','leafy','grains','spices','sale'];
+    let activeFilter = 'all';
+    let cart = [];
+    let slideIndex = 0;
+    let slideTimer = null;
+
+    const slidesEl  = document.getElementById('slides');
+    const slideNav  = document.getElementById('slideNav');
+    const gridEl    = document.getElementById('grid');
+    const pillsEl   = document.getElementById('pills');
+    const cartBtn   = document.getElementById('cartBtn');
+    const cartCount = document.getElementById('cartCount');
+    const cartCountLabel = document.getElementById('cartCountLabel');
+    const drawer    = document.getElementById('drawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const closeDrawer = document.getElementById('closeDrawer');
+    const cartList  = document.getElementById('cartList');
+    const totalEl   = document.getElementById('total');
+    const drawerFoot = document.getElementById('drawerFoot');
+    const toast     = document.getElementById('toast');
+    let toastTimer  = null;
+
+    function showToast(msg) {
+      toast.childNodes[toast.childNodes.length - 1].textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    function renderHero() {
+      slidesEl.innerHTML = heroSlides.map((s, i) => `
+        <div class="slide ${i===0?'active':''}" style="background-image:url('${s.bg}')">
+          <div class="container slide-layout">
+            <div class="slide-content">
+              <div class="eyebrow">${s.eyebrow}</div>
+              <h1>${s.title.replaceAll('\n','<br>')}</h1>
+              <p>${s.desc}</p>
+              <div class="slide-ctas">
+                <button class="hero-cta" onclick="document.getElementById('shop').scrollIntoView({behavior:'smooth'})">${s.cta}</button>
+                <a class="hero-cta-ghost" href="${s.ctaGhostHref}">${s.ctaGhost}</a>
+              </div>
+              <div class="slide-chips">${s.chips.map(c=>`<div class="chip">${c}</div>`).join('')}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      slideNav.innerHTML = heroSlides.map((_,i) =>
+        `<button class="dot ${i===0?'active':''}" data-index="${i}" aria-label="Go to slide ${i+1}"></button>`
+      ).join('');
+
+      slideNav.querySelectorAll('.dot').forEach(btn => {
+        btn.addEventListener('click', () => {
+          slideIndex = Number(btn.dataset.index);
+          applySlide();
+          restartSlideTimer();
+        });
+      });
+      startSlideTimer();
+    }
+
+    function applySlide() {
+      slidesEl.querySelectorAll('.slide').forEach((el,i) => el.classList.toggle('active', i===slideIndex));
+      slideNav.querySelectorAll('.dot').forEach((el,i) => el.classList.toggle('active', i===slideIndex));
+    }
+    function startSlideTimer() {
+      slideTimer = setInterval(() => { slideIndex=(slideIndex+1)%heroSlides.length; applySlide(); }, 4800);
+    }
+    function restartSlideTimer() { clearInterval(slideTimer); startSlideTimer(); }
+
+    function renderPills() {
+      pillsEl.innerHTML = filters.map(f => {
+        const label = f==='all'?'All' : f==='sale'?'On Sale' : f[0].toUpperCase()+f.slice(1);
+        return `<button class="pill ${f===activeFilter?'active':''}" data-filter="${f}">${label}</button>`;
+      }).join('');
+      pillsEl.querySelectorAll('.pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeFilter = btn.dataset.filter;
+          renderPills();
+          renderGrid();
+        });
+      });
+    }
+
+    function filteredProducts() {
+      if (activeFilter==='all') return products;
+      if (activeFilter==='sale') return products.filter(p => p.old && p.old > p.price);
+      return products.filter(p => p.cat===activeFilter);
+    }
+
+    function renderGrid() {
+      const items = filteredProducts();
+      if (!items.length) {
+        gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-subtle)">No products in this category.</div>`;
+        return;
+      }
+      gridEl.innerHTML = items.map(p => {
+        const discountPct = p.old ? Math.round((1 - p.price/p.old)*100) : 0;
+        return `
+        <article class="card">
+          <div class="img-wrap">
+            ${p.old ? `<span class="tag">−${discountPct}%</span>` : ''}
+            <span class="fresh-badge">🌿 Fresh</span>
+            <img src="${p.img}" alt="${p.name}" loading="lazy" />
+            <div class="img-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="cat-label">${catLabels[p.cat]||p.cat}</span>
+              <div class="rating">★ ${p.rating}</div>
+            </div>
+            <h3 class="name">${p.name}</h3>
+            <p class="desc">${p.desc}</p>
+            <div class="delivery-row">🚚 Delivery: <span>${p.delivery}</span></div>
+            <div class="price-row">
+              <span class="price">₹${p.price}/kg</span>
+              ${p.old ? `<span class="old">₹${p.old}</span><span class="discount-pct">Save ₹${p.old-p.price}</span>` : ''}
+            </div>
+            <div class="actions">
+              <button class="btn-primary" type="button" onclick="addToCart(${p.id})">+ Add to Cart</button>
+              <button class="btn-outline" type="button" onclick="window.location.href='index.html'">Buy in App</button>
+            </div>
+          </div>
+        </article>
+      `}).join('');
+    }
+
+    function addToCart(id) {
+      const p = products.find(x=>x.id===id);
+      if (!p) return;
+      cart.push(p);
+      cartCount.textContent = String(cart.length);
+      cartCount.classList.add('bump');
+      setTimeout(() => cartCount.classList.remove('bump'), 300);
+      renderCart();
+      showToast(`${p.name} added to cart`);
+    }
+    window.addToCart = addToCart;
+
+    function renderCart() {
+      const count = cart.length;
+      cartCountLabel.textContent = count + (count===1?' item':' items');
+      if (!count) {
+        cartList.innerHTML = `
+          <div class="cart-empty">
+            <div class="cart-empty-icon">🛒</div>
+            <p>Your cart is empty.<br>Add some fresh produce!</p>
+          </div>`;
+        drawerFoot.style.display = 'none';
+        totalEl.textContent = '₹0';
+        return;
+      }
+      drawerFoot.style.display = 'block';
+      cartList.innerHTML = cart.map((p,idx) => `
+        <div class="cart-item">
+          <img src="${p.img}" alt="${p.name}" />
+          <div class="cart-item-info">
+            <div class="cart-item-name">${p.name}</div>
+            <div class="cart-item-price">₹${p.price}/kg</div>
+          </div>
+          <button type="button" class="remove-btn" aria-label="Remove item" onclick="removeItem(${idx})">×</button>
+        </div>
+      `).join('');
+      const total = cart.reduce((s,p)=>s+p.price, 0);
+      totalEl.textContent = `₹${total}`;
+    }
+
+    function removeItem(idx) {
+      cart.splice(idx,1);
+      cartCount.textContent = String(cart.length);
+      renderCart();
+    }
+    window.removeItem = removeItem;
+
+    function openCart() { drawer.classList.add('open'); drawerOverlay.classList.add('active'); }
+    function closeCart() { drawer.classList.remove('open'); drawerOverlay.classList.remove('active'); }
+
+    cartBtn.addEventListener('click', openCart);
+    closeDrawer.addEventListener('click', closeCart);
+    drawerOverlay.addEventListener('click', closeCart);
+
+    /* ── SCHEDULE DASHBOARD WIDGET ── */
+    const cropEmoji = {
+      vegetables:'🥕', leafy:'🥬', grains:'🌾', fruits:'🍊', spices:'🌶️',
+      dairy:'🥛', pulses:'🫘', oilseeds:'🌻', default:'🌱'
+    };
+
+    function getSchedules() {
+      try { return JSON.parse(localStorage.getItem('tsCustomerSchedules') || '[]'); } catch { return []; }
+    }
+
+    function formatDateShort(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+    }
+
+    function daysUntil(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      d.setHours(0,0,0,0);
+      return Math.ceil((d - now) / 86400000);
+    }
+
+    function renderScheduleWidget() {
+      const schedules = getSchedules();
+      const statCards = document.getElementById('schedStatCards');
+      const upcomingRow = document.getElementById('schedUpcomingRow');
+      const upcoming = document.getElementById('schedUpcoming');
+
+      const active = schedules.filter(s => !['cancelled','expired','fulfilled'].includes(s.status));
+      const urgent = active.filter(s => s.urgency === 'urgent' || daysUntil(s.requiredDate) <= 3);
+      const matched = schedules.filter(s => s.status === 'matched');
+      const nextUp = active
+        .filter(s => s.requiredDate)
+        .sort((a,b) => new Date(a.requiredDate) - new Date(b.requiredDate))[0];
+
+      // Stat cards
+      statCards.innerHTML = `
+        <div class="sched-stat-card">
+          <div class="sched-stat-icon blue">📋</div>
+          <div class="sched-stat-label">Active Schedules</div>
+          <div class="sched-stat-value">${active.length}</div>
+          <div class="sched-stat-sub">${schedules.length} total requests</div>
+        </div>
+        <div class="sched-stat-card">
+          <div class="sched-stat-icon amber">⚡</div>
+          <div class="sched-stat-label">Urgent / Due Soon</div>
+          <div class="sched-stat-value">${urgent.length}</div>
+          <div class="sched-stat-sub">${urgent.length > 0 ? 'Needs attention' : 'All on track'}</div>
+          ${urgent.length > 0 ? `<div class="sched-stat-chips">${urgent.slice(0,2).map(s=>`<span class="sched-mini-chip urgent">⚡ ${s.cropName}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="sched-stat-card">
+          <div class="sched-stat-icon teal">🤝</div>
+          <div class="sched-stat-label">Farmer Matched</div>
+          <div class="sched-stat-value">${matched.length}</div>
+          <div class="sched-stat-sub">${matched.length > 0 ? 'Farmers are preparing' : 'Awaiting matches'}</div>
+          ${matched.length > 0 ? `<div class="sched-stat-chips">${matched.slice(0,2).map(s=>`<span class="sched-mini-chip green">✓ ${s.cropName}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="sched-cta-card">
+          <div>
+            <div class="sched-cta-eyebrow">✦ Plan Ahead</div>
+            <div class="sched-cta-title" style="margin-top:6px;">Schedule Your<br>Next Crop Need</div>
+            <div class="sched-cta-desc" style="margin-top:8px;">${nextUp ? `Next: <strong style="color:white;">${nextUp.cropName}</strong> on ${formatDateShort(nextUp.requiredDate)}` : 'Households, restaurants & bulk buyers — plan ahead so farmers are ready.'}</div>
+          </div>
+          <a class="sched-cta-btn" href="customer-scheduler.html?mode=new">
+            📅 New Schedule →
+          </a>
+        </div>
+      `;
+
+      // Upcoming row
+      const upcomingList = active
+        .filter(s => s.requiredDate)
+        .sort((a,b) => new Date(a.requiredDate) - new Date(b.requiredDate))
+        .slice(0,8);
+
+      if (upcomingList.length) {
+        upcomingRow.style.display = 'block';
+        upcoming.innerHTML = upcomingList.map(s => {
+          const days = daysUntil(s.requiredDate);
+          const badgeClass = s.urgency==='urgent' ? 'urgent' : s.status==='matched' ? 'matched' : 'upcoming';
+          const badgeText = s.status==='matched' ? '✓ Matched' : days <= 3 ? '⚡ Due Soon' : `in ${days}d`;
+          const emoji = cropEmoji[s.cropCategory] || cropEmoji.default;
+          return `
+            <a class="sched-upcoming-item" href="customer-scheduler.html?scheduleId=${s.scheduleId}">
+              <div class="sui-icon">${emoji}</div>
+              <div class="sui-info">
+                <div class="sui-name">${s.cropName}</div>
+                <div class="sui-date">${s.quantity} ${s.unit} · ${formatDateShort(s.requiredDate)}</div>
+              </div>
+              <span class="sui-badge ${badgeClass}">${badgeText}</span>
+            </a>
+          `;
+        }).join('');
+      } else {
+        upcomingRow.style.display = 'none';
+      }
+    }
+
+    renderHero();
+    renderPills();
+    renderGrid();
+    renderCart();
+    renderScheduleWidget();
+  </script>
+</body>
+</html>
+

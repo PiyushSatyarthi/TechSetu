@@ -170,7 +170,7 @@ function goBack(fromScreen, toId) {
 
 function loginSuccess(role) {
   if(role === 'buyer') {
-    showScreen('screen-buyer-type');
+    window.location.href = 'customer-home.html';
   } else {
     window.location.href = 'techsetu_farmer_dashboard.html';
   }
@@ -219,7 +219,7 @@ function googleLoginSuccess(role) {
     window.location.href = 'techsetu_farmer_dashboard.html';
     return;
   }
-  showScreen('screen-home');
+  window.location.href = 'customer-home.html';
 }
 
 function switchLoginTab(tab, role) {
